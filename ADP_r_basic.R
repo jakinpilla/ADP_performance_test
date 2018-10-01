@@ -80,10 +80,35 @@ df_imdb %>%
   drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop)
 nrow(df_imdb_budget_na_drop) ; range(df_imdb_budget_na_drop$budget) # budget 변수 내 NA 제거 확인
 
+## 빈칸("")을 NA로 만들기
 as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
 summary(titanic)
-titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin) ## 빈칸을 NA로 만들기
-titanic$cabin
+titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin); titanic$cabin ## 빈칸을 NA로 만들기
+
+## NA 값들을 전부 0으로 바꾸기(데이터 프레임 모든 열에 대하여)
+as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
+titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; ## NA 값들을 전부 0으로 바꾸기
+summary(titanic_na_zero_replaced)
+
+## NA 값들을 median 값으로 바꾸기
+as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
+titanic %>%
+  mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
+# '_imp' 로 끝나는 새로운 변수로 imputation 하기
+titanic %>%
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .)))
+
+## 범주형 변수에 NA가 함께 있을 경우 문자 "NA"로 대체하기
+titanic %>%
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) %>%
+  mutate_if(is.character, funs(imp=ifelse(is.na(.), "NA", .)))-> t_tmp; summary(t_tmp)
+
+## NA 포함한 관측치 모두 제거하기
+na.omit(titanic) # NA 포함한 관측치 모두 제거
+
+
+
+
 
 
 ## 특정 변수 내 oulier 찾고 제거하기(boxplot()$stat)
