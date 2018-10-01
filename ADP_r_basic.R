@@ -106,11 +106,6 @@ titanic %>%
 ## NA 포함한 관측치 모두 제거하기
 na.omit(titanic) # NA 포함한 관측치 모두 제거
 
-
-
-
-
-
 ## 특정 변수 내 oulier 찾고 제거하기(boxplot()$stat)
 boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # 이상치 제거 필요성 확인
 boxplot(df_imdb_budget_na_drop$budget)$stat ## 
@@ -171,4 +166,140 @@ table(titanic$cabin)
 cabin <- as.data.frame(table(titanic$cabin)); names(cabin) <- c('room', 'count')
 head(cabin)
 ggplot(cabin[-1, ], aes(x=room, y=count)) + geom_bar(stat='identity')
+
+# 컬럼 선택
+glimpse(df_imdb)
+colnames(df_imdb)
+## 'color'에서 'movie_imdb_link' 까지 연속으로 선택하기
+df_imdb %>%
+  select(color:movie_imdb_link)
+
+## 특정 컬럼 이름을 이용해 선택하기
+df_imdb %>% 
+  select(director_name, director_facebook_likes)
+
+## 특정 문자열로 시작하는 컬럼들을 선택하기
+df_imdb %>% select(starts_with('direc')) ## 'direc'으로 시작하는 컬럼 모두 선택
+
+## 특정 문자열로 끝나는 컬럼들을 선택하기
+df_imdb %>% select(ends_with('likes')) ## 'direc'으로 시작하는 컬럼 모두 선택
+
+### 'actor'로 시작하고 'likes'로 끝나는 컬럼 선택하기
+df_imdb %>%
+  select(starts_with('actor')) %>%
+  select(ends_with('likes'))
+
+## 'facebook' 문자열을 포함한 컬럼 선택하기
+df_imdb %>%
+  select(contains('facebook'))
+
+## 특정 컬럼 제외하기(-)
+df_imdb %>% 
+  select(-director_name, -director_facebook_likes)
+
+## 'facebook' 문자열을 포함하지 않는 컬럼 선택하기
+df_imdb %>%
+  select(-contains('facebook'))
+
+## 특정 변수 중 고유한 값들만 추려내기
+nrow(df_imdb)
+
+df_imdb %>%
+  select(director_name) %>%
+  distinct()
+
+df_imdb %>%
+  select(num_critic_for_reviews) %>%
+  distinct()
+
+## n(), n_distinct(), first(), last(), nth(x, n)
+df_imdb %>% 
+  select(director_name) %>%
+  summarise(count=n())
+
+df_imdb %>% 
+  select(director_name) %>%
+  summarise(dict_count=n_distinct(director_name))
+
+df_imdb %>%
+  drop_na() %>%
+  group_by(director_name) %>%
+  summarise(count=n()) %>%
+  arrange(desc(count))
+
+## 특정 컬럼명 바꾸기(director_name --> direc_nm)
+df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = 기본 변수명(director_name)
+
+## colname 들을 모두 소문자, 특정 문자를 또 다른 분자로 치환하여 정리하기
+## "_" 문자를 "."로 바꾸어 보기
+names(df_imdb) <- tolower(gsub('_', '.', make.names(names(df_imdb), unique = T)))
+head(df_imdb)
+
+# melt / cast
+data("airquality"); head(airquality)
+names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 대문자를 소문자로 변환
+aql <- melt(airquality, id.vars = c('month', 'day'))
+aqw <- dcast(aql, month + day ~ variable); aqw
+
+## 고객별&제품별 총 구매비용 및 구매비율 및 구매변동계수 구하기(with melt/cast)
+tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
+tran %>% 
+  group_by(custid, prod) %>%
+  summarise(sum.amt = sum(amt)) -> cust_prod_amt_sum; head(cust_prod_amt_sum)
+
+### pivotting :: (목적) 고객별 구매 상품종류에 대한 지출비용을 알아보기위해 실시
+names(cust_prod_amt_sum)
+melted <- melt(cust_prod_amt_sum, id.vars=c('custid', 'prod'), measure.vars = c('sum.amt')); head(melted)
+dcasted <- dcast(melted, custid ~ prod, value.var = 'value'); head(dcasted)
+sample_dcasted <- dcasted[1:2, ]; sample_dcasted
+
+### NA를 0으로 채우기
+dcasted %>% replace(is.na(.), 0) -> cust_prod_amt_sum
+dcasted %>% mutate_all(funs(ifelse(is.na(.), 0, .))) -> cust_prod_amt_sum
+head(cust_prod_amt_sum)
+dim(cust_prod_amt_sum)
+names(cust_prod_amt_sum) ## 물품 종류의 수는 84 종류(custid 제외)
+
+# 고객별 총구매액(total.amt)에 대한 컬럼 만들기
+cust_prod_amt_sum %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_amt_total_sum; 
+head(cust_prod_amt_total_sum)
+
+# 고객들의 상품 종류별 구매비율 구하기
+cust_prod_amt_total_sum %>%
+  select(-custid, -total.amt) -> cust_prod_amt_total_sum_tmp
+cust_prod_amt_ratio <- cust_prod_amt_total_sum_tmp / cust_prod_amt_total_sum$total.amt
+cust_prod_amt_ratio %>% mutate(total.sum = rowSums(.)) -> cust_prod_amt_ratio # total.sum =1 이 되는지 확인
+head(cust_prod_amt_ratio)
+
+# 소수점 3째자리에서 반올림하여 수들을 정리
+cust_prod_amt_ratio[] <- lapply(cust_prod_amt_ratio, function(x) if(is.numeric(x)) round(x, 2) else x)
+head(cust_prod_amt_ratio)
+names(cust_prod_amt_ratio) <- paste('ratio', names(cust_prod_amt_ratio), sep='_')
+head(cust_prod_amt_ratio)
+
+cust_prod_df <- cbind(df_5, df_6)
+
+# fix(df_7)
+dim(df_7)
+df_7[, c(1, 87:170)] -> df_8
+# fix(df_8) # 이것이 고객별 구매비용의 비율!
+dim(df_8)
+head(df_8)
+df_8$max_prod <- colnames(df_8[, c(2:85)])[apply(df_8[, c(2:85)], 1, which.max)]
+fix(df_8)
+table(df_8$max_prod)
+
+df_8 %>% 
+  drop_na %>%
+  group_by(max_prod) %>%
+  summarise(count = n(), percent = count / nrow(.) * 100) %>%
+  arrange(desc(count)) -> df_9
+
+
+# fix(df_9)
+
+df_wd_ratio %>% left_join(df_8, by='custid') -> df_10
+head(df_10)
+# fix(df_10)
+
 
