@@ -30,6 +30,11 @@ idx <- createDataPartition(titanic$survived, p=.8)[[1]] # createDataPartition() 
 titanic.train <- titanic[idx, ]
 titanic.test <- titanic[-idx, ]
 
+# survived and dead ratio check between train dataset and test dataset
 prop.table(table(titanic.train$survived))
 prop.table(table(titanic.test$survived))
+
+# 2) 각 모델에 동일한 평가방법 적용
+fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
+
 
