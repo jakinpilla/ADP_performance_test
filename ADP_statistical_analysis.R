@@ -198,8 +198,60 @@ formula(m2)
 (reduced <- lm(dist ~ 1, data = cars))
 anova(reduced, full) # 1.49e-12 *** :: 이 두 모델간에는 유의한 차이가 있다.
 
-#
+# 상호작용 확인----
+head(Orange)
+with(Orange, interaction.plot(age, Tree, circumference)) # age, Tree와의 상호작용이 circumference에 어떤 영향??
 
+# 순서있는 범주형 -> 순서없는 범주형 :: 이유는??
+Orange[, 'ftree'] <- factor(Orange[, 'Tree'], ordered=F)
+
+m <- lm(circumference ~ ftree*age, data=Orange)
+m1 <- lm(circumference ~ ftree + age, data=Orange)
+anova(m, m1)
+
+model_2 <- lm(medv ~ .^2, data=training) # 2차 상호작용 모형
+summary(model_2) # 대부분의 변수가 유의하지 않음
+length(coef(model_2)) # 많은 변수 : 과적합 / 해석 어려움
+
+## 선형회귀 실전
+df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
+summary(df_imdb)
+
+df_imdb %>%
+  ggplot(aes(content_rating)) + geom_bar()
+df_imdb %>% 
+  filter(content_rating %in% c('G', 'PG', 'PG-13', 'R')) %>%
+  ggplot(aes(content_rating, imdb_score)) + geom_boxplot()
+
+summary(lm(imdb_score ~ content_rating, 
+           data = df_imdb %>% filter(content_rating %in% c('G', 'PG', 'PG-13', 'R'))))
+# 등급 집단간에 평점 평균이 통계적으로 유의한 차이가 있음
+
+# '좋아요' 개수와 리뷰 평점 사이의 관계
+df_imdb %>%
+  ggplot(aes(movie_facebook_likes)) + geom_histogram()
+
+df_imdb %>%
+  ggplot(aes(movie_facebook_likes)) + geom_histogram() + scale_x_log10()
+
+# '좋아요' 100개 넘으면 두 변수 상관관계 높음
+df_imdb_l00_more <- df_imdb %>%
+  filter(title_year > 2010 & country == 'USA') %>%
+  filter(movie_facebook_likes > 100)
+head(df_imdb_l00_more); dim(df_imdb_l00_more)
+
+cor(log10(df_imdb_l00_more$movie_facebook_likes), df_imdb_l00_more$imdb_score)
+# '좋아요' 100개 넘으면 두 변수 상관관계 높음
+
+## 로그변환 >> 선형모델의 해
+m <- lm(imdb_score ~ log10(movie_facebook_likes), data=df_imdb_l00_more)
+summary(m)
+
+# 다중공선성 : (다변량)
+ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')]) # 독립변수간 높은 상관계수(.7 이상) 확인!
+m <- lm(mpg ~ disp + hp + wt + drat, data=mtcars)
+summary(m)
+anova(m)
 
 
 
