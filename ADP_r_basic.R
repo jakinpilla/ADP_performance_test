@@ -54,7 +54,6 @@ student3
 mean(student3$키)
 mean(student3$키, na.rm=T)
 
-
 # 데이터 구경하기(glimpse, plot(numeric_var ~ factor_var, data))
 glimpse(mpg)
 summary(boston)
@@ -108,7 +107,6 @@ titanic %>%
 na.omit(titanic) # NA 포함한 관측치 모두 제거
 
 ## 특정 변수 내 oulier 찾고 제거하기(boxplot()$stat)
-windows()
 boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # 이상치 제거 필요성 확인
 boxplot(df_imdb_budget_na_drop$budget)$stat ## 
 # [,1]
@@ -122,7 +120,6 @@ boxplot(df_imdb_budget_na_drop$budget)$stat ##
 # "integer" 
 
 # 2.18e+02 ~ 1.00e+08를 벗어나면 이상치로 간주
-windows()
 df_imdb_budget_na_drop %>%
   filter(budget >= 2.18e+02 & budget <= 1.00e+08) -> df_imdb_budget_na_oulier_drop
 boxplot(df_imdb_budget_na_oulier_drop$budget, horizontal = T)
@@ -255,8 +252,12 @@ head(df_imdb)
 # melt / cast
 data("airquality"); head(airquality)
 names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 대문자를 소문자로 변환
+
 aql <- melt(airquality, id.vars = c('month', 'day')) ; head(aql)
 aqw <- dcast(aql, month + day ~ variable); head(aqw)
+
+aql <- melt(airquality, id.vars = c('month', 'day'))
+aqw <- dcast(aql, month + day ~ variable); aqw
 
 ## 고객별&제품별 총 구매비용 및 구매비율 및 구매변동계수 구하기(with melt/cast)
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
@@ -300,6 +301,5 @@ dim(cust_prod_amt_ratio)
 cust_prod_amt_ratio$custid <- cust_prod_amt_total_sum$custid 
 n_tmp <- length(colnames(cust_prod_amt_ratio))
 cust_prod_amt_ratio <- cust_prod_amt_ratio[, c(n_tmp, 1:(n_tmp-1))]
-
 glimpse(cust_prod_amt_ratio)
 

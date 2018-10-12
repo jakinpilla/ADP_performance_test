@@ -156,10 +156,12 @@ rf_m <- train(credit_formula, data=training, method='rf',
               trControl=ml_control)
 
 # 2.2.4 gbm(Geometric Brownian Motion)
+library(gbm)
 gbm_m <- train(credit_formula, data = training, method='gbm', 
                trControl= ml_control, verbose=F)
 
 # 2.2.5 xgBoost
+library(xgboost)
 xgboost_m <- train(credit_formula, data = training, method = 'xgbLinear', 
                    trControl = ml_control)
 
@@ -203,5 +205,4 @@ metrics(testing_perf, truth=Class, estimate = XGB)
 
 # 예측값 저장
 write.csv(predict(xgboost_m), './data/predict_result.csv')
-
 
