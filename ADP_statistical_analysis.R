@@ -43,9 +43,9 @@ x <- GermanCredit$Class
 x <- ifelse(GermanCredit$Class == "Bad", 0, 1)
 class(x); x
 
-# 반응변수 (y) ~ 설명변수 (x)
+# 반응변수 (y) ~ 설명변수 (x) 
 
-# 연속형 변수 x, 연속형 변수 y: 선형모형이 적합
+# 연속형 변수 x, 연속형 변수 y: 선형모형이 적합----
 # 산점도 -> 상관계수(선형 관계의 강도) -> 선형모형 -> 비선형 데이터에는 LOESS(국소회귀)
 
 head(mpg)
@@ -66,7 +66,7 @@ pred
 plot(mpg$hwy, mpg$cty)
 abline(coef(model)) 
 
-# with cars data
+# with cars data----
 head(cars)
 plot(cars$speed, cars$dist)
 abline(coef(model))
@@ -77,7 +77,7 @@ model <- loess(hwy ~ displ, data=mpg)
 plot(model)
 mpg %>% ggplot(aes(displ, hwy)) + geom_point() + geom_smooth()
 
-# 범주형 변수 x, 연ㅅ형 변수 y: 분산분석 ANOVA
+# 범주형 변수 x, 연ㅅ형 변수 y: 분산분석 ANOVA속----
 ## 수면제 종류에 따른 수면량 증가, 차종에 따라 연비 차이, 혈압약과 혈압 감소량
 ## boxplot() -> lm(y(연속형 변수) ~ x(범주형 변수)) -> plot.lm() 잔차분포
 
@@ -90,7 +90,7 @@ pred <- predict(model, newdata=data.frame(class='pickup'))
 # 가정진단 : 잔차의 분포 독립, 잔차의 분포 동일 (잔차는 정규분포)
 # 분포 독립성과 이상치 유무
 
-# 연속형 변수 x, 범주형 변수 y(예 : 성공, 실패) :: 온도와 O링의 실패 여부 등
+# 연속형 변수 x, 범주형 변수 y(예 : 성공, 실패) :: 온도와 O링의 실패 여부 등----
 # 산점도, 병렬상자 -> glm() 로지스틱 & binomial -> plot() 잔차분포, 모형 가정 확인
 chall <- read_table("data/o-ring-erosion-only.data.txt",
                     +                     col_names = FALSE)
@@ -120,6 +120,85 @@ pred <- predict(model, data.frame(temperature=30), type='response'); pred
 # 2) 비지도학습 :: 변수들 간 / 관측치 간의 관계
 # 군집 :: 관측치들 변수들간의 유사도로 그룹화
 # 차원감소 :: 관측치들 간의 유사도를 이용하여 변수의 수를 감소
+
+# 분류 : 주어진 입력변수로 범주형 반응변수 예측(성공/실패)
+# 신용카드 사용자 -> 채무불이행 확률
+# 투자할 회사 -> 투자 성공 확률
+# 웹 방문자, 사이트, 방문시간 -> 광고 클릭 확률
+
+#선형회귀 (연속형, 수치형 반응변수 예측)----
+## 부동산 가격 예측 : 반응변수  medv
+## medv :: Median value of owner-occupied homes in $1000's
+read.table('./data/housing_data.csv') -> boston
+names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'rad',  
+                   'tax', 'ptratio', 'black', 'lstat', 'medv')
+glimpse(boston)
+
+boston %>% sample_n(100) -> training
+model <- lm(medv~., data=training)
+summary(model) # 연관성이 높은 변수 :: lstat, rm
+# lstat :: % lower status of the population
+# rm :: average number of rooms per dwelling
+
+coef(model)
+fitted(model)[1:4] # fitted value (80, 401, 274, 251 번째 데이터의 fitted value)
+boston$medv[c(80, 401, 274, 251)] # observed value
+residuals(model)[1:4] # observed value - fitted value
+confint(model) # 신뢰구간 (정확한 의미 파악 필요)
+
+# with ad_result.csv data----
+data <- read.csv('./data/ad_result.csv')
+m <- lm(install ~., data = data[,c('install', 'tvcm', 'magazine')])
+summary(m) # 유의미한 변수는?
+
+coef(m)
+fitted(m)
+residuals(m)
+confint(m)
+
+# with cars data----
+head(cars)
+m <- lm(dist ~ speed, data=cars)
+predict(m, newdata = data.frame(speed=3)) # 예측
+predict(m, newdata = data.frame(speed=3), interval = 'confidence') # 평균적인 차량의 신뢰구간
+predict(m, newdata = data.frame(speed=3), interval = 'prediction') # 특정속도 차량 한 대(오차)
+
+# 다중선형회귀----
+m <- lm(Sepal.Length ~ ., data=iris)
+summary(m) # Speciesversicolor, Speciesvirginica
+anova(m) # Species의 p-value 확인 / 의미파악하기
+
+# using dummy variables----
+levels(iris$Species)
+library(dummies)
+str(iris)
+iris_dummy <- dummy.data.frame(iris, names=c('Species'), sep='_')
+head(iris_dummy)
+dim(iris_dummy)
+iris_dummy
+m <- lm(Sepal.Length ~ ., data=iris_dummy)
+summary(m)
+# Coefficients:
+#   (Intercept)         Sepal.Width        Petal.Length         Petal.Width  
+# 1.1478              0.4959              0.8292             -0.3152  
+# Species_setosa  Species_versicolor   Species_virginica  
+# 1.0235              0.2999                  NA  
+# Why Speceis_virginica coef is NA
+
+anova(m)
+
+# 변수선택하기----
+m <- lm(medv ~., data = boston)
+m2 <- step(m, direction = 'both')
+formula(m2)
+# predict(m2, newdata=...)
+
+# ANOVA 분산분석, 모델간 비교(다변량)----
+(full <- lm(dist ~ speed, data=cars))
+(reduced <- lm(dist ~ 1, data = cars))
+anova(reduced, full) # 1.49e-12 *** :: 이 두 모델간에는 유의한 차이가 있다.
+
+#
 
 
 
