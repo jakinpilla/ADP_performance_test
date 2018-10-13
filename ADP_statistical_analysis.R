@@ -92,8 +92,7 @@ pred <- predict(model, newdata=data.frame(class='pickup'))
 
 # 연속형 변수 x, 범주형 변수 y(예 : 성공, 실패) :: 온도와 O링의 실패 여부 등----
 # 산점도, 병렬상자 -> glm() 로지스틱 & binomial -> plot() 잔차분포, 모형 가정 확인
-chall <- read_table("data/o-ring-erosion-only.data.txt",
-                    +                     col_names = FALSE)
+chall <- read_table("data/o-ring-erosion-only.data.txt", col_names = FALSE)
 head(chall)
 # chall :: the dataset of the Challenger locket's Orings
 # 1. Number of O-rings at risk on a given flight :: o_ring_ct
@@ -213,7 +212,7 @@ model_2 <- lm(medv ~ .^2, data=training) # 2차 상호작용 모형
 summary(model_2) # 대부분의 변수가 유의하지 않음
 length(coef(model_2)) # 많은 변수 : 과적합 / 해석 어려움
 
-## 선형회귀 실전
+## 선형회귀 실전----
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
 summary(df_imdb)
 
@@ -252,6 +251,117 @@ ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')]) # 독립변수간 높은
 m <- lm(mpg ~ disp + hp + wt + drat, data=mtcars)
 summary(m)
 anova(m)
+
+## 분류모델평가----
+## with randomForest model applied with titanic dataset
+predicted <- predict(rf_fit, newdata = titanic.test) # predicted values
+actual <- titanic.test$survived # actual values
+length(predicted)
+length(actual)
+xtabs(~ predicted + actual) # 분할표
+predicted == actual
+sum(predicted == actual)
+length(actual)
+sum(predicted == actual) / length(actual) # or nrow(actual in case / accuracy
+
+## ROC 커브 및 AUC
+library(ROCR)
+# probs :: 분류 알고리즘이 예측한 점수(predicted probability)
+# labels는 실제 분류true class가 저장된 벡터(actual vectors)
+
+prob <- predict(rf_fit, newdata = titanic.test, type='prob')$survived ## the predicted prob of survived
+head(prob)
+labels <- actual # label :: actual vectors
+head(labels)
+# ROCR package를 적용하기 위해 prediction 를 생성해야 함
+pred <- prediction(prob, labels)
+plot(performance(pred, 'tpr', 'fpr')) # ROC curve
+abline(0,1)
+plot(performance(pred, 'acc')) ## cutoff에 따른 accuracy 변화
+performance(pred, 'auc')@y.values[[1]] # auc
+
+# 회귀모델 평가 RMSE :: 작을수록 정확----
+## with lm model applied with boston housing data
+read.table('./data/housing_data.csv') -> boston
+names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'rad',  
+                   'tax', 'ptratio', 'black', 'lstat', 'medv')
+glimpse(boston)
+
+# splitting total dataset into training and validation dataset
+idx <- createDataPartition(boston$medv, p=c(.6, .4))[[1]]
+boston.train <- boston[idx, ]; dim(boston.train)
+boston.validation_test <- boston[-idx, ]; dim(boston.validation_test)
+
+# splitting validation_test dataset into validation and test dataset 
+idx <- createDataPartition(boston.validation_test$medv, p=c(.5, .5), list=F)
+boston.validation <- boston.validation_test[idx, ]; dim(boston.validation)
+boston.test <- boston.validation_test[-idx, ]; dim(boston.test)
+
+m <- lm(medv~., data=boston.train)
+summary(m)
+
+# defining rmse function----
+rmse <- function(y,yp) {
+  sqrt(mean(y - yp)^2)
+}
+
+actual <- boston.validation$medv
+pred <- predict(m, newdata=boston.validation)
+
+rmse(actual, pred)
+
+# 로지스틱 회귀 :: income이 <=50K", ">50K인지 여부 예측 with adult data
+adult <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+                  sep=",",
+                  header=F,
+                  col.names=c("age", "type_employer", "fnlwgt", "education", 
+                              "education_num","marital", "occupation", "relationship", "race","sex",
+                              "capital_gain", "capital_loss", "hr_per_week","country", "income"),
+                  fill=FALSE, 
+                  strip.white=T)
+glimpse(adult)
+levels(adult$income)
+adult$income <- factor(adult$income, levels=c("<=50K", ">50K" ), labels=c(0,1))
+
+# splitting dataset into train and test dataset
+idx <- createDataPartition(adult$income, p=c(.8, .2), list=F)
+
+# trainig and test dataset defining
+adult.train <- adult[idx, ]
+adult.test <- adult[-idx, ]
+
+# modeling with training dateset
+m <- glm(income ~., data=adult.train, family=binomial)
+summary(m)
+fitted(m)[c(1:5, 51:55)] # 모델에 적합된 값 with probability
+ifelse(fitted(m) >= .5, 1,0)[c(1:5, 51:55)] # 모델에 적합된 값 with 1(">50K"), 0("<=50K")
+
+# predicting with test dataset
+predict(m, newdata = adult.test, type='response')
+pred <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
+
+range(predict(m, newdata = adult.test, type='response'))
+range(predict(m, newdata = adult.test))
+
+# evaluation
+pred <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
+actual <- adult.test$income
+
+xtabs(~ pred + actual)
+sum(pred == actual) / length(actual)
+confusionMatrix(pred, actual)
+
+# ROC curve and AUC
+library(ROCR)
+prob <- predict(m, newdata = adult.test, type='response'); prob
+actual <- adult.test$income; actual
+
+pred <- prediction(prob, actual)
+plot(performance(pred, 'tpr', 'fpr'))
+abline(0,1)
+
+plot(performance(pred, 'acc')) # cutoff 에 따른 accuracy의 변화
+performance(pred, 'auc')@y.values[[1]] # auc
 
 
 
