@@ -351,7 +351,7 @@ xtabs(~ pred + actual)
 sum(pred == actual) / length(actual)
 confusionMatrix(pred, actual)
 
-# ROC curve and AUC
+# ROC curve and AUC----
 library(ROCR)
 prob <- predict(m, newdata = adult.test, type='response'); prob
 actual <- adult.test$income; actual
@@ -363,13 +363,118 @@ abline(0,1)
 plot(performance(pred, 'acc')) # cutoff 에 따른 accuracy의 변화
 performance(pred, 'auc')@y.values[[1]] # auc
 
+# 로지스틱 회귀 :: left or not인지 여부 예측 with hr data----
+hr <- read_csv("data/hr_comma_sep.csv")
+colnames(hr) <- tolower(colnames(hr)); head(hr)
+
+table(hr$left)
+table(hr$sales)
+table(hr$salary)
+
+hr %>% 
+  select(-sales, -salary) %>%
+  sample_n(500) %>%
+  ggpairs()
+
+glimpse(hr)
+
+x <- model.matrix(~. -left, data=hr) # 선형 모형 formualtion을 위한 문자열 문법
+
+## data splitting into training, validation, test dataset----
+set.seed(2018)
+n <- nrow(hr)
+idx <- 1:n
+training_idx <- sample(idx, n*.6)
+idx <- setdiff(idx, training_idx)
+validate_idx <- sample(idx, n*.2)
+test_idx <- setdiff(idx, validate_idx)
 
 
+length(training_idx); length(validate_idx); length(test_idx)
+
+training <- hr[training_idx, ]
+validation <- hr[validate_idx, ]
+test <- hr[test_idx, ]
+
+## modeling----
+hr_glm_full <- glm(left ~., data=training, family = binomial); summary(hr_glm_full)
 
 
+## prediction accuracy visualization----
+actual <- validation$left
+pred <- predict(hr_glm_full, newdata=validation, type='response')
 
+ggplot(data.frame(actual, pred), 
+       aes(pred, fill=factor(actual))) + geom_density(alpha=.5)
 
+## ROCR :: ROC curve and AUC----
+library(ROCR)
+pred_lm <- prediction(pred, actual) # pred :: probability
+perf_lm <- performance(pred_lm, 'tpr', 'fpr')
+plot(perf_lm, main='ROC curve for glm model') # ROC curve
+performance(pred_lm, 'auc')@y.values[[1]] # auc
 
+# 로지스틱 회귀 :: cancer or not인지 여부 예측 with breast cancer----
+
+## data downloading with curl----
+library(curl)
+h <- new_handle(copypostfields = "moo=moomooo")
+handle_setheaders(h,
+                  "Content-Type" = "text/moo",
+                  "Cache-Control" = "no-cache",
+                  "User-Agent" = "A cow"
+)
+
+tmp <- tempfile()
+
+curl_download('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data', tmp, handle=h)
+data <-read.csv(tmp, header=F)
+feature_names <- c('radius', 'texture', 'perimeter', 'area', 'smoothness',
+                   'compactness', 'concavity', 'concave_points', 'symmetry', 'fractal_dim')
+
+names(data) <-
+  c('id', 'class',
+    paste0('mean_', feature_names),
+    paste0('se_', feature_names),
+    paste0('worst_', feature_names))
+
+glimpse(data)
+
+## define needed functions----
+rmse <- function(yi, yhat_i){
+  sqrt(mean((yi - yhat_i)^2))
+}
+
+binomial_deviance <- function(y_obs, yhat){
+  epsilon = 0.0001
+  yhat = ifelse(yhat < epsilon, epsilon, yhat)
+  yhat = ifelse(yhat > 1-epsilon, 1-epsilon, yhat)
+  a = ifelse(y_obs==0, 0, y_obs * log(y_obs/yhat))
+  b = ifelse(y_obs==1, 0, (1-y_obs) * log((1-y_obs)/(1-yhat)))
+  return(2*sum(a + b))
+}
+
+# cleansing data----
+data <- data %>% select(-id)
+data$class <- factor(ifelse(data$class == 'B', 0, 1))
+glimpse(data); summary(data)
+
+# data EDA
+library(gridExtra)
+p1 <- data %>% ggplot(aes(class)) + geom_bar()
+p2 <- data %>% ggplot(aes(class, mean_concave_points)) +
+  geom_jitter(col='gray') +
+  geom_boxplot(alpha=.5)
+p3 <- data %>% ggplot(aes(class, mean_radius)) +
+  geom_jitter(col='gray') +
+  geom_boxplot(alpha=.5)
+p4 <- data %>% ggplot(aes(mean_concave_points, mean_radius)) +
+  geom_jitter(col='gray') + geom_smooth()
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+# data splitting
+set.seed(1606)
+n <- nrow(data)
 
 
 
