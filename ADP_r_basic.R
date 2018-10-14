@@ -5,9 +5,9 @@ getwd()
 # install.packages('party')
 # install.packages('randomForest')
 
-# 여러 개의 패키지를 한 번에 읽
+# 여러 개의 패키지를 한 번에 읽기
 Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dplyr')
+              'randomForest')
 lapply(Packages, library, character.only=T)
 
 
