@@ -459,8 +459,9 @@ data <- data %>% select(-id)
 data$class <- factor(ifelse(data$class == 'B', 0, 1))
 glimpse(data); summary(data)
 
-# data EDA
+# data EDA----
 library(gridExtra)
+windows()
 p1 <- data %>% ggplot(aes(class)) + geom_bar()
 p2 <- data %>% ggplot(aes(class, mean_concave_points)) +
   geom_jitter(col='gray') +
@@ -475,6 +476,63 @@ grid.arrange(p1, p2, p3, p4, ncol=2)
 # data splitting
 set.seed(1606)
 n <- nrow(data)
+idx <- 1:n
+training_idx <- sample(idx, n*.6)
+idx <- setdiff(idx, training_idx)
+validate_idx <- sample(idx, n*.2)
+test_idx <- setdiff(idx, validate_idx)
+training <- data[training_idx, ]
+validation <- data[validate_idx, ]
+test <- data[test_idx, ]
+
+# logistic regression modeling----
+data_lm_full <- glm(class ~., data=training, family=binomial)
+summary(data_lm_full)
+anova(data_lm_full)
+
+# predict----
+predict(data_lm_full, newdata = data[1:5, ], type='response') 
+data[1:5, ]$class
+
+# model validation----
+library(ROCR)
+y_obs <- as.numeric(as.character(validation$class)) # factor -> character -> numeric
+y_obs
+yhat_lm <- predict(data_lm_full, newdata=validation, type='response')
+pred_lm <- prediction(yhat_lm, y_obs)
+plot(performance(pred_lm, 'tpr', 'fpr'))
+abline(0,1)
+performance(pred_lm, 'auc')@y.values[[1]]
+
+binomial_deviance(y_obs, yhat_lm)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

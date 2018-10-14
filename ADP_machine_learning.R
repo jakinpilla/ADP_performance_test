@@ -39,6 +39,7 @@ titanic %>%
   select(-body) %>%
   replace(is.na(.), 0) %>%
   cbind(survived = titanic$survived) -> titanic_preprocessed
+write.csv(titanic_preprocessed, './data/titanic_preprocessed.csv')
 glimpse(titanic_preprocessed)
 
 # 예측할 변수를 'survived'로 선택
