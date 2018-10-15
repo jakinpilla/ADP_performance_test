@@ -3,11 +3,14 @@
 # install.packages('KoNLP')
 # install.packages('SnowballC')
 # install.packages('slam')
+# install.packages('wordcloud')
+
 library(rJava)
 library(KoNLP); useSejongDic()
 library(SnowballC)
 library(slam)
 library(tm)
+library(wordcloud)
 
 Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest')
@@ -30,6 +33,7 @@ tvpro_nm_df
 pro_nm <- tvpro_nm_df$tvpro_nm
 pro_nm_pasted <- gsub(" ", "", tvpro_nm_df$tvpro_nm)
 pro_names <- union(pro_nm, pro_nm_pasted)
+pro_names
 
 user_d <- data.frame(tvpro_nm = pro_names, "ncn" ) # using 'broadcasting'
 
@@ -45,18 +49,36 @@ mergeUserDic(data.frame("사이다", "ncn"))
 mergeUserDic(data.frame("한국은처음이지", "ncn"))
 # mergeUserDic(data.frame(readLines("./data/000.txt"), "ncn"))
 
-
 # data loadinng ----
 tvpro <- read_delim("data/tvprograms.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
-head(tvpro, 2)
-
+head(tvpro, 10)
 head(tvpro, 2)$date
 head(tvpro, 2)$title
 head(tvpro, 2)$contents
 
+## titie text preprocessing----
+head(tvpro$title, 10)
 # remove punctuation 
-tvpro$title <- gsub('[[:punct:]]+', "", tvpro$title)
+tvpro$title <- gsub('[[:punct:]]+', "", tvpro$title) #구두점 제거
+tvpro$title <- gsub('2016년도', "", tvpro$title)  # 특정단어 제거
+# tvpro$title <- gsub('\\d+', "", tvpro$title) # 숫자 제거 :: program_nm 내 숫자가 있으므로 여기서는 해선 안 됨
+tvpro$title <- gsub('[ㄱ-ㅣ]', '', tvpro$title) # ㅋㅋㅋ, ㅜㅠ 등 제거
+tvpro$title <- str_replace_all(tvpro$title, '[[:lower:]]', '') # 영어표현 모두 삭제
+
+# 영문, 한글 아닌 것 전부 제거 하지만 띄어쓰기까지 모두 제거됨----
+# tvpro$title <- str_replace_all(tvpro$title, '[^[:alpha:]]', '') 
+
+head(tvpro$title, 10)
+
+## contents text preprocessing----
 tvpro$contents <- gsub('[[:punct:]]+', "", tvpro$contents)
+tvpro$contents <- gsub('2016년도', "", tvpro$contents)  # 특정단어 제거
+tvpro$contents <- gsub('▲', "", tvpro$contents)  # 특정단어 제거
+# tvpro$contents <- gsub('\\d+', "", tvpro$contents) # 숫자 제거
+tvpro$contents <- gsub('[ㄱ-ㅣ]', '', tvpro$contents) # ㅋㅋㅋ, ㅜㅠ 등 제거
+tvpro$contents <- str_replace_all(tvpro$contents, '[[:lower:]]', '') # 영어 소문자 표현 모두 삭제
+
+head(tvpro$contents, 10)
 
 ## NA 값 제거----
 title <- tvpro$title
@@ -93,16 +115,10 @@ str(title_mat)
 rownames(title_mat)
 
 ## title data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
-### 나중에 for 문으로...
-sum(title_mat[1, ]) # 537 :: 1박2일은 537건의 문건에서 등장(title만 보았을때)
-sum(title_mat[2, ]) # 210 :: 나혼자산다 210번
-sum(title_mat[3, ]) # 742 :: 무한도전 742번
-sum(title_mat[4, ]) # 17 :: 발칙한 동거
-sum(title_mat[5, ]) # 474 :: 복면가왕
-sum(title_mat[6, ]) # 278 :: 삼시세끼
-sum(title_mat[7, ]) # 105 :: 아는형님
-sum(title_mat[8, ]) # 51 :: 정글의법칙
-sum(title_mat[9, ]) # 363 :: 한끼줍쇼
+for (i in 1:length(pro_nm_pasted)) {
+  pro_freq = sum(title_mat[i, ])
+  cat(pro_nm_pasted[i], ':', pro_freq, "\n", sep=" ")
+}
 
 # contents data----
 ## TDM 생성----
@@ -125,16 +141,14 @@ str(contents_mat)
 rownames(contents_mat)
 
 ## contents data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
-### 나중에 for 문으로...
-sum(contents_mat[1, ]) # 1767 :: 1박2일은 537건의 문건에서 등장(title만 보았을때)
-sum(contents_mat[2, ]) # 349 :: 나혼자산다 210번
-sum(contents_mat[3, ]) # 4417 :: 무한도전 742번
-sum(contents_mat[4, ]) # 9 :: 발칙한 동거
-sum(contents_mat[5, ]) # 1858 :: 복면가왕
-sum(contents_mat[6, ]) # 1318 :: 삼시세끼
-sum(contents_mat[7, ]) # 216 :: 아는형님
-sum(contents_mat[8, ]) # 125 :: 정글의법칙
-sum(contents_mat[9, ]) # 727 :: 한끼줍쇼
+
+length(pro_nm_pasted)
+pro_nm_pasted[1]
+
+for (i in 1:length(pro_nm_pasted)) {
+  pro_freq = sum(contents_mat[i, ])
+  cat(pro_nm_pasted[i], ':', pro_freq, "\n", sep=" ")
+}
 
 # sum matrix----
 total_mat <- title_mat + contents_mat
@@ -188,4 +202,95 @@ ggplot(melted, aes(x=month, y=value, fill=variable)) +
 
 ggplot(melted, aes(x=month, y=value, fill=variable)) +
   geom_bar(position='fill', stat='identity') + scale_y_continuous(labels = scales :: percent)
+
+# legend를 한글로 바꾸는 방법...
+
+# 그냥 contents 자주 나오는 단어를 보고 tv program 이름 유추해보기
+# word count, word cloud 등
+
+# word count----
+# data loadinng ----
+tvpro <- read_delim("data/tvprograms.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+head(tvpro$contents, 10)
+
+# text cleansing----
+tvpro$contents <- gsub('[[:punct:]]+', "", tvpro$contents)
+tvpro$contents <- gsub('2016년도', "", tvpro$contents)  # 특정단어 제거
+tvpro$contents <- gsub('▲', "", tvpro$contents)  # 특정단어 제거
+tvpro$contents <- gsub('△', "", tvpro$contents)  # 특정단어 제거
+
+# tvpro$contents <- gsub('\\d+', "", tvpro$contents) # 숫자 제거
+tvpro$contents <- gsub('[ㄱ-ㅣ]', '', tvpro$contents) # ㅋㅋㅋ, ㅜㅠ 등 제거
+
+# 영어 소문자 표현 모두 삭제
+# 잘 동작되지 않음
+tvpro$contents <- str_replace_all(tvpro$contents, '[[:lower:]]', '') 
+head(tvpro$contents, 10)
+
+contents <- tvpro$contents
+  
+# 명사 빈도 분석----
+## ko.words() :: 명사 추출 함수 정의----
+ko.words <- function(doc) {
+  d <- as.character(doc)
+  extractNoun(d)
+}
+
+## TermDocumentMatrix----
+options(mc.cores=1)
+cps <- VCorpus(VectorSource(contents))
+tdm_contents <- TermDocumentMatrix(cps, 
+                                   control = list(tokenize = ko.words,
+                                                  removePunctuation=T,
+                                                  wordLengths=c(2, 6),
+                                                  weighting = weightTf))
+
+tdm_contents_mat <- as.matrix(tdm_contents)
+dim(tdm_contents_mat)
+
+length(rownames(tdm_contents_mat))
+length(rowSums(tdm_contents_mat))
+word_freq_df <- data.frame(words = rownames(tdm_contents_mat),
+                           freq = rowSums(tdm_contents_mat))
+rownames(word_freq_df) <- NULL
+head(word_freq_df)
+
+word_freq_df %>%
+  arrange(desc(freq)) 
+
+head(word_freq_df)
+word_freq_df$words
+nchar(word_freq_df$words)
+
+word_freq_df %>%
+  mutate(leng_words = str_length(words)) %>% # 각 단어의 character 수를 세기
+  arrange(desc(freq)) %>%
+  filter(leng_words > 2) %>%
+  slice(1:100) -> word_df
+  
+  
+# worocloud----
+wordcloud(words = word_df$words, freq=(word_df$freq/min(word_df$freq)), random.order=FALSE, 
+          colors=brewer.pal(6,"Dark2"), random.color=TRUE)
+## 프로그램명 유추 :: 무한도전, 복면가왕, 1박2일, 삼시세끼, 한끼줍쇼, 나혼자산다, 아는형님 등으로 유추가능
+
+
+# 월별 각 프로그램들의 등장 횟수 구하기
+## TDM -> DTM으로 변경
+## DTM에 날짜 컬럼 붙이기(일자 및 월별 컬럼 두 개)
+## 이 중 rowname이 유추된 프로그램명과 동일한 것만 추출
+## 추출된 데이터를 월별로 집계로 -> 각 프로그램의 월별 등장 빈도수 파악
+## 시각화(wordcloud)
+
+
+
+
+
+
+
+
+
+
+
+
 
