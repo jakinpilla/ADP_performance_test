@@ -109,7 +109,7 @@ tdm_title_mat <- as.matrix(tdm_title)
 dim(tdm_title_mat)
 
 ## pro_names가 있는 행들만 추출----
-tdm_title_extracted <- tdm_title[dimnames(tdm_title)$Terms %in% pro_names, ]
+tdm_title_extracted <- tdm_title[dimnames(tdm_title)$Terms %in% pro_names, ] # TDM 에서 추출한다.
 title_mat <- as.matrix(tdm_title_extracted)
 str(title_mat)
 rownames(title_mat)
@@ -205,6 +205,8 @@ ggplot(melted, aes(x=month, y=value, fill=variable)) +
 
 # legend를 한글로 바꾸는 방법...
 
+##-------------------------------------------------------------------------------------
+
 # 그냥 contents 자주 나오는 단어를 보고 tv program 이름 유추해보기
 # word count, word cloud 등
 
@@ -268,29 +270,69 @@ word_freq_df %>%
   filter(leng_words > 2) %>%
   slice(1:100) -> word_df
   
-  
 # worocloud----
+wordcloud(words = word_df$words, freq=word_df$freq, random.order=FALSE)
+
 wordcloud(words = word_df$words, freq=(word_df$freq/min(word_df$freq)), random.order=FALSE, 
           colors=brewer.pal(6,"Dark2"), random.color=TRUE)
 ## 프로그램명 유추 :: 무한도전, 복면가왕, 1박2일, 삼시세끼, 한끼줍쇼, 나혼자산다, 아는형님 등으로 유추가능
 
 
 # 월별 각 프로그램들의 등장 횟수 구하기
-## TDM -> DTM으로 변경
+## TDM rowname이 유추된 프로그램명과 동일한 것만 추출
+## extracted TDM -> DTM으로 변경
 ## DTM에 날짜 컬럼 붙이기(일자 및 월별 컬럼 두 개)
-## 이 중 rowname이 유추된 프로그램명과 동일한 것만 추출
 ## 추출된 데이터를 월별로 집계로 -> 각 프로그램의 월별 등장 빈도수 파악
 ## 시각화(wordcloud)
 
+## extracting pro_names rows from TDM
+pro_names <- c('무한도전', '1박2일', '복면가왕', '삼시세끼', '한끼줍쇼', '나혼자산다', '아는형님')
+tdm_contents_extracted <- tdm_contents[dimnames(tdm_contents)$Terms %in% pro_names, ]
+class(tdm_contents_extracted)
 
+contents_mat <- as.matrix(tdm_contents_extracted)
+dim(contents_mat)
+class(contents_mat)
 
+## TDM matix -> DTM matix
+dtm_contents_mat <- t(contents_mat)
+dim(dtm_contents_mat)
 
+# add date and month columns----
+View(head(as.data.frame(dtm_contents_mat))[1:50, ])
+dtm_df <-  as.data.frame(dtm_contents_mat)
+dim(dtm_df)
 
+tvpro$month <- format(tvpro$date, '%Y-%m')
+date_df <- data.frame(date = tvpro$date, month=tvpro$month)
+dim(date_df)
+data <- cbind(date_df, dtm_df)
+colnames(data)
 
+glimpse(data)
 
+## aggregating by month----
+data %>% 
+  group_by(month) %>%
+  summarise(sum.day_night = sum(`1박2일`),
+            sum.live_alone = sum(나혼자산다),
+            sum.endless_challenge = sum(무한도전), 
+            sum.mask_singer = sum(복면가왕),
+            sum.three_meals = sum(삼시세끼),
+            sum.brother_known = sum(아는형님),
+            sum.gimme_food = sum(한끼줍쇼)) -> data_grouped
 
+pro_words <- c('1박2일', '나혼자산다', '무한도전', '복면가왕', '삼시세끼', '아는형님', '한끼줍쇼')
 
+# wordcloud for 2016-10 data----
+melt(data_grouped, id.var='month') %>%
+  filter(month == '2016-10') -> word_df
 
+words_df <- cbind(word_df, pro_words)
 
+wordcloud(words = words_df$pro_words, freq=words_df$value, random.order=FALSE)
+wordcloud(words = words_df$pro_words, freq=(words_df$value/min(words_df$value)), 
+          random.order=FALSE, colors=brewer.pal(6,"Dark2"), random.color=TRUE)
 
+# ...
 
