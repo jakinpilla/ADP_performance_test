@@ -47,8 +47,7 @@ head(tran,20)
 
 
 # 고객별 구매시간 비율을 알아보기 위해 필요한 변수만 선택
-tran %>% select(custid)
-tran %>% select(custid, `h_bin_6-11`, `h_bin_12-17`, `h_bin_18-23`) -> df_h
+tran %>% select(custid, `h_bin_6-11`, `h_bin_12-17`, `h_bin_18-23`) -> df_h; head(df_h)
 
 # 고객별 구매시간 bin들의 합 구하기
 df_h %>% group_by(custid) %>%
@@ -80,12 +79,9 @@ ratio_cust_visit[, -1] %>%
          row_mean = round(rowMeans(as.matrix(.[1:3])), 3), 
          h_cv = row_std/row_mean) -> h_df
 
+head(cust_visit_h)
 head(h_df)
-range(h_df$h_cv)
-
-h_df %>% filter(h_cv ==0)
-# fix(wd_df)
-
+tran_h_df <- cbind(cust_visit_h[, 1], h_df); head(tran_h_df)
 
 # data select and arange
 
