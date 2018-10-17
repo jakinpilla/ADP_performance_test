@@ -3,9 +3,8 @@ getwd()
 
 # install.packages('party')
 # install.packages('TH.data')
-
-Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
+              'randomForest', 'dummies', 'curl', 'gridExtra')
 
 lapply(Packages, library, character.only=T)
 

@@ -10,94 +10,168 @@ lapply(Packages, library, character.only=T)
 
 # data loading----
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
-head(tran)
+head(tran); dim(tran) ## 27,993건의 거래내역
 
 # invoice numbering----
+i=0
 group_number = (function(){i = 0; function() i <<- i+1 })()
 # df %>% group_by(u,v) %>% mutate(label = group_number())
 tran %>% 
   arrange(ymd, time, custid) %>%
   group_by(ymd, time, custid) %>%
-  mutate(invoice_no = group_number()) -> tran_tmp
+  mutate(basket_id = group_number()) %>%
+  as.data.frame() %>% # to avoid adding grouped var...
+  select(basket_id, prod) -> tran_basket; head(tran_basket)
 
-# making transaction_data for apriori----
-transaction_data <- ddply(tran_tmp,c("invoice_no"),
-                          function(tran_tmp)paste(tran_tmp$prod, collapse = ","))
-head(transaction_data)  
+# make basket.transaction and basket.transaction sparse format---- 
+basket.transaction <- split(tran_basket$prod, tran_basket$basket_id)
+basket.transaction[1:5]
 
-# making transaction_data for apriori----
-head(tran_tmp)
-transaction_data <- ddply(tran_tmp,c("invoice_no"),
-                          function(tran_tmp)paste(tran_tmp$prod, collapse = ","))
-head(transaction_data)  
-
-tran_tmp %>% 
-  group_by(invoice_no) %>%
-  summarise(paste(prod, collapse = ',')) -> transaction_data; head(transaction_data)
-
-transaction_data[, 2]
-write.table(transaction_data[, 2], './data/groceries_data.csv', 
-            row.names = FALSE,  col.names=FALSE) 
-## to writed data without header, use write.table() with col.names=FALSE
-
-## apply apriori----
-groceries <- read.transactions("./data/groceries_data.csv", sep = ",")
-summary(groceries)
-class(groceries)
+basket.transaction <- as(basket.transaction, 'transactions')
+basket.transaction
 
 # 처음 5개 거래 확인----
-inspect(groceries[1:5])
+inspect(basket.transaction[1:5])
 
 # 식료품의 빈도 확인----
-itemFrequency(groceries[, 1:50])
+itemFrequency(basket.transaction[, 1:5])
 
 # 식료품의 빈도 시각화
-# itemFrequencyPlot(groceries, support = 0.5)
-itemFrequencyPlot(groceries, topN = 20)
+# itemFrequencyPlot(basket.transaction, support = 0.5)
+itemFrequencyPlot(basket.transaction, topN = 20)
 
 # 처음 5개 거래에 대한 희소 매트릭스 시각화
-windows()
-image(groceries[1:4000])
+# windows()
+image(basket.transaction[1:100])
 
 # 100개 식료품의 무작위 샘플 시각화
-image(sample(groceries, 100))
+image(sample(basket.transaction, 200))
 
-# ## 3단계 : 데이터에 대한 모델 훈련 ----
-# library(arules)
-# 
-# # 기본 설정
-# apriori(groceries)
-# 
-# # 규칙을 좀 더 학습히기 위해 지지도(support)와 신뢰도(confidence) 설정 변경
-groceryrules <- apriori(groceries, parameter = list(support =0.00001, 
-                                                    confidence = 0.00001,
-                                                    minlen = 2))
+ 
+# 규칙을 좀 더 학습히기 위해 지지도(support)와 신뢰도(confidence) 설정 변경
+groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
+groceryrules <- apriori(basket.transaction, parameter = list(support =0.001, 
+                                                    confidence = 0.001,
+                                                    minlen = 1))
 
 summary(groceryrules)
 inspect(groceryrules[1:5])
 
-# groceryrules
-# 
-# ## 4단계 : 모델 성능 평가 ----
-# # 식료품 연관 규칙의 요약
-# summary(groceryrules)
-# 
-# # 처음 3개 규칙 확인
-# inspect(groceryrules[1:3])
-# 
-# ## 5단계 : 모델 성능 향상 ----
-# 
-# # lift로 규칙 정렬
-# inspect(sort(groceryrules, by = "lift")[1:5])
-# 
-# # 딸기류 아이템을 포함하는 규칙의 부분 규칙 찾기
-# berryrules <- subset(groceryrules, items %in% "berries")
-# inspect(berryrules)
-# 
-# # CSV 파일에 규칙 쓰기
-# write(groceryrules, file = "groceryrules.csv",
-#       sep = ",", quote = TRUE, row.names = FALSE)
-# 
-# # 규칙들을 데이터 프레임으로 변환
-# groceryrules_df <- as(groceryrules, "data.frame")
-# str(groceryrules_df)
+# arrange by lift----
+inspect(sort(groceryrules, by = "lift")[1:5])
+ 
+# `harddrinks` 아이템을 포함하는 규칙의 부분 규칙 찾기
+harddrinks_rules <- subset(groceryrules, items %in% "harddrinks")
+inspect(harddrinks_rules)
+
+# write groceryrules(write())----
+write(harddrinks_rules, file = "./data/harddrinks_rules.csv", sep = ",", 
+      quote = TRUE, row.names = FALSE)
+
+# convert rules as datafame----
+harddrinks_rules_df <- as(harddrinks_rules, "data.frame")
+str(harddrinks_rules_df)
+head(harddrinks_rules_df)
+
+#
+
+
+
+
+# ----
+# LoL Champoion Dataset :: sample-data.csv
+# load data and transder it into transactions format for apriori----
+library(arules)
+df <- read.csv('./data/sample-data-1.csv'); str(df)
+table(df$id) # 총 18명의 챔피언 플레이 정보
+head(df)
+dim(df)
+length(unique(df$names))
+
+rioter.list <- split(df$names, df$id)
+rioter.transaction <- as(rioter.list, 'transactions')
+rioter.transaction
+
+# generate rules----
+rules <- apriori(rioter.transaction)
+summary(rules)
+
+rule.list <- as.data.frame(inspect(rules)); head(rule.list)
+data.frame(lhs = rule.list$lhs, 
+           rhs = rule.list$rhs,
+           support = rule.list$support,
+           confidence = rule.list$confidence, 
+           lift = rule.list$lift,
+           count = rule.list$count) -> rule_df
+colnames(rule_df)
+glimpse(rule_df)
+
+rule_df %>%
+  arrange(-lift)
+
+# itemFrequencyPlot()----
+itemFrequencyPlot(rioter.transaction, topN=10)
+
+# image()----
+image(rioter.transaction[1:10])
+
+# inspect rules----
+inspect(rules[1:5])
+
+# lift로 규칙 정렬----
+inspect(sort(rules, by = "lift")[1:5])
+
+# `자이라` 를 포함하는 규칙의 부분 규칙 찾기
+zaira_rules <- subset(rules, items %in% "자이라")
+inspect(zaira_rules)
+
+# generate rules with condition list----
+rules <- apriori(rioter.transaction, parameter = list(supp=.001,
+                                                      conf=.8))
+summary(rules)
+
+itemFrequencyPlot(basket.transaction, topN = 20)
+
+# 처음 5개 거래에 대한 희소 매트릭스 시각화
+# windows()
+image(basket.transaction[1:4000])
+
+# 100개 식료품의 무작위 샘플 시각화
+image(sample(basket.transaction, 100))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

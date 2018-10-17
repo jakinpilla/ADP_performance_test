@@ -12,10 +12,13 @@ library(slam)
 library(tm)
 library(wordcloud)
 
-Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
+              'randomForest', 'dummies', 'curl', 'gridExtra')
+
+Packages_tm <- c('rJava', 'KoNLP', 'SnowballC', 'slam', 'wordcloud')
 
 lapply(Packages, library, character.only=T)
+lapply(Packages_tm, library, character.only=T); useSejongDic()
 
 options(mc.cores=1) # not multi_core
 
