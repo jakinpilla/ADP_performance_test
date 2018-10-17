@@ -53,7 +53,7 @@ tran %>% select(custid, `h_bin_6-11`, `h_bin_12-17`, `h_bin_18-23`) -> df_h; hea
 df_h %>% group_by(custid) %>%
   summarise(sum.h_6_11 = sum(`h_bin_6-11`), 
             sum.h_12_17 = sum(`h_bin_12-17`),
-            sum.h_18_23 = sum(`h_bin_18-23`)) -> cust_visit_h
+            sum.h_18_23 = sum(`h_bin_18-23`)) -> cust_visit_h; head(cust_visit_h)
 
 cust_visit_h %>% mutate(total_visitcount = rowSums(.[2:4])) -> cust_visit_h_total
 
@@ -124,8 +124,10 @@ plot(log10(gapminder$gdpPercap), gapminder$lifeExp, cex=.5)
 
 ## with df_imdb dataset
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip'); glimpse(df_imdb)
-df_imdb %>% count(country) %>% arrange(-n)
-
+head(df_imdb)
+df_imdb$country <- as.factor(df_imdb$country); glimpse(df_imdb)
+df_imdb %>% group_by(country) %>% tally() %>% arrange(-n)
+ 
 ## 미국 영화의 예산 분포 알아보기
 df_imdb %>%
   filter(country == 'USA') %>%
@@ -174,6 +176,9 @@ ggpairs(diamonds %>% sample_n(100))
 mpg %>%
   ggplot(aes(class, hwy)) + geom_boxplot()
 
+mpg %>% mutate(class=reorder(class, hwy, median)); mpg$class[1:5] 
+#`class` 컬럼을 hwy의 중간값(median) 순서로 정렬하여 데이터를 정렬 
+
 mpg %>%
   mutate(class=reorder(class, hwy, median)) %>% # hwy의 중간값 순서로 정렬
   ggplot(aes(class, hwy)) + geom_jitter() + geom_boxplot(alpha=.5)
@@ -206,9 +211,6 @@ chisq.test(xtabs(~ sex + survived, data=titanic)) # p < .05 |-> 독립이 아니
 
 # mosaic plot----
 mosaicplot(survived ~ pclass + sex, data = titanic, color=T) # 해석에 집중해보자
-
-#
-
 
 
 
