@@ -3,7 +3,7 @@ getwd()
 
 # install.packages('arules')
 library(arules)
-Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'dummies', 'curl', 'gridExtra')
 
 lapply(Packages, library, character.only=T)
