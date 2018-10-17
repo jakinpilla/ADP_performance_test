@@ -37,8 +37,9 @@ inspect(basket.transaction[1:5])
 itemFrequency(basket.transaction[, 1:5])
 
 # 식료품의 빈도 시각화
-# itemFrequencyPlot(basket.transaction, support = 0.5)
 itemFrequencyPlot(basket.transaction, topN = 20)
+itemFrequencyPlot(basket.transaction, support = .05, 
+                  main = 'item frequency plot above support 1%')
 
 # 처음 5개 거래에 대한 희소 매트릭스 시각화
 # windows()
@@ -50,19 +51,41 @@ image(sample(basket.transaction, 200))
  
 # 규칙을 좀 더 학습히기 위해 지지도(support)와 신뢰도(confidence) 설정 변경
 groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
-groceryrules <- apriori(basket.transaction, parameter = list(support =0.001, 
-                                                    confidence = 0.001,
-                                                    minlen = 1))
+groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
+                                                    confidence = 0.0001,
+                                                    minlen = 2))
 
 summary(groceryrules)
 inspect(groceryrules[1:5])
+
+# arrrange by support----
+inspect(sort(groceryrules, by='support')[1:5])
 
 # arrange by lift----
 inspect(sort(groceryrules, by = "lift")[1:5])
  
 # `harddrinks` 아이템을 포함하는 규칙의 부분 규칙 찾기
 harddrinks_rules <- subset(groceryrules, items %in% "harddrinks")
-inspect(harddrinks_rules)
+inspect(harddrinks_rules[1:5])
+
+# item based rules finding----
+rule_interest_lhs <- subset(groceryrules, lhs %in% c('icecream'))
+inspect(rule_interest_lhs[1:5])
+
+
+# %in%, %pin%, %ain%----
+## %in% :: 적어도 하나의 제품이라도 존재하면 연관규칙을 indexing 
+## %pin% :: 부분일치만 하더라도 연관규칙을 indexing
+## %ain% :: 완전일치하는 연관규칙만을 indexing
+
+rule_interest_lhs <- subset(groceryrules, lhs %in% c('bread', 'milk'))
+inspect(rule_interest_lhs[1:5])
+
+rule_interest_lhs <- subset(groceryrules, lhs %pin% c('mi'))
+inspect(rule_interest_lhs[1:5]) ## rule 안에 "mi"란 문자가 들어가 있으면 indexing
+
+rule_interest_lhs <- subset(groceryrules, lhs %ain% c('cooky/cakes', 'fermentedmilk'))
+inspect(rule_interest_lhs[1:5])
 
 # write groceryrules(write())----
 write(harddrinks_rules, file = "./data/harddrinks_rules.csv", sep = ",", 
@@ -73,10 +96,47 @@ harddrinks_rules_df <- as(harddrinks_rules, "data.frame")
 str(harddrinks_rules_df)
 head(harddrinks_rules_df)
 
-#
+# Visualization arules :: arulesViz
+# install.packages('arulesViz')
+# install.packages('viridisLite')
+library(viridisLite)
+library(arulesViz)
 
+# plotting rules----
+groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
+                                                             confidence = 0.0001,
+                                                             minlen = 3))
+plot(groceryrules)
+plot(sort(groceryrules, by='support')[1:20], method='grouped')
 
+windows()
+plot(groceryrules, method='graph', control=list(type='items'),
+     vertex.label.cex = .7, 
+     edge.arrow.size= .3,
+     edge.arrow.size= 2)
 
+plot(groceryrules[1:20], method='graph', control=list(type='items'))
+plot(groceryrules[21:40], method='graph', control=list(type='items'))
+plot(groceryrules[41:60], method='graph', control=list(type='items'))
+
+sort(groceryrules, by = "lift") -> groceryrules_by_lift
+
+plot(groceryrules_by_lift, method='graph', control=list(type='items'),
+     vertex.label.cex = .7, 
+     edge.arrow.size= .5,
+     edge.arrow.size= 5)
+
+plot(groceryrules_by_lift[1:20], method='graph', 
+     control=list(type='items'),
+     vertex.label.cex = .7, 
+     edge.color = 'dark',
+     edge.width = 10,
+     edge.arrow.size= .5,
+     edge.arrow.width = 2,
+     edge.arrow.size= 5)
+
+plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
+plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
 
 # ----
 # LoL Champoion Dataset :: sample-data.csv
