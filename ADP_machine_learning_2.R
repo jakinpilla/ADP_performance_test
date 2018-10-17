@@ -138,6 +138,30 @@ plot(groceryrules_by_lift[1:20], method='graph',
 plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
 plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
 
+# before item----
+# milk를 장바구니에 넣기 전에 구매할 가능성이 높은 제품
+milk_before <- apriori(basket.transaction, 
+                       parameter = list(support =0.0005, 
+                                        confidence = 0.0001,
+                                        minlen = 2), # 공백제거
+                       appearance = list(default='lhs', rhs='milk'),
+                       control = list(verbose=F))
+
+inspect(milk_before)[1:2]
+inspect(sort(milk_before, by='confidence', decreasing = T))
+
+# after item----
+# milk를 장박구니에 넣었다면 추가로 구매할 가능성이 높은 제품
+milk_after <- apriori(basket.transaction, 
+                       parameter = list(support =0.0005, 
+                                        confidence = 0.0001,
+                                        minlen = 2), # 공백제거
+                       appearance = list(default='rhs', lhs='milk'),
+                       control = list(verbose=F))
+
+inspect(sort(milk_after, by='confidence', decreasing = T))
+
+
 # ----
 # LoL Champoion Dataset :: sample-data.csv
 # load data and transder it into transactions format for apriori----
