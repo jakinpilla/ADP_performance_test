@@ -76,7 +76,9 @@ grid.arrange(p1, p2, p3, p4, ncol=2)
 
 # 변수명의 특수문자 처리----
 old_names <- names(data)
+old_names
 new_names <- make.names(names(data), unique=T) # 특수문자를 숫자로 바꾸어줌
+new_names
 cbind(old_names, new_names) [old_names != new_names,]
 
 names(data) <- new_names
@@ -292,6 +294,17 @@ abline(0, 1, col='blue')
 data.frame(method=c('glm', 'rf'), 
            auc = c(performance(pred_glm, 'auc')@y.values[[1]], 
                    performance(pred_rf, 'auc')@y.values[[1]]))
+
+# 
+
+
+
+
+
+
+
+
+
 
 
 
