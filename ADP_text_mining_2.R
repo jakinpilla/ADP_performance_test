@@ -39,4 +39,12 @@ tdm_rowsum_desc <- tdm_rowsum[order(tdm_rowsum, decreasing=T)]; tdm_rowsum_desc
 
 
 library(slam)
-as.data.frame()
+as.data.frame(row_sums(tdm_contents, na.rm=T)) -> wd_count_df
+wd_count_df %>%
+  colnames()
+wd_count_df %>% rename(freq = `row_sums(tdm_contents, na.rm = T)`) %>% head
+
+
+
+
+
