@@ -1,4 +1,6 @@
 # PCA
+setwd("C:/Users/Daniel/ADP_performance_test")
+getwd()
 
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'dummies', 'curl', 'gridExtra')

@@ -1,3 +1,6 @@
+setwd("C:/Users/Daniel/ADP_performance_test")
+getwd()
+
 # install.packages('tm')
 # install.packages('rJava')
 # install.packages('KoNLP')
