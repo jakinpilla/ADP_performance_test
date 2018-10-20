@@ -154,6 +154,40 @@ rowSums(as.matrix(dcasted[, -1]))
 data.frame(custid = dcasted$custid, 
            purchased = rowSums(as.matrix(dcasted[, -1]))) -> purchased_df; head(purchased_df)
 
+# 제품 카테고별 구매비용 변동계수(카테고리별 구매비용의 표준편차 / 평균) :: ct_cov 변수----
+head(tran)
+prod_ct_tbl <- read.csv('./data/prod_cate.csv'); head(prod_ct_tbl)
+colnames(prod_ct_tbl) <- c('prod', 'prod_ct') ; head(prod_ct_tbl)
+length(unique(prod_ct_tbl$prod_ct)) ## 84 --> 11
+
+## join----
+as.tibble(tran) -> tran
+tran %>% left_join(prod_ct_tbl, by='prod') -> tran
+head(tran)
+
+tran %>%
+  group_by(custid, prod_ct) %>%
+  summarise(sum_amt = sum(amt)) %>%
+  spread(prod_ct, sum_amt) %>%
+  replace(is.na(.), 0) -> tran_tmp
+
+head(tran_tmp)
+
+tran_tmp %>%
+  ungroup() %>%
+  select(-custid) -> tran_tmp; head(tran_tmp)
+
+library(matrixStats)
+tran_ct_mat <- as.matrix(tran_tmp)
+tran_tmp$ct_mean <- rowMeans(tran_tmp); head(tran_tmp)
+View(head(tran_tmp))
+
+tran_tmp$std <- rowSds(tran_ct_mat) ; head(tran_tmp)
+View(head(tran_tmp))
+
+num <- c(2300, 3540, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+sd(num)
+
 # with click streaming data----
 ## click-streaming data에서 시간은 transaction 데이터에서의 구매비용이라고 생각하면 된다.
 ## click-streaming data에서 사이트는 transaction 데이터에서의 제품이라고 생각하면 된다.
