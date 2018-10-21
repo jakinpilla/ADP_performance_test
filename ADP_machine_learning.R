@@ -21,15 +21,16 @@ data %>%
 
 summary(var_num)
 # g_paid, buyed_prod_num, pruchased, vdays, day_mean_amt variables are too large :: nomalize 
-scale(var_num) -> scaled_var_num
+scale(var_num) -> scaled_var_num # return matrix
 as.data.frame(scaled_var_num) -> var_num_df; head(var_num_df)
 
 str(data$gender)
 data$gender <- ifelse(data$gender == "f", 0, 1)
 data$custid <- as.character(data$custid)
 
+
 data %>% 
-  select(custid, gender) %>%
+  select(gender) %>%
   cbind(var_num_df) -> df
 
 glimpse(df)
@@ -57,15 +58,16 @@ dim(df.test)
 
 1255 + 417 + 417 # NA 값 등으로 인해 전처리 과정 상 없어진 데이터가 있음에 유의
 
+
 # model df.train----
 
 ## fitControl--
-fitControl <- trainControl(method='repeatedcv', number=10)
+fitControl <- trainControl(method='repeatedcv', number=10, repeats = 3)
 
 ## models fitting----
 
 ## 로지스틱 회귀--
-## 시간 소요 다대...극복방안은?
+## 문자형인 변수가 데이터에 들어 있으면 시간 다대 소요됨에 유의할 것
 glm_m <- train(gender ~., data=df.train, 
                method = 'glm', 
                family = binomial(link='logit'))
@@ -86,14 +88,51 @@ xgboost_m <- train(gender ~., data = df.train, method = 'xgbLinear',
                    trControl = fitControl)
 
 # 모형 평가 with validation data----
-model_arch <- validation %>% # model_val
-  mutate(GLM  = predict(glm_m, validation),
-         CART = predict(cart_m, validation),
-         RF = predict(rf_m, validation),
-         XGB = predict(xgboost_m, validation),
-         GBM = predict(gbm_m, validation))
+model_arch <- df.valid %>% # model_val
+  mutate(GLM  = predict(glm_m, df.valid),
+         CART = predict(cart_m, df.valid),
+         RF = predict(rf_m, df.valid),
+         XGB = predict(xgboost_m, df.valid))
 
-model_arch[, c('Class', 'CART', 'RF', 'XGB', 'GBM')] # model_val
+model_pred_result <- model_arch[, c('gender', 'GLM', 'CART', 'RF', 'XGB')] # model_val
+head(model_pred_result, 30)
+
+library(yardstick)
+
+metrics(model_arch, truth=gender, estimate = GLM)
+metrics(model_arch, truth=gender, estimate = CART)
+metrics(model_arch, truth=gender, estimate = RF)
+metrics(model_arch, truth=gender, estimate = XGB)
+# randomForest is winner.
+
+predict(rf_m, df.valid, type='prob') %>% head
+
+# model performance----
+df.test_perf <- df.test %>% # model_test
+  mutate(GLM = predict(glm_m, df.test),
+         CART = predict(cart_m, df.test),
+         RF = predict(rf_m, df.test),
+         XGB = predict(xgboost_m, df.test))
+
+metrics(df.test_perf, truth=gender, estimate = GLM)
+metrics(df.test_perf, truth=gender, estimate = CART)
+metrics(df.test_perf, truth=gender, estimate = RF)
+metrics(df.test_perf, truth=gender, estimate = XGB)
+# randomForest is winner.
+
+varImp(rf_m)
+
+yhat_rf <- predict(rf_m, df.test, type='prob')$`1`
+yhat_rf
+y_obs <- df.test$gender
+
+
+# ROC curve and AUC
+library(ROCR)
+pred_rf <- prediction(yhat_rf, y_obs)
+perf_rf <- performance(pred_rf, 'tpr', 'fpr')
+plot(perf_rf, main='ROC curve for glm model') 
+performance(pred_rf, 'auc')@y.values[[1]] # auc
 
 
 

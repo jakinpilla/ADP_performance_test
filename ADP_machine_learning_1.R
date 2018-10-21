@@ -104,11 +104,11 @@ data("GermanCredit")
 head(GermanCredit)
 glimpse(GermanCredit)
 # categorical var
+nrow(in_train) # 600
 
 # 1.2 데이터 분할, 훈련, 검증, 시험
 ## 훈련 및 검증/시험
 in_train <- createDataPartition(GermanCredit$Class, p=c(.6, .4), list=F)
-nrow(in_train) # 600
 training <- GermanCredit[in_train, ]
 validation_test <- GermanCredit[-in_train, ]
 
