@@ -48,7 +48,7 @@ head(cust_prod_ct_ratio)
 head(cust_prod_ct_amt)
 ## 0이 아닌 컬럼의 수 구하기
 cust_prod_ct_mat <- as.matrix(cust_prod_ct_amt[, -1])
-cust_prod_ct_mat_bin <- ifelse(cust_prod_ct_mat[, ] > 0, 1, 0)
+cust_prod_ct_mat_bin <- ifelse(cust_prod_ct_mat[, ] > 0, 1, 0) # 구매했으면 1, 안 했으면 0으로 치환
 round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
 cust_prod_ct_amt$coverage <- round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
 cust_coverage <- cust_prod_ct_amt[, c('custid', 'coverage')]; head(cust_coverage)
@@ -117,7 +117,7 @@ tran$wd <- factor(tran$wd, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", 
 glimpse(tran)
 Sys.setlocale("LC_TIME", "Korean_Korea.949") # Windows
 
-## 고객별 요일별 구메비용의 합을 구하기
+## 고객별 요일별 구매비용의 합을 구하기
 tran %>%
   group_by(custid, wd) %>%
   summarise(cust_wd_sum = sum(amt)) -> cust_wd_sum ; head(cust_wd_sum)
@@ -150,6 +150,9 @@ melt(tran, id.vars = c('custid', 'prod'), measure.vars = c('amt')) -> melted
 head(melted)
 
 dcast(melted, custid ~ prod, value.var = 'value') -> dcasted; head(dcasted)
+dcasted_mat <- as.matrix(dcasted)
+ifelse(dcasted[, -1] > 0, 1, 0) -> dcasted_bin; dim(dcasted_bin)
+rowSums(dcasted_bin)
 rowSums(as.matrix(dcasted[, -1]))
 data.frame(custid = dcasted$custid, 
            purchased = rowSums(as.matrix(dcasted[, -1]))) -> purchased_df; head(purchased_df)
@@ -185,8 +188,105 @@ View(head(tran_tmp))
 tran_tmp$std <- rowSds(tran_ct_mat) ; head(tran_tmp)
 View(head(tran_tmp))
 
-num <- c(2300, 3540, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-sd(num)
+## custid 붙이기----
+cust_g_paid %>%
+  head
+
+tran_tmp %>% 
+  select(ct_mean, std) %>%
+  mutate(ct_cov = std/ct_mean) %>% 
+  cbind(cust_g_paid[, 1]) %>% 
+  as.tibble() %>% 
+  select(custid, ct_cov) -> ct_cov_df; head(ct_cov_df)
+
+## 총 구매일수 :: vdays 변수 ----
+## 지금부터는 day를 기준으로...
+head(tran)
+tran %>%
+  group_by(custid) %>%
+  summarise(vdays = n_distinct(ymd)) -> vday_df; head(vday_df)
+head(vday_df)
+
+## 하루 평균 구매 비용 :: day_mean_amt 변수 ----
+cust_g_paid %>% 
+  left_join(vday_df, by='custid') %>%
+  mutate(day_mean_amt = (g_paid/vdays)) %>%
+  select(custid, day_mean_amt) -> day_mean_amt_df; head(day_mean_amt_df)
+
+## 일별 변동계수 :: 일일 구매비용의 `표준편차/평균` 값 :: daycov 변수 ----
+tran %>%
+  group_by(custid, ymd) %>%
+  summarise(sum_day_amt = sum(amt)) %>% as.data.frame() %>%
+  group_by(custid) %>%
+  summarise(day_sd_amt = sd(sum_day_amt)) %>%
+  replace(is.na(.), 0) -> day_sd_amt_df; 
+
+head(day_sd_amt_df)
+  
+day_sd_amt_df %>%
+  left_join(day_mean_amt_df, by='custid') %>%
+  mutate(daycov = (day_sd_amt / day_mean_amt)) %>%
+  select(custid, daycov) -> daycov_df 
+
+head(daycov_df)
+
+## 가장 많이 구매한 제품 :: top_prod 변수 ----
+head(tran)
+
+tran %>%
+  select(custid, prod) %>%
+  group_by(custid, prod) %>%
+  summarise(count = n()) %>%
+  arrange(custid, desc(count)) %>%
+  group_by(custid) %>%
+  summarise(top_prod = first(prod)) -> top_prod_df
+
+
+## ','로 고객별 구매한 물품을 하나이 row로 표현하기
+custid_prod_df %>%
+  group_by(custid) %>%
+  mutate(item_pur = paste(prod, collapse = ',')) -> item_pur_df; head(item_pur_df)
+
+head(item_pur_df)
+
+tran %>% 
+  filter(custid == 'C2048') # softdrink를 많이 구매하는 사람인지 여부 확인
+
+## 반대로는 어떻게 할 수 있을까??
+
+
+# cbinding every data----
+# 1. cust_prod_ct_ratio
+# 2. cust_coverage
+# 3. cust_g_paid
+# 4. cust_buyed_prod_num
+# 5. cust_time_bin_ratio
+# 6. cust_wd_ratio
+# 7. purchased_df
+# 8. ct_cov_df
+# 9. vday_df
+# 10. day_mean_amt_df
+# 11. daycov_df 
+# 12. top_prod_df
+
+head(cust_prod_ct_ratio)
+
+cust_prod_ct_ratio %>%
+  left_join(cust_coverage, by='custid') %>%
+  left_join(cust_g_paid, by='custid') %>%
+  left_join(cust_buyed_prod_num) %>%
+  left_join(cust_time_bin_ratio) %>%
+  left_join(cust_wd_ratio) %>%
+  left_join(purchased_df) %>%
+  left_join(ct_cov_df) %>%
+  left_join(vday_df) %>%
+  left_join(day_mean_amt_df) %>%
+  left_join(daycov_df) %>%
+  left_join(top_prod_df) -> data_total
+
+# 나중에 custid는 모두 factor로 변환하자.(warning)
+fix(data_total)
+write.csv(data_total, './data/data_total.csv') 
 
 # with click streaming data----
 ## click-streaming data에서 시간은 transaction 데이터에서의 구매비용이라고 생각하면 된다.
@@ -206,7 +306,7 @@ sd(num)
 # DAYTIME :: 하루 평균 체류시간(하루 평균 구매비용)
 # DAYCOV :: 일별 변동계수(일일 체류시간의 '표준편차/평균' 값)
 #           (일일 구매비용의 '표준편차/평균' 값)
-# SCH_KEYWORDS :: 네이버에서 검색한 검색량
+# SCH_KEYWORDS :: 네이버에서 검색한 검색량(transaxtion data에 matching 하기가 곤란함 --> 어떻게 전처리??)
 # SCH_TOPKEYWORD :: 네이버에서 가장 많이 검색한 검색어(가장 많이 구매한 상품 --> word embedding 필요)
 # GENDER :: 고객성별(남자/여자). 예측하고자 하는 값
 
