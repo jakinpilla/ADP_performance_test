@@ -223,6 +223,7 @@ image(basket.transaction[1:4000])
 # 100개 식료품의 무작위 샘플 시각화
 image(sample(basket.transaction, 100))
 
+# salvation
 
 
 

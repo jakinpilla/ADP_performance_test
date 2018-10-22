@@ -131,8 +131,11 @@ y_obs <- df.test$gender
 library(ROCR)
 pred_rf <- prediction(yhat_rf, y_obs)
 perf_rf <- performance(pred_rf, 'tpr', 'fpr')
-plot(perf_rf, main='ROC curve for glm model') 
+plot(perf_rf, main='ROC curve for glm model', col = 'red') 
+abline(0,1)
 performance(pred_rf, 'auc')@y.values[[1]] # auc
+
+# what is the next step?
 
 
 
