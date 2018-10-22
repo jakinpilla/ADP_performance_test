@@ -96,7 +96,7 @@ titanic %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
 # '_imp' 로 끝나는 새로운 변수로 imputation 하기
 titanic %>%
-  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .)))
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
 
 ## 범주형 변수에 NA가 함께 있을 경우 문자 "NA"로 대체하기
 titanic %>%
@@ -137,7 +137,7 @@ fivenum(df_imdb_budget_na_drop$budget)[4]
 
 ## Q3 + 1.5*IQR
 fivenum(df_imdb_budget_na_drop$budget)[4] + 1.5*IQR(df_imdb_budget_na_drop$budget) # 1.01e+08
-boxplot(df_imdb_budget_na_drop$budget)$stat[5]
+boxplot(df_imdb_budget_na_drop$budget)$stat[5] # stat[1] and stat[5] are outlier fence
 
 max(df_imdb_budget_na_drop$budget)
 min(df_imdb_budget_na_drop$budget)
@@ -220,7 +220,13 @@ nrow(df_imdb)
 
 df_imdb %>%
   select(director_name) %>%
-  distinct()
+  distinct() 
+
+## 고유한 값들의 개수를 파악하기(nrow())
+df_imdb %>%
+  select(director_name) %>%
+  distinct()  %>%
+  nrow()
 
 df_imdb %>%
   select(num_critic_for_reviews) %>%
@@ -241,6 +247,21 @@ df_imdb %>%
   summarise(count=n()) %>%
   arrange(desc(count))
 
+head(df_imdb)
+df_imdb %>%
+  drop_na() %>%
+  group_by(director_name) %>%
+  mutate(first_duration = first(duration)) %>%
+  select(director_name, first_duration)
+
+df_imdb %>%
+  drop_na() %>%
+  group_by(director_name) %>%
+  mutate(last(duration)) %>%
+  mutate(last_duration = last(duration)) %>%
+  select(director_name, last_duration)
+
+
 ## 특정 컬럼명 바꾸기(director_name --> direc_nm)
 df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = 기본 변수명(director_name)
 
@@ -249,6 +270,7 @@ df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = �
 names(df_imdb) <- tolower(gsub('_', '.', make.names(names(df_imdb), unique = T)))
 head(df_imdb)
 
+make.names(names(df_imdb))
 # melt / cast
 data("airquality"); head(airquality)
 names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 대문자를 소문자로 변환
