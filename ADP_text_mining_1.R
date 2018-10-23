@@ -27,7 +27,7 @@ options(mc.cores=1) # not multi_core
 
 
 # 단어 사전에 추가하기----
-tvpro_nm <- read_csv("./data/tvprograms_name.txt", col_names = FALSE)
+tvpro_nm <- read_csv("./data/tvprograms_name.txt", col_names = FALSE); tvpro_nm
 tvpro_nm_df <- as.data.frame(t(tvpro_nm))
 rownames(tvpro_nm_df) <- NULL; tvpro_nm_df
 rep('ncn', nrow(tvpro_nm_df))
@@ -116,6 +116,8 @@ dim(tdm_title_mat)
 
 ## pro_names가 있는 행들만 추출----
 tdm_title_extracted <- tdm_title[dimnames(tdm_title)$Terms %in% pro_names, ] # TDM 에서 추출한다.
+dim(tdm_title_extracted) # 9개의 행들만 추출된 matrix
+
 title_mat <- as.matrix(tdm_title_extracted)
 str(title_mat)
 rownames(title_mat)
@@ -178,7 +180,7 @@ dim(total_df)
 date_df <- data.frame(date = tvpro$date, month=tvpro$month)
 dim(date_df)
 
-data <- cbind(date_df, total_df)
+data <- cbind(date_df, total_df); head(data)
 
 # aggregate date grouped by month
 head(data)
@@ -204,10 +206,10 @@ melted <- melt(data_mon_sum , id.vars = 'month'); head(melted)
 
 windows()
 ggplot(melted, aes(x=month, y=value, fill=variable)) +
-  geom_bar(position='dodge', stat='identity') + scale_y_continuous()
+  geom_bar(position='dodge', stat='identity', color = 'black') + scale_y_continuous()
 
 ggplot(melted, aes(x=month, y=value, fill=variable)) +
-  geom_bar(position='fill', stat='identity') + scale_y_continuous(labels = scales :: percent)
+  geom_bar(position='fill', stat='identity', color='black') + scale_y_continuous(labels = scales :: percent)
 
 # legend를 한글로 바꾸는 방법...
 
@@ -261,27 +263,39 @@ length(rowSums(tdm_contents_mat))
 word_freq_df <- data.frame(words = rownames(tdm_contents_mat),
                            freq = rowSums(tdm_contents_mat))
 rownames(word_freq_df) <- NULL
-head(word_freq_df)
+head(word_freq_df); str(word_freq_df)
+word_freq_df$words <- as.character(word_freq_df$words)
 
 word_freq_df %>%
   arrange(desc(freq)) 
 
-head(word_freq_df)
+head(word_freq_df);
 word_freq_df$words
+str(word_freq_df)
+
 nchar(word_freq_df$words)
 
 word_freq_df %>%
   mutate(leng_words = str_length(words)) %>% # 각 단어의 character 수를 세기
   arrange(desc(freq)) %>%
   filter(leng_words > 2) %>%
-  slice(1:100) -> word_df
+  slice(1:100) -> word_df; head(word_df)
   
 # worocloud----
-wordcloud(words = word_df$words, freq=word_df$freq, random.order=FALSE)
+windowsFonts(malgun=windowsFont("맑은 고딕"))
+wordcloud(words = word_df$words, 
+          freq=word_df$freq, 
+          random.order=FALSE, 
+          family = 'malgun')
 
-wordcloud(words = word_df$words, freq=(word_df$freq/min(word_df$freq)), random.order=FALSE, 
-          colors=brewer.pal(6,"Dark2"), random.color=TRUE)
-## 프로그램명 유추 :: 무한도전, 복면가왕, 1박2일, 삼시세끼, 한끼줍쇼, 나혼자산다, 아는형님 등으로 유추가능
+wordcloud(words = word_df$words, 
+          freq=(word_df$freq/min(word_df$freq)), 
+          random.order=FALSE, 
+          colors=brewer.pal(6,"Dark2"), 
+          random.color=TRUE,
+          family = 'malgun')
+
+## 워드크라우드를 보고 프로그램명 유추 :: 무한도전, 복면가왕, 1박2일, 삼시세끼, 한끼줍쇼, 나혼자산다, 아는형님 등으로 유추가능
 
 
 # 월별 각 프로그램들의 등장 횟수 구하기
@@ -305,7 +319,7 @@ dtm_contents_mat <- t(contents_mat)
 dim(dtm_contents_mat)
 
 # add date and month columns----
-View(head(as.data.frame(dtm_contents_mat))[1:50, ])
+# View(head(as.data.frame(dtm_contents_mat))[1:50, ])
 dtm_df <-  as.data.frame(dtm_contents_mat)
 dim(dtm_df)
 
@@ -334,11 +348,20 @@ pro_words <- c('1박2일', '나혼자산다', '무한도전', '복면가왕', '�
 melt(data_grouped, id.var='month') %>%
   filter(month == '2016-10') -> word_df
 
-words_df <- cbind(word_df, pro_words)
+words_df <- cbind(word_df, pro_words); head(words_df)
 
-wordcloud(words = words_df$pro_words, freq=words_df$value, random.order=FALSE)
-wordcloud(words = words_df$pro_words, freq=(words_df$value/min(words_df$value)), 
-          random.order=FALSE, colors=brewer.pal(6,"Dark2"), random.color=TRUE)
+wordcloud(words = words_df$pro_words, 
+          freq=words_df$value, 
+          random.order=FALSE,
+          family = 'malgun')
+
+
+wordcloud(words = words_df$pro_words, 
+          freq=(words_df$value/min(words_df$value)), 
+          random.order=FALSE, 
+          colors=brewer.pal(6,"Dark2"), 
+          random.color=TRUE, 
+          family='malgun')
 
 # ...
 
