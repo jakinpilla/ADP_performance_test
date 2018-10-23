@@ -19,23 +19,35 @@ tran <- read.csv('./data/transaction.csv'); head(tran)
 ## 제품 카테고리별 구매비용 비율 :: ct_xxx 파생변수 만들기 ----
 length(unique(tran$prod))
 
+## instead..
+tran %>%
+  select(prod) %>%
+  summarise(dict_count =n_distinct(prod))
+
+## like python value.count()--
+tran %>%
+  select(prod) %>%
+  group_by(prod) %>%
+  tally() %>% arrange(desc(n))
+
+## load prod_cate.csv and join the tbl--
 prod_ct_tbl <- read.csv('./data/prod_cate.csv'); head(prod_ct_tbl)
 colnames(prod_ct_tbl) <- c('prod', 'prod_ct') ; head(prod_ct_tbl)
 length(unique(prod_ct_tbl$prod_ct)) ## 84 --> 11
 
-## join----
+## join--
 as.tibble(tran) -> tran
 tran %>% left_join(prod_ct_tbl, by='prod') -> tran
 tran %>% 
   group_by(custid, prod_ct) %>%
-  summarise(sum.prod_ct = sum(amt)) -> tran_grouped
+  summarise(sum.prod_ct = sum(amt)) -> tran_grouped; head(tran_grouped); dim(tran_grouped)
 
-# pivotting----
+# pivotting--
 melted <- melt(tran_grouped, id.vars=c('custid', 'prod_ct'), measure.vars = c('sum.prod_ct')); head(melted)
 dcast(melted, custid ~ prod_ct, value.var = 'value') -> dcasted; head(dcasted)
 dcasted %>% replace(is.na(.), 0) -> cust_prod_ct_amt; head(cust_prod_ct_amt)
 
-# rowsum and ratio----
+# rowsum and ratio--
 cust_prod_ct_amt %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_ct_sum; head(cust_prod_ct_sum)
 round(cust_prod_ct_amt[, -1] / cust_prod_ct_sum$total.amt, 2) -> cust_prod_ct_ratio
 class(cust_prod_ct_ratio)
@@ -43,6 +55,31 @@ cust_prod_ct_ratio <- cbind(custid =cust_prod_ct_amt[, 1], cust_prod_ct_ratio); 
 paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1]))
 colnames(cust_prod_ct_ratio) <- c('custid', paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1])))
 head(cust_prod_ct_ratio)
+
+## instead pivotting with dplyr--
+head(tran_grouped)
+
+tran_grouped %>%
+  spread(prod_ct, value = sum.prod_ct) %>%
+  replace(is.na(.), 0) %>% as.data.frame() -> trans_grouped_df; head(trans_grouped_df)
+
+dim(trans_grouped_df)
+data.frame(custid = trans_grouped_df$custid) -> custid_df; head(custid_df)
+
+trans_grouped_df %>%  
+  select(-custid) %>%
+  mutate(total.sum = rowSums(.)) -> tran_g_spread; head(tran_g_spread)
+
+(as.matrix(tran_g_spread) / tran_g_spread$total.sum) %>%
+  round(2) %>% as.data.frame() %>%
+  select(-total.sum) -> prod_ct_ratio; head(prod_ct_ratio)
+
+colnames(prod_ct_ratio) <- paste0('ct_', colnames(prod_ct_ratio)); head(prod_ct_ratio)
+
+ct_ratio_df <- cbind(custid = trans_grouped_df$custid, 
+                     prod_ct_ratio); head(ct_ratio_df)
+
+##-----
 
 ## 서로 다른 카테고리의 제품을 얼마나 다양하게 구매하였는지에 대한 비율 :: coverage 파생변수 만들기----
 head(cust_prod_ct_amt)
@@ -53,11 +90,28 @@ round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
 cust_prod_ct_amt$coverage <- round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
 cust_coverage <- cust_prod_ct_amt[, c('custid', 'coverage')]; head(cust_coverage)
 
+## instead...
+as.matrix(ct_ratio_df[, -1]) -> ct_ratio_mat; ct_ratio_mat[1:10, 1:11] # matrix 변환 전 custid 컬럼을 제거해야 함에 유의
+ifelse(ct_ratio_mat > 0, 1, 0) -> ct_bin_mat; ct_bin_mat[1:10, 1:11]
+ncol(ct_bin_mat)
+
+as.data.frame(ct_bin_mat) %>% 
+  mutate(total.sum = rowSums(.)) %>%
+  mutate(coverage = total.sum/ncol(ct_bin_mat)) %>%
+  mutate(coverage = round(coverage, 2)) %>%
+  select(coverage) -> coverage_df; head(coverage_df)
+
+cbind(custid = trans_grouped_df$custid, coverage_df) -> coverage_df ; head(coverage_df)
+
+##----
+
 ## 총 구매비용 구하기 :: g_paid----
 head(tran)
 tran %>% 
   group_by(custid) %>%
   summarise(g_paid = sum(amt)) -> cust_g_paid; head(cust_g_paid)
+
+##----
 
 ## 총 구매 제품 종류의 수 구하기 :: buyed_prod_num----
 ## tran dataset에서는 하나의 row가 하나의 prod에 해당하므로 단순 count로 구한다.
@@ -66,31 +120,32 @@ tran %>%
   group_by(custid) %>%
   summarise(buyed_prod_num = n())  -> cust_buyed_prod_num; head(cust_buyed_prod_num)
 
+##----
 
 ## 기간대별 구매금액의 비율 구하기 :: hf_xxx----
 
-## 시간 변수를 생성----
+## 시간 변수를 생성--
 as.character(tran$time) -> tran$time; glimpse(tran)
 as.numeric(substr(tran$time, 1, 2)) -> tran$time; glimpse(tran)
 
-## 시간 binning----
+## 시간 binning--
 tran %>% mutate(h_bin = cut(time, 
                             breaks = c(0, 6, 12, 18, 23),
                             include.lowest = T, # 0을 그룹에 포함시키기 위해 반드시 필요, 아니면 NA값 반환됨.
                             labels=c('0-5', '6-11', '12-17', '18-23'))) -> tran; glimpse(tran)
 
-## 고객별 시간대별 총 지출비용 구하기----
+## 고객별 시간대별 총 지출비용 구하기--
 tran %>%
   group_by(custid, h_bin) %>%
   summarise(sum_paid_time_bin = sum(amt)) -> time_bin_paid; head(time_bin_paid)
 
-## pivotting----
+## pivotting--
 melted <- melt(time_bin_paid, id.vars=c('custid', 'h_bin'), 
                measure.vars = c('sum_paid_time_bin')); head(melted)
 dcast(melted, custid ~ h_bin, value.var = 'value') -> dcasted; head(dcasted)
 dcasted %>% replace(is.na(.), 0) -> cust_time_bin_paid; head(cust_time_bin_paid)
 
-## hf_xxx 변수 만들기----
+## hf_xxx 변수 만들기--
 cust_time_bin_paid %>% mutate(total.amt = rowSums(.[-1])) -> cust_time_bin_sum; 
 head(cust_time_bin_sum)
 round(cust_time_bin_paid[, -1] / cust_time_bin_sum$total.amt, 2) -> cust_time_bin_ratio
@@ -102,6 +157,21 @@ head(cust_time_bin_ratio)
 paste0('hf', '_', colnames(cust_time_bin_paid[, -1]))
 colnames(cust_time_bin_ratio) <- c('custid', paste0('hf', '_', colnames(cust_time_bin_paid[, -1])))
 head(cust_time_bin_ratio)
+
+## instead--
+head(time_bin_paid)
+time_bin_paid %>%
+  spread(h_bin, sum_paid_time_bin) %>%
+  replace(is.na(.), 0) %>% as.data.frame() %>%
+  select(-custid) %>% 
+  mutate(total.sum = rowSums(.)) -> df_tmp; head(df_tmp)
+  
+(as.matrix(df_tmp) / df_tmp$total.sum) %>%
+  round(2) %>% as.data.frame() %>%
+  select(-total.sum) %>% setNames(paste0('hf_', names(.))) %>% 
+  cbind(custid = trans_grouped_df$custid, .) -> hf_df; head(hf_df)
+
+##----
 
 # 요일별 구매비용 비율 구하기 :: wdf_xxx ----
 tran <- read.csv('./data/transaction.csv'); head(tran)
@@ -143,6 +213,22 @@ head(cust_wd_sum_ratio)
 # cbind custid----
 cust_wd_ratio <- cbind(custid =cust_wd_sum[, 1], cust_wd_sum_ratio)
 head(cust_wd_ratio)
+
+## instead--
+head(cust_wd_sum)
+cust_wd_sum %>%
+  spread(wd, cust_wd_sum) %>%
+  replace(is.na(.), 0) %>% as.data.frame() %>%
+  select(-custid) %>%
+  mutate(total.sum = rowSums(.)) -> wd_df_tmp; head(wd_df_tmp)
+  
+(as.matrix(wd_df_tmp)/wd_df_tmp$total.sum) %>%
+  round(2) %>% as.data.frame() %>%
+  select(-total.sum) %>% 
+  setNames(paste0('wdf_', names(.))) %>% 
+  cbind(custid = custid_df$custid, .) -> wdf_df; head(wdf_df)
+
+
 
 # 구매한 서로 다른 제품의 수 :: purchased 변수 ----
 head(tran)
