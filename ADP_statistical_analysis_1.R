@@ -109,7 +109,7 @@ chall %>% ggplot(aes(factor(distress_ct), temperature)) + geom_boxplot()
 
 # 반응변수가 2차원 매트릭스(성공회수, 실패횟수)
 model <- glm(cbind(distress_ct, o_ring_ct - distress_ct) ~ temperature, 
-             data = chall, family='binomial')
+             data = chall, family='binomial') # 로지스틱 회귀
 summary(model) # temperature의 효과 :: 온도 1도 상승할 때 로그 오즈비가 0.179 감소??
 # 모형의 적합도 :: degree F가 1 줄었을때 deviance 충분히 감소 :: 적합
 
@@ -135,7 +135,7 @@ read.table('./data/housing_data.csv') -> boston
 names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'rad',  
                    'tax', 'ptratio', 'black', 'lstat', 'medv')
 glimpse(boston)
-
+set.seed(2018)
 boston %>% sample_n(100) -> training
 model <- lm(medv~., data=training)
 summary(model) # 연관성이 높은 변수 :: lstat, rm
@@ -143,15 +143,19 @@ summary(model) # 연관성이 높은 변수 :: lstat, rm
 # rm :: average number of rooms per dwelling
 
 coef(model)
-fitted(model)[1:4] # fitted value (80, 401, 274, 251 번째 데이터의 fitted value)
-boston$medv[c(80, 401, 274, 251)] # observed value
+fitted(model)[1:4] # fitted value (171, 235, 31, 100 번째 데이터의 fitted value)
+boston$medv[c(171, 235, 31, 100)] # observed value
 residuals(model)[1:4] # observed value - fitted value
 confint(model) # 신뢰구간 (정확한 의미 파악 필요)
 
 # with ad_result.csv data----
-data <- read.csv('./data/ad_result.csv')
 m <- lm(install ~., data = data[,c('install', 'tvcm', 'magazine')])
 summary(m) # 유의미한 변수는?
+
+data <- read.csv('./data/ad_result.csv'); head(data)
+data %>%
+  select_if(is.numeric) %>%
+  lm(install ~ ., .) -> m; summary(m)
 
 coef(m)
 fitted(m)
@@ -166,6 +170,10 @@ predict(m, newdata = data.frame(speed=3), interval = 'confidence') # 평균적�
 predict(m, newdata = data.frame(speed=3), interval = 'prediction') # 특정속도 차량 한 대(오차)
 
 # 다중선형회귀----
+
+# Godd feature subsets contain features highly correlated with the classification, yet 
+# uncorrelaetd to each other.
+
 m <- lm(Sepal.Length ~ ., data=iris)
 summary(m) # Speciesversicolor, Speciesvirginica
 anova(m) # Species의 p-value 확인 / 의미파악하기
@@ -195,6 +203,23 @@ m2 <- step(m, direction = 'both')
 formula(m2)
 # predict(m2, newdata=...)
 
+write.csv(bio, './data/bio.csv', row.names = F)
+bio <- read.csv('./data/bio.csv')
+glimpse(bio)
+
+# 전진소거법
+step(lm(pemax~1, bio), 
+     scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), 
+     direction = 'forward') # 변수를 weight와 bmp로 선택
+
+# 후진소거법
+step(lm(pemax~age+weight+bmp+rv+frc+tlc, bio), 
+     direction = 'backward')
+
+# 단계별 소거법
+step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'both')
+
+
 # ANOVA 분산분석, 모델간 비교(다변량)----
 (full <- lm(dist ~ speed, data=cars))
 (reduced <- lm(dist ~ 1, data = cars))
@@ -202,6 +227,7 @@ anova(reduced, full) # 1.49e-12 *** :: 이 두 모델간에는 유의한 차이�
 
 # 상호작용 확인----
 head(Orange)
+range(Orange$age)
 with(Orange, interaction.plot(age, Tree, circumference)) # age, Tree와의 상호작용이 circumference에 어떤 영향??
 
 # 순서있는 범주형 -> 순서없는 범주형 :: 이유는??
@@ -209,7 +235,7 @@ Orange[, 'ftree'] <- factor(Orange[, 'Tree'], ordered=F)
 
 m <- lm(circumference ~ ftree*age, data=Orange)
 m1 <- lm(circumference ~ ftree + age, data=Orange)
-anova(m, m1)
+anova(m, m1) # p-value = 9.402e-05 *** 이므로 두 모형 간에는 유의한 차이가 있음, 교호작용이 있음.
 
 model_2 <- lm(medv ~ .^2, data=training) # 2차 상호작용 모형
 summary(model_2) # 대부분의 변수가 유의하지 않음
@@ -221,9 +247,18 @@ summary(df_imdb)
 
 df_imdb %>%
   ggplot(aes(content_rating)) + geom_bar()
+
 df_imdb %>% 
   filter(content_rating %in% c('G', 'PG', 'PG-13', 'R')) %>%
-  ggplot(aes(content_rating, imdb_score)) + geom_boxplot()
+  ggplot(aes(content_rating, imdb_score)) + 
+  geom_point(alpha=.3, color = 'grey') + 
+  geom_jitter() + 
+  geom_boxplot(alpha=.7)
+
+df_imdb %>%
+  filter(content_rating %in% c("G", "PG", "PG-13", "R")) %>%
+  ggplot(aes(imdb_score, fill=content_rating, linetype=content_rating)) + 
+  geom_density(alpha=.3) # density plot..
 
 summary(lm(imdb_score ~ content_rating, 
            data = df_imdb %>% filter(content_rating %in% c('G', 'PG', 'PG-13', 'R'))))
@@ -235,6 +270,26 @@ df_imdb %>%
 
 df_imdb %>%
   ggplot(aes(movie_facebook_likes)) + geom_histogram() + scale_x_log10()
+
+# 좋아요 개수와 스코어 간의 산점도
+df_imdb %>%
+  ggplot(aes(movie_facebook_likes, imdb_score)) + 
+  geom_point() + 
+  scale_x_log10() +
+  geom_smooth()
+
+# 2010년 이전과 이후의 좋아요 개수의 분포가 상이함을 확인 
+df_imdb %>%
+  ggplot(aes(as.factor(title_year), movie_facebook_likes)) +
+  geom_boxplot() +
+  scale_y_log10()
+
+df_imdb %>%
+  filter(title_year > 2010 & country == 'USA') %>%
+  ggplot(aes(movie_facebook_likes, imdb_score)) +
+  geom_point() +
+  scale_x_log10() +
+  geom_smooth()
 
 # '좋아요' 100개 넘으면 두 변수 상관관계 높음
 df_imdb_l00_more <- df_imdb %>%
@@ -257,6 +312,37 @@ anova(m)
 
 ## 분류모델평가----
 ## with randomForest model applied with titanic dataset
+
+read.csv('./data/titanic_preprocessed.csv') -> titanic; glimpse(titanic)
+titanic$pclass <- as.factor(titanic$pclass)
+titanic$sex <- as.factor(titanic$sex)
+titanic$embarked <- as.factor(titanic$embarked)
+glimpse(titanic)
+
+# 1) 학습/평가 데이터셋 분리
+nrow(titanic)
+idx <- createDataPartition(titanic$survived, p=.8, list=F)
+titanic.train <- titanic[idx, ]
+titanic.test <- titanic[-idx, ]
+head(titanic.train)
+head(titanic.test)
+
+# survived and dead ratio check between train dataset and test dataset
+prop.table(table(titanic.train$survived))
+prop.table(table(titanic.test$survived))
+
+# 2) 각 모델에 동일한 평가방법 적용
+fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
+# 머신러닝 알고리즘별 최적 모수를 찾기 위한 학습방법 사전 설정
+
+# 예측 모델 작성_1 ::: RandomForest
+# install.packages('e1071')
+library(e1071)
+rf_fit <- train(survived ~ ., data=titanic.train,
+                preProcess = c("pca"),
+                method='rf', ntree=100, verbose=F, trControl=fitControl)
+
+
 predicted <- predict(rf_fit, newdata = titanic.test) # predicted values
 actual <- titanic.test$survived # actual values
 length(predicted)
@@ -272,16 +358,16 @@ library(ROCR)
 # probs :: 분류 알고리즘이 예측한 점수(predicted probability)
 # labels는 실제 분류true class가 저장된 벡터(actual vectors)
 
-prob <- predict(rf_fit, newdata = titanic.test, type='prob')$survived ## the predicted prob of survived
-head(prob)
-labels <- actual # label :: actual vectors
-head(labels)
+yhat_rf <- predict(rf_fit, newdata = titanic.test, type='prob')$survived ## the predicted prob of survived
+head(yhat_rf)
+y_obs <- titanic.test$survived # label :: actual vectors
+head(y_obs)
 # ROCR package를 적용하기 위해 prediction 를 생성해야 함
-pred <- prediction(prob, labels)
-plot(performance(pred, 'tpr', 'fpr')) # ROC curve
+pred_rf <- prediction(yhat_rf, y_obs)
+plot(performance(pred_rf, 'tpr', 'fpr')) # ROC curve
 abline(0,1)
-plot(performance(pred, 'acc')) ## cutoff에 따른 accuracy 변화
-performance(pred, 'auc')@y.values[[1]] # auc
+plot(performance(pred_rf, 'acc')) ## cutoff에 따른 accuracy 변화
+performance(pred_rf, 'auc')@y.values[[1]] # auc
 
 # 회귀모델 평가 RMSE :: 작을수록 정확----
 ## with lm model applied with boston housing data
@@ -291,7 +377,7 @@ names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'ra
 glimpse(boston)
 
 # splitting total dataset into training and validation dataset
-idx <- createDataPartition(boston$medv, p=c(.6, .4))[[1]]
+idx <- createDataPartition(boston$medv, p=c(.6, .4), list=F)
 boston.train <- boston[idx, ]; dim(boston.train)
 boston.validation_test <- boston[-idx, ]; dim(boston.validation_test)
 
@@ -304,14 +390,14 @@ m <- lm(medv~., data=boston.train)
 summary(m)
 
 # defining rmse function----
-rmse <- function(y,yp) {
-  sqrt(mean(y - yp)^2)
+rmse <- function(y_obs, yhat) {
+  sqrt(mean(y_obs - yhat)^2)
 }
 
-actual <- boston.validation$medv
-pred <- predict(m, newdata=boston.validation)
+y_obs <- boston.validation$medv
+yhat_m <- predict(m, newdata=boston.validation)
 
-rmse(actual, pred)
+rmse(y_obs, yhat_m) # 작을 수록 정확한 모델
 
 # 로지스틱 회귀 :: income이 <=50K", ">50K인지 여부 예측 with adult data
 adult <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
@@ -347,19 +433,19 @@ range(predict(m, newdata = adult.test, type='response'))
 range(predict(m, newdata = adult.test))
 
 # evaluation
-pred <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
-actual <- adult.test$income
+yhat_m_class <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
+y_obs <- adult.test$income
 
-xtabs(~ pred + actual)
-sum(pred == actual) / length(actual)
-confusionMatrix(pred, actual)
+xtabs(~ yhat_m_class + y_obs)
+sum(yhat_m_class == y_obs) / length(y_obs)
+confusionMatrix(yhat_m_class, y_obs)
 
 # ROC curve and AUC----
 library(ROCR)
-prob <- predict(m, newdata = adult.test, type='response'); prob
-actual <- adult.test$income; actual
+yhat_glm <- predict(m, newdata = adult.test, type='response'); yhat_glm
+y_obs  <- adult.test$income; y_obs
 
-pred <- prediction(prob, actual)
+pred <- prediction(yhat_glm, y_obs)
 plot(performance(pred, 'tpr', 'fpr'))
 abline(0,1)
 
@@ -367,7 +453,7 @@ plot(performance(pred, 'acc')) # cutoff 에 따른 accuracy의 변화
 performance(pred, 'auc')@y.values[[1]] # auc
 
 # 로지스틱 회귀 :: left or not인지 여부 예측 with hr data----
-hr <- read_csv("data/hr_comma_sep.csv")
+hr <- read_csv("./data/hr_comma_sep.csv")
 colnames(hr) <- tolower(colnames(hr)); head(hr)
 
 table(hr$left)
@@ -392,7 +478,6 @@ idx <- setdiff(idx, training_idx)
 validate_idx <- sample(idx, n*.2)
 test_idx <- setdiff(idx, validate_idx)
 
-
 length(training_idx); length(validate_idx); length(test_idx)
 
 training <- hr[training_idx, ]
@@ -404,21 +489,20 @@ hr_glm_full <- glm(left ~., data=training, family = binomial); summary(hr_glm_fu
 
 
 ## prediction accuracy visualization----
-actual <- validation$left
-pred <- predict(hr_glm_full, newdata=validation, type='response')
+y_obs <- validation$left
+yhat_glm <- predict(hr_glm_full, newdata=validation, type='response')
 
-ggplot(data.frame(actual, pred), 
-       aes(pred, fill=factor(actual))) + geom_density(alpha=.5)
+ggplot(data.frame(y_obs, yhat_glm), 
+       aes(yhat_glm, fill=factor(y_obs))) + geom_density(alpha=.5)
 
 ## ROCR :: ROC curve and AUC----
 library(ROCR)
-pred_lm <- prediction(pred, actual) # pred :: probability
-perf_lm <- performance(pred_lm, 'tpr', 'fpr')
-plot(perf_lm, main='ROC curve for glm model') # ROC curve
-performance(pred_lm, 'auc')@y.values[[1]] # auc
+pred_glm <- prediction(yhat_glm, y_obs) # pred :: probability
+perf_glm <- performance(pred_glm, 'tpr', 'fpr')
+plot(perf_glm, main='ROC curve for glm model') # ROC curve
+performance(pred_glm, 'auc')@y.values[[1]] # auc
 
 # 로지스틱 회귀 :: cancer or not인지 여부 예측 with breast cancer----
-
 ## data downloading with curl----
 library(curl)
 h <- new_handle(copypostfields = "moo=moomooo")
@@ -444,8 +528,8 @@ names(data) <-
 glimpse(data)
 
 ## define needed functions----
-rmse <- function(yi, yhat_i){
-  sqrt(mean((yi - yhat_i)^2))
+rmse <- function(y_obs, yhat){
+  sqrt(mean((y_obs - yhat)^2))
 }
 
 binomial_deviance <- function(y_obs, yhat){
@@ -460,20 +544,24 @@ binomial_deviance <- function(y_obs, yhat){
 # cleansing data----
 data <- data %>% select(-id)
 data$class <- factor(ifelse(data$class == 'B', 0, 1))
-glimpse(data); summary(data)
+glimpse(data)
+summary(data)
 
 # data EDA----
 library(gridExtra)
-windows()
 p1 <- data %>% ggplot(aes(class)) + geom_bar()
+
 p2 <- data %>% ggplot(aes(class, mean_concave_points)) +
   geom_jitter(col='gray') +
   geom_boxplot(alpha=.5)
+
 p3 <- data %>% ggplot(aes(class, mean_radius)) +
   geom_jitter(col='gray') +
   geom_boxplot(alpha=.5)
+
 p4 <- data %>% ggplot(aes(mean_concave_points, mean_radius)) +
   geom_jitter(col='gray') + geom_smooth()
+
 grid.arrange(p1, p2, p3, p4, ncol=2)
 
 # data splitting
@@ -506,8 +594,8 @@ pred_lm <- prediction(yhat_lm, y_obs)
 plot(performance(pred_lm, 'tpr', 'fpr'))
 abline(0,1)
 performance(pred_lm, 'auc')@y.values[[1]]
-
 binomial_deviance(y_obs, yhat_lm)
+
 
 
 
