@@ -1,10 +1,6 @@
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-# install.packages('yardstick')
-# install.packages('party')
-# install.packages('randomForest')
-
 # 여러 개의 패키지를 한 번에 읽기
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'dummies', 'curl', 'gridExtra')
@@ -12,7 +8,7 @@ Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', '
 lapply(Packages, library, character.only=T)
 
 # logistic trgression with spambase----
-# data loading----
+# data loading(ham or spam)----
 h <- new_handle(copypostfields = "moo=moomooo")
 handle_setheaders(h,
                   "Content-Type" = "text/moo",
@@ -45,10 +41,7 @@ names(data) <-
     'class'
   )
 
-head(data)
-names(data)[58] <- 'class'
-data$class <- factor(data$class)
-glimpse(data)
+data$class <- factor(data$class); glimpse(data)
 
 tmp <- as.data.frame(cor(data[,-58], as.numeric(data$class))); head(tmp)
 tmp <- tmp %>% rename(cor=V1)
@@ -73,14 +66,12 @@ p4 <- data %>% ggplot(aes(class, capital_run_length_longest)) +
   scale_y_log10()
 grid.arrange(p1, p2, p3, p4, ncol=2)
 
-
 # 변수명의 특수문자 처리----
 old_names <- names(data)
 old_names
-new_names <- make.names(names(data), unique=T) # 특수문자를 숫자로 바꾸어줌
+new_names <- make.names(names(data), unique=T) # make.names() :: 특수문자를 숫자로 바꾸어줌
 new_names
-cbind(old_names, new_names) [old_names != new_names,]
-
+cbind(old_names, new_names) [old_names != new_names,] # beautiful coding..
 names(data) <- new_names
 
 # splitting dataset----
@@ -107,8 +98,8 @@ yhat_lm_train <- predict(data_lm_full, newdata=training, type='response')
 yhat_lm_test <- predict(data_lm_full, newdata=test, type='response')
 
 # model evalidation----
-mse <- function(yi, yhat_i){
-  sqrt(mean((yi - yhat_i)^2))
+rmse <- function(y_obs, yhat){
+  sqrt(mean((y_obs - yhat)^2))
 }
 
 binomial_deviance <- function(y_obs, yhat){
@@ -119,6 +110,7 @@ binomial_deviance <- function(y_obs, yhat){
   b = ifelse(y_obs==1, 0, (1-y_obs) * log((1-y_obs)/(1-yhat)))
   return(2*sum(a + b))
 }
+
 y_obs <- as.numeric(as.character(validation$class))
 yhat_lm <- predict(data_lm_full, newdata=validation, type='response')
 pred_lm <- prediction(yhat_lm, y_obs)
@@ -152,6 +144,9 @@ xtabs(~ yhat + iris$Species)
 # 수량형 변수를 팩터로 변환, 의사결정나무에 적합
 # loading titanic_preprocessed dataset
 read.csv('./data/titanic_preprocessed.csv') -> titanic; head(titanic)
+titanic$pclass <- as.factor(titanic$pclass)
+titanic$sex <- as.factor(titanic$sex)
+titanic$embarked <- as.factor(titanic$embarked)
 glimpse(titanic)
 
 # splitting dataset----
@@ -175,7 +170,9 @@ printcp(m)
 summary(m)
 
 # var importance----
-varImp(m)
+varImp(m) %>%
+  mutate(var.name = rownames(.)) %>% 
+  arrange(desc(Overall))
 
 # model evaluation----
 yhat <- predict(m, newdata = titanic.validation); head(yhat)
@@ -191,19 +188,19 @@ confusionMatrix(yhat, y_obs)
 
 library(ROCR)
 y_obs <- as.numeric(y_obs) - 1
-yhat_lm <- as.data.frame(predict(m, newdata=titanic.validation))$survived
-pred_lm <- prediction(yhat_lm, y_obs)
-plot(performance(pred_lm, 'tpr', 'fpr'))
+yhat_dt <- as.data.frame(predict(m, newdata=titanic.validation))$survived
+pred_dt <- prediction(yhat_dt, y_obs)
+plot(performance(pred_dt, 'tpr', 'fpr'))
 abline(0,1)
-performance(pred_lm, 'auc')@y.values[[1]]
+performance(pred_dt, 'auc')@y.values[[1]]
 
 # ctree :: 조건부 추론나무
 # 과적합, 변수선택 편중 문제 해결
-m <- ctree(Species ~ ., data=iris)
-plot(m)
+m_ctree <- ctree(Species ~ ., data=iris)
+plot(m_ctree)
 levels(iris$Species) # 가려서 안 보일때
-yhat <- predict(m, newdata = iris, type = 'response')
-head(yhat)
+yhat_ctree <- predict(m_ctree, newdata = iris, type = 'response')
+head(yhat_ctree)
 
 # randomForest----
 # 변수 >> 팩터형 >> 분류!
@@ -240,14 +237,16 @@ rf <- randomForest(as.factor(left) ~., hr.train %>%
                             sales = as.factor(sales)))
 
 # select rf model----
-importance(rf)
+importance(rf) # not arranged...
 importance(rf)[, 1]
 data.frame(var=rownames(importance(rf)), gini_desc=importance(rf)[, 1]) -> var_imp_df
 var_imp_df %>%
   arrange(desc(gini_desc))
 
+# what are varables important?
 varImpPlot(rf) ## 변수 중요도를 한 번에 시각화 가능
 
+# how many trees are need to make model?
 plot(rf) # MSE variance to decide how many trees
 
 # predict----
