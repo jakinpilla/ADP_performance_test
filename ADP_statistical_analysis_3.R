@@ -1,0 +1,132 @@
+# anova(analysis of variance)
+
+# an analysis of variance(anova) allows you to compare the means of three or more independent samples.
+
+# It is suitable when the values are drawn from a normal distribution and when the variance is
+# approximately the same in each group.
+
+# You can check the assumption of equal variance with a Barlett's test
+
+# The null hypothesis for the test is that the mean for all groups is the same, and the alternative
+# hypothesis is that the mean is different for at least one pair of groups
+
+# anova takes advantage of the additivity property of variance, and we partition the variance into 
+# treatment effect (real differences) and error (differences due to sampling errror or individual differences)
+
+# the ratio of two variance follows the F distribution (named after Fisher)
+
+## One-way ANOVA
+## two-way ANOVA
+## Post-hoc Tests
+
+# One-way ANOVA
+# we compare the means for three or more groups. Each group is defined by a different level of the factor.
+# If the overall F test is significant, we are justified in conducting post-hoc tests to determine which
+# pairs of means are significantly different
+
+# Patition of variance
+
+# treatment variance :: the differences among the group means. we compare each group mean to the overall
+# average treating all the variances as a single group(between variation)
+
+# error variance :: the differencesss among values within each group(within variation)
+
+# the null hypothesis in one-way anova is that all the means are equal in the population. the alternative
+# hypothesis is that at least one of the means is different from the others
+
+setwd("C:/Users/Daniel/ADP_performance_test")
+getwd()
+
+# 여러 개의 패키지를 한 번에 읽기
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
+              'randomForest', 'dummies', 'curl', 'gridExtra')
+
+lapply(Packages, library, character.only=T)
+
+
+glimpse(PlantGrowth); str(PlantGrowth)
+PlantGrowth %>%
+  select(group) %>%
+  unique
+
+boxplot(weight ~ group, PlantGrowth)
+
+# one-way anova
+plant.aov <- aov(weight ~ group, PlantGrowth)
+summary(plant.aov)
+anova(plant.aov)
+model.tables(plant.aov, type='means')
+
+# post-hoc test
+plant.ph <- TukeyHSD(plant.aov); plant.ph
+plot(plant.ph)
+
+# Two-way ANOVA
+# In two-way ANOVA, there are two factors. We will illustrate only the most basic version of two-way
+# fixed effects ANOVA, which is a balanced factorial design.
+# Let us call the factors A and B. If there are r levels of A and c levels of B, there will be rXc total
+# groups, each of which will have the same number of data values.
+
+# Partition of Variation
+# We partition the total sums of squares into respective sums of squares.
+# The two-way ANOVA is an effecient design because it allow us to conduct three hypothesis tests.
+# The three null hypotheses are:
+# 1. There is no main effect of A considered sepatately.
+# 2. There is no main effect of B considered separately.
+# 3. There is no interaction of A and B considered together.
+
+tw <- read.csv('./data/tw.csv'); head(tw)
+glimpse(tw)
+
+tw %>%
+  select(Format) %>%
+  unique
+
+tw %>%
+  select(Subject) %>%
+  unique
+
+boxplot(Satisfaction ~ Format*Subject, tw)
+with(tw, interaction.plot(Subject, Format, Satisfaction)) # 교호작용이 없음
+
+tw.aov <- aov(Satisfaction ~ Format*Subject, tw)
+summary(tw.aov)
+model.tables(tw.aov, type = 'means')
+
+# Post-hoc Test
+tw.format.ph <- TukeyHSD(tw.aov, which = 'Format')
+tw.format.ph
+plot(tw.format.ph)
+
+tw.subject.ph <- TukeyHSD(tw.aov, which = 'Subject')
+tw.subject.ph
+plot(tw.subject.ph)
+
+# Two-way ANOVA (2)
+pw <- read.csv('./data/pw.csv')
+head(pw)
+
+pw %>% 
+  select(plant) %>%
+  unique
+
+pw %>% 
+  select(water) %>%
+  unique
+
+boxplot(height ~ plant*water, pw)
+with(pw, interaction.plot(water, plant, height)) # 교호작용이 있음
+
+pw.aov <- aov(height ~ plant*water, pw)
+summary(pw.aov)
+model.tables(pw.aov, type='means')
+
+# Post-hoc Test
+pw.ph <- TukeyHSD(pw.aov, which= 'plant:water')
+pw.ph
+op <- par(mar=c(5, 8, 4, 2))
+plot(pw.ph, cex.axis=.7, las=1)
+
+
+
+
