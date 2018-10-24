@@ -6,8 +6,8 @@ getwd()
 # install.packages('randomForest')
 
 # 여러 개의 패키지를 한 번에 읽기
-Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dplyr')
+Packages <- c('plyr', 'dplyr','tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
+              'randomForest')
 
 lapply(Packages, library, character.only=T)
 
@@ -32,6 +32,7 @@ data("GermanCredit")
 glimpse(GermanCredit)
 class(GermanCredit$Class)
 x <- GermanCredit$Class
+str(x); glimpse(x)
 # 'Bad', 'Good'의 팩터를 0,1의 숫자형 데이터로 변환하는 방법
 
 ## 첫번째 factor(), as.numeric() 이용
@@ -73,11 +74,12 @@ abline(coef(model))
 
 # 비선형(평활법) - LOESS (국소회귀)
 str(mpg); unique(mpg$hwy)
+with(mpg, plot(displ, hwy))
 model <- loess(hwy ~ displ, data=mpg)
 plot(model)
 mpg %>% ggplot(aes(displ, hwy)) + geom_point() + geom_smooth()
 
-# 범주형 변수 x, 연ㅅ형 변수 y: 분산분석 ANOVA속----
+# 범주형 변수 x, 연속형 변수 y: 분산분석 ANOVA속----
 ## 수면제 종류에 따른 수면량 증가, 차종에 따라 연비 차이, 혈압약과 혈압 감소량
 ## boxplot() -> lm(y(연속형 변수) ~ x(범주형 변수)) -> plot.lm() 잔차분포
 
@@ -96,12 +98,12 @@ chall <- read_table("data/o-ring-erosion-only.data.txt", col_names = FALSE)
 head(chall)
 # chall :: the dataset of the Challenger locket's Orings
 # 1. Number of O-rings at risk on a given flight :: o_ring_ct
-# 2. Number experiencing thermal distress :: ring_ct
+# 2. Number experiencing thermal distress :: distress_ct
 # 3. Launch temperature (degrees F) :: temperature
 # 4. Leak-check pressure (psi) :: pressure
 # 5. Temporal order of flight :: flight_order
 colnames(chall) <- c('o_ring_ct', 'distress_ct', 'temperature', 'pressure', 'flight_order')
-glimpse(chall)
+glimpse(chall); head(chall)
 chall %>% ggplot(aes(temperature, distress_ct)) + geom_point()
 chall %>% ggplot(aes(factor(distress_ct), temperature)) + geom_boxplot()
 
@@ -110,6 +112,7 @@ model <- glm(cbind(distress_ct, o_ring_ct - distress_ct) ~ temperature,
              data = chall, family='binomial')
 summary(model) # temperature의 효과 :: 온도 1도 상승할 때 로그 오즈비가 0.179 감소??
 # 모형의 적합도 :: degree F가 1 줄었을때 deviance 충분히 감소 :: 적합
+
 
 # 예측 :: 확률값
 pred <- predict(model, data.frame(temperature=30), type='response'); pred

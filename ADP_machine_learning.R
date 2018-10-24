@@ -1,10 +1,6 @@
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-# install.packages('yardstick')
-# install.packages('party')
-# install.packages('randomForest')
-
 # 여러 개의 패키지를 한 번에 읽기
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'e1071')
@@ -27,7 +23,6 @@ as.data.frame(scaled_var_num) -> var_num_df; head(var_num_df)
 str(data$gender)
 data$gender <- ifelse(data$gender == "f", 0, 1)
 data$custid <- as.character(data$custid)
-
 
 data %>% 
   select(gender) %>%
@@ -58,14 +53,12 @@ dim(df.test)
 
 1255 + 417 + 417 # NA 값 등으로 인해 전처리 과정 상 없어진 데이터가 있음에 유의
 
-
 # model df.train----
 
 ## fitControl--
 fitControl <- trainControl(method='repeatedcv', number=10, repeats = 3)
 
 ## models fitting----
-
 ## 로지스틱 회귀--
 ## 문자형인 변수가 데이터에 들어 있으면 시간 다대 소요됨에 유의할 것
 glm_m <- train(gender ~., data=df.train, 
@@ -126,7 +119,6 @@ yhat_rf <- predict(rf_m, df.test, type='prob')$`1`
 yhat_rf
 y_obs <- df.test$gender
 
-
 # ROC curve and AUC
 library(ROCR)
 pred_rf <- prediction(yhat_rf, y_obs)
@@ -134,9 +126,5 @@ perf_rf <- performance(pred_rf, 'tpr', 'fpr')
 plot(perf_rf, main='ROC curve for glm model', col = 'red') 
 abline(0,1)
 performance(pred_rf, 'auc')@y.values[[1]] # auc
-
-# what is the next step?
-
-
 
 
