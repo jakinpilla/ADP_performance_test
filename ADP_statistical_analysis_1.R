@@ -1,16 +1,11 @@
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-# install.packages('yardstick')
-# install.packages('party')
-# install.packages('randomForest')
-
 # 여러 개의 패키지를 한 번에 읽기
 Packages <- c('plyr', 'dplyr','tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest')
 
 lapply(Packages, library, character.only=T)
-
 
 # 통계분석 기본
 cor(iris$Sepal.Width, iris$Sepal.Length)
@@ -45,7 +40,6 @@ x <- ifelse(GermanCredit$Class == "Bad", 0, 1)
 class(x); x
 
 # 반응변수 (y) ~ 설명변수 (x) 
-
 # 연속형 변수 x, 연속형 변수 y: 선형모형이 적합----
 # 산점도 -> 상관계수(선형 관계의 강도) -> 선형모형 -> 비선형 데이터에는 LOESS(국소회귀)
 
@@ -55,19 +49,17 @@ with(mpg, cor(cty, hwy))
 with(mpg, cor(cty, hwy, method='spearman')) # 이상치가 많을 경우
 model <- lm(hwy ~ cty, data=mpg)
 summary(model) # 모델해석  t-value, p-value, adjusted R, 검정통계량
+
+par(mfrow=c(2, 2))
 plot(model) # 4가지 그래프 해석
-opar <- par(mfrow=c(2,2))
-plot(model)
-opar <- par(mfrow=c(1,1))
+par(mfrow=c(1,1))
 # 가정 진단 :: 선형, 잔차의 분포 독립, 잔차의 분포 동일, 잔차의 정규분포 등 확인
 
-pred <-predict(model, newdata = data.frame(cty=c(10,20,20)))
-pred
-
+yhat_model <-predict(model, newdata = data.frame(cty=c(10,20,20))); yhat_model
 plot(mpg$hwy, mpg$cty)
 abline(coef(model)) 
 
-# with cars data----
+# with cars data--
 head(cars)
 plot(cars$speed, cars$dist)
 abline(coef(model))
@@ -84,11 +76,11 @@ mpg %>% ggplot(aes(displ, hwy)) + geom_point() + geom_smooth()
 ## boxplot() -> lm(y(연속형 변수) ~ x(범주형 변수)) -> plot.lm() 잔차분포
 
 mpg %>% ggplot(aes(class, hwy)) + geom_boxplot()
-model <- lm(hwy ~ class, data=mpg)
-summary(model) # 다른 집단과 유의하게 다른 평균 연비
+m <- lm(hwy ~ class, data=mpg)
+summary(m) # 다른 집단과 유의하게 다른 평균 연비
 # 연비의 총 변동량 중 차종으로 설명되는 비율, 모형의 적합도
 
-pred <- predict(model, newdata=data.frame(class='pickup'))
+yhat_m <- predict(m, newdata=data.frame(class='pickup')); yhat_m[1]
 # 가정진단 : 잔차의 분포 독립, 잔차의 분포 동일 (잔차는 정규분포)
 # 분포 독립성과 이상치 유무
 
@@ -595,43 +587,4 @@ plot(performance(pred_lm, 'tpr', 'fpr'))
 abline(0,1)
 performance(pred_lm, 'auc')@y.values[[1]]
 binomial_deviance(y_obs, yhat_lm)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
