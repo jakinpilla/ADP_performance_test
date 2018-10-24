@@ -293,35 +293,3 @@ abline(0, 1, col='blue')
 data.frame(method=c('glm', 'rf'), 
            auc = c(performance(pred_glm, 'auc')@y.values[[1]], 
                    performance(pred_rf, 'auc')@y.values[[1]]))
-
-# 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
