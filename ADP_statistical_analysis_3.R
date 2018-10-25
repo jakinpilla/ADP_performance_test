@@ -38,8 +38,10 @@ setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 # 여러 개의 패키지를 한 번에 읽기
+# install.packages('car')
+
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+              'randomForest', 'dummies', 'curl', 'gridExtra', 'car', 'MASS', 'leaps')
 
 lapply(Packages, library, character.only=T)
 
@@ -200,23 +202,94 @@ duration = b[1] + b[2]*waiting; duration
 newdata <- data.frame(waiting=80)
 predict(eruption.lm, newdata)
 
+# with stackloss--
+head(stackloss)
+colnames(stackloss) <- tolower(colnames(stackloss))
+
+stack.loss.lm <- lm(stack.loss ~ air.flow + water.temp + acid.conc., data = stackloss)
+summary(stack.loss.lm)
+
+stack.loss.rlm <- lm(stack.loss ~ air.flow+ water.temp, data = stackloss)
+summary(stack.loss.rlm)
+
+anova(stack.loss.lm, stack.loss.rlm)
+
+## predict--
+newdata = data.frame(air.flow = 72, water.temp = 20)
+predict(stack.loss.rlm, newdata)
+predict(stack.loss.rlm, newdata, interval = 'confidence')
+predict(stack.loss.rlm, newdata, interval = 'prediction')
+
+## resid(), fitted(), hatvalues(), cooks.distance()--
+lm.fit <- lm(Volume ~ Girth, trees)
+resids <- rstandard(lm.fit); resids
+shapiro.test(resids) # p-value > .05 so residuals' normal distribution
+plot(lm.fit, which=2) ## QQ plot :: Normal probability plot (QQ plot) of standardized residuals
+plot(lm.fit, which=1) ## residuals against fitted values
+plot(lm.fit, which=3) ## similar to the residual against fitted values but it uses the square root of the standardized residuals
+plot(lm.fit, which=4); abline(h=4/(31-1+1), col='red') # cook's distance with rule of thumb
+plot(lm.fit, which=5); abline(v=2*(1+1)/31, col='blue') # residuals against leverage with rule of thumb
+plot(lm.fit, which=6) # cook's distance against leverage
+
+# multicolinearity----
+# VIF as an indicator :: the larger the value of VIF, the more 'troublesome' or collinear the variable X
+# if the VIF of a variable exceeds 10, which will happen if multiple correlation coefficient 
+# for j-th variable R^2 exceeds .9, that variable is said to be highly collinear.
+
+ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')])
+fit <- lm(mpg ~ disp + hp + wt + drat , data=mtcars)
+summary(fit) 
+anova(fit)
+library(car); vif(fit)
+
+# select best regression model----
+head(state.x77)
+colnames(state.x77) <- tolower(colnames(state.x77))
+glimpse(state.x77); class(state.x77)
+states <- as.data.frame(state.x77)
+glimpse(states)
+states %>%
+  rename(life.exp = `life exp`) %>%
+  rename(hs.grad = `hs grad`) -> states; head(states)
+
+fit <- lm(murder ~ population + illiteracy + income + frost, data = states)
+summary(fit)
+anova(fit)
+
+fit1 <- lm(murder ~ population + illiteracy, data=states)
+fit2 <- lm(murder ~ population + illiteracy + income + frost, data=states)
+anova(fit1, fit2)
+
+AIC(fit1, fit2) # model with small AIC values (indicating adequate fit with fewer parameters) are prefered
+
+# stepwise selection
+fit1 <- lm(murder ~ 1, data=states)
+fit2 <- lm(murder ~ population + illiteracy + income + frost, data=states)
+
+# library(MASS)
+stepAIC(fit2, direction = 'backward')
+stepAIC(fit1, direction = 'forward', scope=list(lower=fit1, upper=fit2))
+stepAIC(fit1, direction= 'both', scope=list(lower=fit1, upper=fit2))
 
 
+write.csv(bio, './data/bio.csv', row.names = F)
+bio <- read.csv('./data/bio.csv')
+head(bio)
+step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'forward')
+step(lm(pemax~age+weight+bmp+rv+frc+tlc, bio), direction = 'backward')
+step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'both')
 
+# all-subsets regression
+library(leaps)
+leaps <- regsubsets(murder ~ population + illiteracy + income + frost, data=states, nbest=4)
+plot(leaps, scale='adjr2') # scale = 'Cp', 'adjr2', 'r2', 'bic'
 
+leaps <- regsubsets(pemax ~ age + weight + bmp + rv + frc + tlc, data=bio, nbest=6)
+plot(leaps, scale = 'adjr2')
 
-
-
-
-
-
-
-
-
-
-
-
-
+# standardized regression coef
+fit1 <- lm(murder ~ population + illiteracy, data=states); summary(fit1)
+fit2 <- lm(scale(murder) ~ scale(population) + scale(illiteracy), data=states); summary(fit2)
 
 
 
