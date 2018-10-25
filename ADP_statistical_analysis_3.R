@@ -128,5 +128,103 @@ op <- par(mar=c(5, 8, 4, 2))
 plot(pw.ph, cex.axis=.7, las=1)
 
 
+# Regression Analysis----
+
+# simple linear regression
+head(trees)
+glimpse(trees)
+lm(Volume ~ Girth, trees)
+
+# multiple linear regression
+powerplant <- read.csv('./data/powerplant.csv'); glimpse(powerplant)
+lm(Output ~ Pressure + Temp, powerplant)
+
+# interaction terms
+lm(Output ~ Pressure*Temp, powerplant)
+
+# update model :: update()
+# The update function allows you build a new model by adding or removing terms from an existing model.
+
+# t-test ::: Significance test for model coefficients
+## significance test for model coefficients tell you whether indivisual coefficient estimates are significantly differnt from 0.
+
+# F-test :: Analysis of Variance :: ANOVA
+## F-test tells you whether the model is significantly better at predicting compared with using the overalll mean value as a prediction.
+## F-test can also be used to compare two models.
+## the anova() function to perform an F_test to compare a more complex model to simpler model.
+
+
+lm.fit <- lm(Volume ~ Girth, trees)
+summary(lm.fit)
+anova(lm.fit)
+
+poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
+anova(lm.fit, poly.fit)
+
+coef(lm.fit)
+confint(lm.fit)
+plot(trees$Volume, trees$Girth)
+plot(Girth ~ Volume, trees) # same as plot(trees$Volume, trees$Girth)
+abline(coef(lm.fit))
+abline(lm.fit) # same as abline(coef(lm.fit))
+
+lm.fit <-lm(Volume ~ Girth, trees)
+plot(Volume ~  Girth, trees, main = 'Scatter plot with line of best fit')
+abline(lm.fit, col = 'red')
+lines(lowess(trees$Girth, trees$Volume), col = 'blue')
+
+poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
+b <- coef(poly.fit); b
+curve(b[1] + b[2]*x + b[3]*x^2, col='gray', add=T, lwd=2)
+
+# make predictions----
+# predict(model, newdata, interval = 'prediction', level=.99)
+lm.fit <- lm(Volume ~ Girth, trees)
+newtrees <- data.frame(Girth=c(17.2, 12.0, 11.4))
+predict(lm.fit, newdata = newtrees, interval='prediction')
+
+# with faithful dataset--
+head(faithful)
+ggplot(faithful, aes(x=waiting, y=eruptions)) + 
+  geom_point() +
+  geom_smooth(method='lm')
+
+eruption.lm <- lm(eruptions ~ waiting, data=faithful)
+summary(eruption.lm)
+anova(eruption.lm)
+
+b <- coef(eruption.lm); b
+waiting <- 80
+duration = b[1] + b[2]*waiting; duration 
+
+newdata <- data.frame(waiting=80)
+predict(eruption.lm, newdata)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
