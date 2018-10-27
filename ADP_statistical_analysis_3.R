@@ -39,12 +39,13 @@ getwd()
 
 # 여러 개의 패키지를 한 번에 읽기
 # install.packages('car')
+Packages_stat <- c('car', 'MASS', 'leaps') # Packages_stat을 먼저 불러드려야 함.
 
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'dummies', 'curl', 'gridExtra', 'car', 'MASS', 'leaps')
 
+lapply(Packages_stat, library, character.only=T)
 lapply(Packages, library, character.only=T)
-
 
 glimpse(PlantGrowth); str(PlantGrowth)
 PlantGrowth %>%
