@@ -251,15 +251,14 @@ head(df_imdb)
 df_imdb %>%
   drop_na() %>%
   group_by(director_name) %>%
-  mutate(first_duration = first(duration)) %>%
-  select(director_name, first_duration)
+  mutate(first_duration = first(duration)) %>% as.data.frame() %>%
+  select(director_name, first_duration) %>% head(10)
 
 df_imdb %>%
   drop_na() %>%
   group_by(director_name) %>%
-  mutate(last(duration)) %>%
-  mutate(last_duration = last(duration)) %>%
-  select(director_name, last_duration)
+  mutate(last_duration = last(duration)) %>% as.data.frame() %>%
+  select(director_name, last_duration) %>% head(10)
 
 
 ## 특정 컬럼명 바꾸기(director_name --> direc_nm)
@@ -267,10 +266,10 @@ df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = �
 
 ## colname 들을 모두 소문자, 특정 문자를 또 다른 분자로 치환하여 정리하기
 ## "_" 문자를 "."로 바꾸어 보기
+make.names(names(df_imdb), unique=T)
 names(df_imdb) <- tolower(gsub('_', '.', make.names(names(df_imdb), unique = T)))
-head(df_imdb)
+colnames(df_imdb)
 
-make.names(names(df_imdb))
 # melt / cast
 data("airquality"); head(airquality)
 names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 대문자를 소문자로 변환

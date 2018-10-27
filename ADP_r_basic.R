@@ -76,19 +76,22 @@ trans_grouped_df %>%
 
 colnames(prod_ct_ratio) <- paste0('ct_', colnames(prod_ct_ratio)); head(prod_ct_ratio)
 
-ct_ratio_df <- cbind(custid = trans_grouped_df$custid, 
+ct_ratio_df <- cbind(custid = custid_df$custid, 
                      prod_ct_ratio); head(ct_ratio_df)
 
 ##-----
 
 ## 서로 다른 카테고리의 제품을 얼마나 다양하게 구매하였는지에 대한 비율 :: coverage 파생변수 만들기----
-head(cust_prod_ct_amt)
+head(trans_grouped_df)
 ## 0이 아닌 컬럼의 수 구하기
-cust_prod_ct_mat <- as.matrix(cust_prod_ct_amt[, -1])
-cust_prod_ct_mat_bin <- ifelse(cust_prod_ct_mat[, ] > 0, 1, 0) # 구매했으면 1, 안 했으면 0으로 치환
-round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
-cust_prod_ct_amt$coverage <- round(rowSums(cust_prod_ct_mat_bin) / 11, 2)
-cust_coverage <- cust_prod_ct_amt[, c('custid', 'coverage')]; head(cust_coverage)
+trans_grouped_mat <- as.matrix(trans_grouped_df[, -1])
+trans_grouped_mat_bin <- ifelse(trans_grouped_mat[, ] > 0, 1, 0) # 구매했으면 1, 안 했으면 0으로 치환
+round(rowSums(trans_grouped_mat_bin) / 11, 2) -> tmp; length(tmp) # vector로 rowSum value들을저장
+
+dim(trans_grouped_df)
+trans_grouped_df$coverage <- tmp
+head(trans_grouped_df)
+cust_coverage <- trans_grouped_df[, c('custid', 'coverage')]; head(cust_coverage)
 
 ## instead...
 as.matrix(ct_ratio_df[, -1]) -> ct_ratio_mat; ct_ratio_mat[1:10, 1:11] # matrix 변환 전 custid 컬럼을 제거해야 함에 유의
@@ -229,7 +232,6 @@ cust_wd_sum %>%
   cbind(custid = custid_df$custid, .) -> wdf_df; head(wdf_df)
 
 
-
 # 구매한 서로 다른 제품의 수 :: purchased 변수 ----
 head(tran)
 melt(tran, id.vars = c('custid', 'prod'), measure.vars = c('amt')) -> melted
@@ -242,6 +244,29 @@ rowSums(dcasted_bin)
 rowSums(as.matrix(dcasted[, -1]))
 data.frame(custid = dcasted$custid, 
            purchased = rowSums(as.matrix(dcasted[, -1]))) -> purchased_df; head(purchased_df)
+
+
+# instead--
+tran <- read.csv('./data/transaction.csv'); head(tran)
+
+tran %>% 
+  group_by(custid, prod) %>%
+  summarise(sum.prod = sum(amt)) -> tran_grouped; head(tran_grouped); dim(tran_grouped)
+
+tran_grouped %>%
+  spread(prod, sum.prod) %>%
+  replace(is.na(.), 0) -> tmp; head(tmp)
+
+as.matrix(tmp[, -1]) -> tmp_mat
+ifelse(tmp_mat > 0, 1, 0) -> tmp_mat_bin
+
+as.data.frame(tmp_mat_bin) %>%
+  mutate(total.sum = rowSums(.)) %>%
+  select(total.sum) -> purchase_df; head(purchase_df); class(purchase_df)
+
+custid_df %>% head
+
+data.frame(custid = custid_df$custid, purchase = purchase_df$total.sum) -> purchase_df; head(purchase_df)
 
 # 제품 카테고별 구매비용 변동계수(카테고리별 구매비용의 표준편차 / 평균) :: ct_cov 변수----
 head(tran)
@@ -274,15 +299,11 @@ View(head(tran_tmp))
 tran_tmp$std <- rowSds(tran_ct_mat) ; head(tran_tmp)
 View(head(tran_tmp))
 
-## custid 붙이기----
-cust_g_paid %>%
-  head
-
+## ct_cov 변수 생성 및 custid 붙이기----
 tran_tmp %>% 
   select(ct_mean, std) %>%
-  mutate(ct_cov = std/ct_mean) %>% 
-  cbind(cust_g_paid[, 1]) %>% 
-  as.tibble() %>% 
+  mutate(ct_cov = std/ct_mean) %>% as.data.frame() %>%
+  cbind(custid = custid_df$custid, .) %>%
   select(custid, ct_cov) -> ct_cov_df; head(ct_cov_df)
 
 ## 총 구매일수 :: vdays 변수 ----
@@ -316,7 +337,7 @@ day_sd_amt_df %>%
 
 head(daycov_df)
 
-## 가장 많이 구매한 제품 :: top_prod 변수 ----
+## 가장 많이 구매한 제품 :: top_prod 변수 :: dplyr :: first() ----
 head(tran)
 
 tran %>%
@@ -325,15 +346,17 @@ tran %>%
   summarise(count = n()) %>%
   arrange(custid, desc(count)) %>%
   group_by(custid) %>%
-  summarise(top_prod = first(prod)) -> top_prod_df
+  summarise(top_prod = first(prod)) -> top_prod_df; head(top_prod_df)
 
 
 ## ','로 고객별 구매한 물품을 하나이 row로 표현하기
+tran <- read.csv('./data/transaction.csv'); head(tran)
+tran %>%
+  select(custid, prod) -> custid_prod_df
+
 custid_prod_df %>%
   group_by(custid) %>%
   mutate(item_pur = paste(prod, collapse = ',')) -> item_pur_df; head(item_pur_df)
-
-head(item_pur_df)
 
 tran %>% 
   filter(custid == 'C2048') # softdrink를 많이 구매하는 사람인지 여부 확인
@@ -363,7 +386,7 @@ cust_prod_ct_ratio %>%
   left_join(cust_buyed_prod_num) %>%
   left_join(cust_time_bin_ratio) %>%
   left_join(cust_wd_ratio) %>%
-  left_join(purchased_df) %>%
+  left_join(purchase_df) %>%
   left_join(ct_cov_df) %>%
   left_join(vday_df) %>%
   left_join(day_mean_amt_df) %>%
