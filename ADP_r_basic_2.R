@@ -72,6 +72,7 @@ head(ratio_cust_visit)
 # install.packages('matrixStats')
 library(matrixStats)
 dim(ratio_cust_visit)
+head(ratio_cust_visit)
 
 ratio_cust_visit[, -1] %>%
   mutate(row_std = round(rowSds(as.matrix(.[1:3])), 3),
@@ -125,6 +126,7 @@ plot(log10(gapminder$gdpPercap), gapminder$lifeExp, cex=.5)
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip'); glimpse(df_imdb)
 head(df_imdb)
 df_imdb$country <- as.factor(df_imdb$country); glimpse(df_imdb)
+# like pandas .value_count() method
 df_imdb %>% group_by(country) %>% tally() %>% arrange(-n)
  
 ## 미국 영화의 예산 분포 알아보기
@@ -166,6 +168,7 @@ library(MASS)
 data(survey); glimpse(survey)
 head(table(survey$W.Hnd))
 chisq.test(table(survey$W.Hnd), p=c(.3, .7)) # 특정 분포를 따르는지...
+# p< .05 이므로 특정 분포를 따르지 않는다.
 
 # 3. 두 수량형 변수 (산점도)
 pairs(diamonds %>% sample_n(100))
@@ -202,6 +205,7 @@ titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'su
 
 glimpse(titanic)
 
+# 분할표--
 xtabs(survived == 'survived' ~ sex + pclass, data=titanic)
 xtabs(survived == 'survived' ~ sex + pclass, data=titanic) / xtabs(~ sex + pclass, data=titanic)
 
