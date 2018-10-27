@@ -1,36 +1,39 @@
+rm(list=ls()); gc()
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 # 여러 개의 패키지를 한 번에 읽기
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'e1071')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
+              'ROCR', 'party', 'randomForest', 'e1071')
 lapply(Packages, library, character.only=T)
 
 # 데이터 가공 > 예측할 변수 선정 > 데이터 분리 > 모델선택 > 학습 > 평가
 
 # loading data
-read.csv('./data/data_total.csv') -> data
+read.csv('./data/data_total_with_gender_final.csv', stringsAsFactors = F) -> data
+head(data)
+data$gender <- ifelse(data$gender == "f", 0, 1)
+data$gender <- as.factor(data$gender)
+data$custid <- as.character(data$custid)
 glimpse(data)
 
 data %>%
   select_if(is.numeric) -> var_num
 
-summary(var_num)
+summary(var_num); glimpse(var_num)
 # g_paid, buyed_prod_num, pruchased, vdays, day_mean_amt variables are too large :: nomalize 
 scale(var_num) -> scaled_var_num # return matrix
 as.data.frame(scaled_var_num) -> var_num_df; head(var_num_df)
-
 str(data$gender)
-data$gender <- ifelse(data$gender == "f", 0, 1)
-data$custid <- as.character(data$custid)
 
+colnames(data)
 data %>% 
   select(gender) %>%
   cbind(var_num_df) -> df
 
 glimpse(df)
-as.factor(df$gender) -> df$gender; glimpse(df)
 dim(df)
+head(df)
 
 # data splitting----
 idx <- createDataPartition(df$gender, p=c(.6, .4), list=F); 
@@ -41,15 +44,17 @@ df.train <- df[idx, ]
 df.valid.test <- df[-idx, ]
 
 dim(df.train)
+head(df.train)
 
 # validation data
+head(df.valid.test)
 idx <- createDataPartition(df.valid.test$gender, p=c(.5, .5), list=F)
 idx[1:5]; length(idx)
 df.valid <- df.valid.test[idx, ]
 df.test <- df.valid.test[-idx, ]
 
-dim(df.valid)
-dim(df.test)
+dim(df.valid); head(df.valid)
+dim(df.test); head(df.test)
 
 1255 + 417 + 417 # NA 값 등으로 인해 전처리 과정 상 없어진 데이터가 있음에 유의
 
@@ -73,7 +78,7 @@ cart_m <- train(gender ~., data=df.train,
 ## 랜덤포레스트--
 rf_m <- train(gender ~., data=df.train, method='rf', 
               trControl=fitControl)
-
+rf_m
 
 ## xgBoost--
 library(xgboost)
