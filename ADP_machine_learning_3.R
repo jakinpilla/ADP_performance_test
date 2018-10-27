@@ -132,7 +132,7 @@ ggplot(df, aes(PC1, PC2, col=yhat, shape=yhat)) + geom_point(size=3) +
 protein <- read_delim("./data/protein.txt",  "\t", escape_double = FALSE, trim_ws = TRUE)
 glimpse(protein)
 vars <- colnames(protein)[-1]
-pmatrix <- scale(protein[, vars])
+pmatrix <- scale(protein[, vars]) # matrix class
 d <- dist(pmatrix, method='euclidean')
 h <- hclust(d, method='ward.D')
 plot(h, labels = protein$Country)

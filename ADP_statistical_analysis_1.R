@@ -55,7 +55,7 @@ plot(model) # 4가지 그래프 해석
 par(mfrow=c(1,1))
 # 가정 진단 :: 선형, 잔차의 분포 독립, 잔차의 분포 동일, 잔차의 정규분포 등 확인
 
-yhat_model <-predict(model, newdata = data.frame(cty=c(10,20,20))); yhat_model
+yhat_model <-predict(model, newdata = data.frame(cty=c(10,20,20))); yhat_model # newdata as data.frame() in predict()
 plot(mpg$hwy, mpg$cty)
 abline(coef(model)) 
 
