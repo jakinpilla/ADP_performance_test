@@ -1,19 +1,25 @@
+#' ---
+#' title: "ADP R Basic(transaction data analysis)"
+#' author: "jakinpilla"
+#' date: "May 3rd, 2014"
+#' ---
+
 # setting working dtrectory----
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-# install.packages('yardstick')
-# install.packages('party')
-# install.packages('randomForest')
 
-# 여러 개의 패키지를 한 번에 읽기
-Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest')
+###' 거래 데이터 분석
+
+#' 여러 개의 패키지를 한 번에 읽기
+
+Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
+              'ROCR', 'party', 'randomForest')
 lapply(Packages, library, character.only=T)
 
-# feature engineering----
+# feature engineering
 
-## with transaction data----
+#
 tran <- read.csv('./data/transaction.csv'); head(tran)
 
 ## 제품 카테고리별 구매비용 비율 :: ct_xxx 파생변수 만들기 ----
