@@ -6,8 +6,6 @@
 #' ---
 
 #' setting working dtrectory
-setwd("C:/Users/Daniel/ADP_performance_test")
-getwd()
 
 #' 거래 데이터 분석
 #' 거래 데이터 분석을 위한 고객별 파생변수를 어떻게 생성하는지를 알아온다.
