@@ -1,4 +1,4 @@
-setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 # install.packages('yardstick')
@@ -251,14 +251,18 @@ head(df_imdb)
 df_imdb %>%
   drop_na() %>%
   group_by(director_name) %>%
-  mutate(first_duration = first(duration)) %>% as.data.frame() %>%
-  select(director_name, first_duration) %>% head(10)
+  mutate(first_duration = first(duration)) %>% 
+  as.data.frame() %>%
+  select(director_name, first_duration) %>% 
+  head(10)
 
 df_imdb %>%
   drop_na() %>%
   group_by(director_name) %>%
-  mutate(last_duration = last(duration)) %>% as.data.frame() %>%
-  select(director_name, last_duration) %>% head(10)
+  mutate(last_duration = last(duration)) %>% 
+  as.data.frame() %>%
+  select(director_name, last_duration) %>% 
+  head(10)
 
 
 ## 특정 컬럼명 바꾸기(director_name --> direc_nm)
@@ -324,6 +328,7 @@ n_tmp <- length(colnames(cust_prod_amt_ratio))
 cust_prod_amt_ratio <- cust_prod_amt_ratio[, c(n_tmp, 1:(n_tmp-1))]
 glimpse(cust_prod_amt_ratio)
 
+# update
 
 
 
