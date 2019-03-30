@@ -1,7 +1,16 @@
+#' ---
+#' title: "ADP machine learning with transaction dataset"
+#' author: "jakinpilla"
+#' date: "`r Sys.Date`"
+#' output: rmarkdown::github_document
+#' ---
+
+#' setting working dtrectory
+
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-# install.packages('arules')
+#' install.packages('arules')
 library(arules)
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
               'randomForest', 'dummies', 'curl', 'gridExtra')
@@ -225,9 +234,16 @@ image(sample(basket.transaction, 100))
 
 
 
-
-
-
+# 상품 방문 코너 예측...
+# 고객당 과거 가장 많이 방문했던 코너들의 이름 순 구하기
+# 한 행에 가장 많은 수에 해당하는 컬럼 명 구하기
+# 가장 많은 수에 해당하는 코노명 5개 정리하기...
+# 이것을 모델로 만들 수는 없을까? 각종 파생변수를 만들고 각장 최대로 방문한 매장을 목적변수로 하면 
+# 그리고 그 모델이 예측한 각 분류값들의 확률을 순차적으로 반환하게 하면 되지 않을까?...
+# pivotting to_long, to_wide에 대해 철저하게 연습하고 가로행 중 최대값을 가지는 열의 이름, 순차적으로 
+# 5개의 열의 이름을 가져오는 방법을 열심히 연습해두자...
+# 하루에 1번이상 커밋하고 꼭 문제를 일주에 한 문제정도는 연습하자
+# 오늘 일을 잊지 말자.
 
 
 

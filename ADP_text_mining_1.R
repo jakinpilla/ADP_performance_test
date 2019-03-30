@@ -8,6 +8,8 @@ getwd()
 # install.packages('slam')
 # install.packages('wordcloud')
 
+rm(list = ls()); gc()
+
 library(rJava)
 library(KoNLP); useSejongDic()
 library(SnowballC)
@@ -36,12 +38,17 @@ tvpro_nm_df <- data.frame(tvpro_nm = tvpro_nm_df$V1, tag=rep('ncn', nrow(tvpro_n
 rownames(tvpro_nm_df) <- NULL
 tvpro_nm_df
 
-pro_nm <- tvpro_nm_df$tvpro_nm
-pro_nm_pasted <- gsub(" ", "", tvpro_nm_df$tvpro_nm)
-pro_names <- union(pro_nm, pro_nm_pasted)
-pro_names
+pro_nm <- as.character(tvpro_nm_df$tvpro_nm)
+pro_nm_pasted <- gsub(" ", "_", pro_nm)
+pro_nm_pasted
 
-user_d <- data.frame(tvpro_nm = pro_names, "ncn" ) # using 'broadcasting'
+pro_nm_without_space <- gsub(" ", "", pro_nm)
+pro_nm_without_space
+
+tvpro_nm_union <- union(pro_nm_pasted, pro_nm_without_space)
+
+user_d <- data.frame(tvpro_nm = tvpro_nm_union, "ncn" ) # using 'broadcasting'
+user_d
 
 ## adding words into dic :: buildDictionary()
 dics <- c('sejong')
@@ -65,6 +72,17 @@ head(tvpro, 2)$contents
 ## titie text preprocessing----
 head(tvpro$title, 10)
 # remove punctuation 
+tvpro$title <- gsub("1박 2일", "1박_2일", tvpro$title)
+tvpro$title <- gsub("아는 형님", "아는_형님", tvpro$title)
+tvpro$title <- gsub("정글의 법칙", "정글의_법칙", tvpro$title)
+tvpro$title <- gsub("발칙한 동거", "발칙한_동거", tvpro$title)
+
+tvpro$contents <- gsub("1박 2일", "1박_2일", tvpro$contents)
+tvpro$contents <- gsub("아는 형님", "아는_형님", tvpro$contents)
+tvpro$contents <- gsub("정글의 법칙", "정글의_법칙", tvpro$contents)
+tvpro$contents <- gsub("발칙한 동거", "발칙한_동거", tvpro$contents)
+
+
 tvpro$title <- gsub('[[:punct:]]+', "", tvpro$title) #구두점 제거
 tvpro$title <- gsub('2016년도', "", tvpro$title)  # 특정단어 제거
 # tvpro$title <- gsub('\\d+', "", tvpro$title) # 숫자 제거 :: program_nm 내 숫자가 있으므로 여기서는 해선 안 됨
@@ -74,7 +92,7 @@ tvpro$title <- str_replace_all(tvpro$title, '[[:lower:]]', '') # 영어표현 �
 # 영문, 한글 아닌 것 전부 제거 하지만 띄어쓰기까지 모두 제거됨----
 # tvpro$title <- str_replace_all(tvpro$title, '[^[:alpha:]]', '') 
 
-head(tvpro$title, 10)
+head(tvpro$title, 100)
 
 ## contents text preprocessing----
 tvpro$contents <- gsub('[[:punct:]]+', "", tvpro$contents)
@@ -100,6 +118,55 @@ ko.words <- function(doc) {
   extractNoun(d)
 }
 
+# SimplePos22 태그 부착하기
+title.vec <- tvpro$title
+length(title.vec)
+title.vec
+
+title.vec_01 <- NULL
+for (i in seq(length(title.vec))) {
+  if(nchar(title.vec[i] > 1)) {
+    title.vec_01 <- c(title.vec_01, SimplePos22(title.vec[i]))
+  }
+}
+
+title.vec_01 %>% length()
+title.vec[1] %>% strsplit(" ")
+
+title.vec[1] %>% 
+  SimplePos09() %>% 
+  unlist() %>% 
+  unname() %>% 
+  strsplit("\\+") %>% 
+  unlist() -> title.vec_1.tagged
+
+noun.vec_1 <- title.vec_1.tagged[grep("/N", title.vec_1.tagged)]
+title.vec_1.tagged[grep("/P", title.vec_1.tagged)]
+
+
+noun.vec_1 %>% paste(collapse = " ")
+
+sam.vec <- title.vec[1:2]
+
+title.vec[is.na(title.vec)] <- "dummy"
+doc.vec <- NULL
+for (i in 1:length(title.vec)) {
+  
+  title.vec[i] %>% SimplePos09 %>% unlist() %>% unname() %>%
+    strsplit("\\+") %>% unlist() -> title.vec_ith_tagged
+  
+  ith.noun_vec <- title.vec_ith_tagged[grep("/N", title.vec_ith_tagged)]
+  
+  ith.noun_vec %>% paste(collapse = " ") -> ith.noun_vec.pasted
+  
+  doc.vec <- c(doc.vec, ith.noun_vec.pasted)
+}
+
+
+doc.vec
+
+?grep()
+
 # title data----
 
 ## TDM 생성----
@@ -114,6 +181,14 @@ tdm_title
 tdm_title_mat <- as.matrix(tdm_title)
 dim(tdm_title_mat)
 
+# 만약 TDM이 너무 커서 메모리상에 할당되지 않을 때의 해결방법은??
+# 
+# 긍정, 부정 단어 사전, 카운트, 두 개의 집단으로  클러스터링, 시각화...
+# 
+# 영화 댓글, 점수 크롤링 후 데이터셋 만들기 / 형용사 추출 / 긍부정과 관련있는 형용사는 무엇
+# 영화의 긍부정 댓글 구분
+# 월별 긍부정 추이 확인
+#
 ## pro_names가 있는 행들만 추출----
 tdm_title_extracted <- tdm_title[dimnames(tdm_title)$Terms %in% pro_names, ] # TDM 에서 추출한다.
 dim(tdm_title_extracted) # 9개의 행들만 추출된 matrix

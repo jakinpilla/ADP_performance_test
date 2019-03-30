@@ -21,6 +21,11 @@ qqnorm(mpg$hwy)
 qqline(mpg$hwy)
 t.test(mpg$hwy, mu=22.9, alternative = 'greater')
 
+# 통계분석은 제발 시각화를 자유자재로 할 수 있도록 연습하자...
+# 특히 boxplot...
+# 
+# 다변량 수업내용 다시한번 곱씹어 보자...
+# 
 # 하나의 범주형 변수 (성공-실패, binom.test)
 # barplot() >> table(), prop.table() >> binom.test
 data("GermanCredit")
