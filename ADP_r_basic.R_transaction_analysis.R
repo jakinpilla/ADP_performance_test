@@ -1,13 +1,14 @@
 #' ---
-#' title: "ADP R Basic(transaction data analysis)"
+#' title: "ADP transaction data analysis"
 #' author: "jakinpilla"
-#' date: "May 3rd, 2014"
+#' date: "`r Sys.Date()`"
 #' output: rmarkdown::github_document
 #' ---
 
 #' setting working dtrectory
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
+
 
 #' 거래 데이터 분석
 #' 거래 데이터 분석을 위한 고객별 파생변수를 어떻게 생성하는지를 알아온다.
@@ -74,6 +75,10 @@ molten <- melt(tran_grouped, id.vars=c('custid', 'prod_ct'), measure.vars = c('s
 dcasted <- dcast(molten, custid ~ prod_ct, value.var = 'value') -> dcasted
 dcasted %>% replace(is.na(.), 0) -> cust_prod_ct_amt; 
 head(cust_prod_ct_amt) %>% kable()
+
+cust_prod_ct_amt %>% View()
+
+
 
 #' ### Rowsum and Ratio
 #' 
