@@ -21,9 +21,61 @@ qqnorm(mpg$hwy)
 qqline(mpg$hwy)
 t.test(mpg$hwy, mu=22.9, alternative = 'greater')
 
-# 통계분석은 제발 시각화를 자유자재로 할 수 있도록 연습하자...
-# 특히 boxplot...
-# 
+# boxplot
+as_tibble(iris)
+
+# boxplot basic...
+boxplot(iris$Sepal.Length)
+boxplot(iris$Sepal.Length, border = "brown",col = "orange", horizontal = T, notch = T)
+iris.sepal_length.box <- boxplot(iris$Sepal.Length); iris.sepal_length.box
+iris.sepal_length.box$stats
+
+with(iris, boxplot(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, 
+                   col= c("grey", "blue", "red", "orange"),
+                   notch = T,
+                   names = c("sepal.length", "sepal.width",
+                             "petal.length", "petal.width")))
+
+boxplot(Sepal.Length ~ Species, data = iris,
+        col = c("grey", "blue", "orange"),
+        horizontal = T,
+        border = "brown")
+
+# box plot with ggplot...
+ggplot(iris, aes(x= Species, y = Sepal.Length)) +geom_boxplot()
+
+ggplot(iris, aes(x= Species, y = Sepal.Length)) + geom_boxplot(notch = T) + coord_flip()
+
+ggplot(iris, aes(x= Species, y = Sepal.Length)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 8, outlier.size = 4)
+
+ggplot(iris, aes(x= Species, y = Sepal.Length)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 8, outlier.size = 4) +
+  scale_x_discrete(limits = c("setosa", "virginica"))
+
+ggplot(iris, aes(x= Species, y = Sepal.Length)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 8, outlier.size = 4) +
+  scale_x_discrete(limits = c("setosa", "virginica")) + # we can select x elements...
+  geom_jitter()  
+
+ggplot(iris, aes(x= Species, y = Sepal.Length, color = Species)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 8, outlier.size = 4, fill = "grey") +
+  scale_x_discrete(limits = c("setosa", "virginica")) +
+  geom_jitter() 
+
+# scatter plot...
+plot(iris$Sepal.Length, iris$Sepal.Width,
+     main = "Sepal Length vs Width of iris",
+     xlab = "Sepal Length", ylab = "Petal Length", pch = 19)
+lines(lowess(iris$Sepal.Length, iris$Sepal.Width))
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width)) + 
+  geom_point(aes(color = factor(Species))) +
+  stat_smooth(method = "lm") +
+  labs(title = "Sepal Length vs Width of iris",
+       x = "Sepal Length of iris",
+       y = "Sepal Length of iris")
+ 
 # 다변량 수업내용 다시한번 곱씹어 보자...
 # 
 # 하나의 범주형 변수 (성공-실패, binom.test)
@@ -59,6 +111,21 @@ par(mfrow=c(2, 2))
 plot(model) # 4가지 그래프 해석
 par(mfrow=c(1,1))
 # 가정 진단 :: 선형, 잔차의 분포 독립, 잔차의 분포 동일, 잔차의 정규분포 등 확인
+
+plot(model, which = 1)
+# Residuals vs Fitted는 X 축에 선형 회귀로 예측된 Y 값, Y 축에는 잔차를 보여준다. 선형 회귀에서 오차는 평균이 0이고 분산이 일정한 정규 분포를 가정하였으므로, 예측된 Y 값과 무관하게 잔차의 평균은 0이고 분산은 일정해야 한다. 따라서 이 그래프에서는 기울기 0인 직선이 관측되는 것이 이상적이다.
+
+plot(model, which = 2)
+plot(model, which = 3)
+# Scale-Location은 X 축에 선형 회귀로 예측된 Y 값, Y 축에 표준화 잔차Standardized Residual3 를 보여준다. 이 경우도 기울기가 0인 직선이 이상적이다. 만약 특정 위치에서 0에서 멀리 떨어진 값이 관찰된다면 해당 점에 대해서 표준화 잔차가 크다, 즉, 회귀 직선이 해당 Y를 잘 적합하지 못한다는 의미다. 이런 점들은 이상치outlier일 가능성이 있다.
+
+plot(model, which = 4)
+plot(model, which = 5)
+# Residuals vs Leverage는 X 축에 레버리지Leverage, Y 축에 표준화 잔차를 보여준다. 레버리지는 설명 변수가 얼마나 극단에 치우쳐 있는지를 뜻한다. 예를 들어, 다른 데이터의 X 값은 모두 1 ~ 10 사이의 값인데 특정 데이터만 99999 값이라면 해당 데이터의 레버리지는 큰 값이 된다. 이런 데이터는 입력이 잘못되었거나, 해당 범위의 설명 변숫값을 가지는 데이터를 보충해야 하는 작업 등이 필요하므로 유심히 살펴봐야 한다.
+
+# 네 번째 차트의 우측 상단과 우측 하단에는 선으로 쿡의 거리Cook’s Distance가 표시되어 있다. 쿡의 거리는 회귀 직선의 모양(기울기나 절편 등)에 크게 영향을 끼치는 점들을 찾는 방법이다. 쿡의 거리는 레버리지와 잔차에 비례하므로 두 값이 큰 우측 상단과 우측 하단에 쿡의 거리가 큰 값들이 위치하게 된다. 
+
+plot(model, which = 6)
 
 yhat_model <-predict(model, newdata = data.frame(cty=c(10,20,20))); yhat_model # newdata as data.frame() in predict()
 plot(mpg$hwy, mpg$cty)
@@ -146,7 +213,8 @@ residuals(model)[1:4] # observed value - fitted value
 confint(model) # 신뢰구간 (정확한 의미 파악 필요)
 
 # with ad_result.csv data----
-m <- lm(install ~., data = data[,c('install', 'tvcm', 'magazine')])
+ad_result <- read_csv("data/ad_result.csv")
+m <- lm(install ~., data = ad_result[,c('install', 'tvcm', 'magazine')])
 summary(m) # 유의미한 변수는?
 
 data <- read.csv('./data/ad_result.csv'); head(data)
@@ -181,7 +249,14 @@ library(dummies)
 str(iris)
 iris_dummy <- dummy.data.frame(iris, names=c('Species'), sep='_')
 head(iris_dummy)
-dim(iris_dummy)
+
+
+iris %>%
+  as_tibble() %>%
+  tibble :: rowid_to_column("ID") %>%
+  mutate(yesno = 1) %>%
+  spread(Species, yesno, fill = 0)
+
 iris_dummy
 m <- lm(Sepal.Length ~ ., data=iris_dummy)
 summary(m)
