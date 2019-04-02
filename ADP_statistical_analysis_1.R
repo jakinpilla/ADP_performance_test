@@ -75,6 +75,45 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width)) +
   labs(title = "Sepal Length vs Width of iris",
        x = "Sepal Length of iris",
        y = "Sepal Length of iris")
+
+
+# lm with iris data...
+m <- lm(Sepal.Length ~ ., data=iris)
+summary(m) # Speciesversicolor, Speciesvirginica
+anova(m) # Species의 p-value 확인 / 의미파악하기
+
+plot(m, which = 1)
+plot(m, which = 2)
+plot(m, which = 3)
+plot(m, which = 4)
+plot(m, which = 5)
+plot(m, which = 6)
+
+# using dummy variables----
+levels(iris$Species)
+library(dummies)
+str(iris)
+iris_dummy <- dummy.data.frame(iris, names=c('Species'), sep='_')
+head(iris_dummy)
+
+
+iris %>%
+  as_tibble() %>%
+  tibble :: rowid_to_column("ID") %>%
+  mutate(yesno = 1) %>%
+  spread(Species, yesno, fill = 0)
+
+iris_dummy
+m <- lm(Sepal.Length ~ ., data=iris_dummy)
+summary(m)
+# Coefficients:
+#   (Intercept)         Sepal.Width        Petal.Length         Petal.Width  
+# 1.1478              0.4959              0.8292             -0.3152  
+# Species_setosa  Species_versicolor   Species_virginica  
+# 1.0235              0.2999                  NA  
+# Why Speceis_virginica coef is NA
+
+anova(m)
  
 # 다변량 수업내용 다시한번 곱씹어 보자...
 # 
@@ -212,6 +251,9 @@ boston$medv[c(171, 235, 31, 100)] # observed value
 residuals(model)[1:4] # observed value - fitted value
 confint(model) # 신뢰구간 (정확한 의미 파악 필요)
 
+par(mfrow=c(2, 2))
+plot(model)
+
 # with ad_result.csv data----
 ad_result <- read_csv("data/ad_result.csv")
 m <- lm(install ~., data = ad_result[,c('install', 'tvcm', 'magazine')])
@@ -239,45 +281,16 @@ predict(m, newdata = data.frame(speed=3), interval = 'prediction') # 특정속�
 # Godd feature subsets contain features highly correlated with the classification, yet 
 # uncorrelaetd to each other.
 
-m <- lm(Sepal.Length ~ ., data=iris)
-summary(m) # Speciesversicolor, Speciesvirginica
-anova(m) # Species의 p-value 확인 / 의미파악하기
-
-# using dummy variables----
-levels(iris$Species)
-library(dummies)
-str(iris)
-iris_dummy <- dummy.data.frame(iris, names=c('Species'), sep='_')
-head(iris_dummy)
-
-
-iris %>%
-  as_tibble() %>%
-  tibble :: rowid_to_column("ID") %>%
-  mutate(yesno = 1) %>%
-  spread(Species, yesno, fill = 0)
-
-iris_dummy
-m <- lm(Sepal.Length ~ ., data=iris_dummy)
-summary(m)
-# Coefficients:
-#   (Intercept)         Sepal.Width        Petal.Length         Petal.Width  
-# 1.1478              0.4959              0.8292             -0.3152  
-# Species_setosa  Species_versicolor   Species_virginica  
-# 1.0235              0.2999                  NA  
-# Why Speceis_virginica coef is NA
-
-anova(m)
-
 # 변수선택하기----
+# 전진선택법(forward selection), 후진소거법(backward selection), 단계선택법(step selection)...
 m <- lm(medv ~., data = boston)
 m2 <- step(m, direction = 'both')
 formula(m2)
 # predict(m2, newdata=...)
 
-write.csv(bio, './data/bio.csv', row.names = F)
 bio <- read.csv('./data/bio.csv')
 glimpse(bio)
+str(bio)
 
 # 전진소거법
 step(lm(pemax~1, bio), 
@@ -298,6 +311,7 @@ step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), d
 anova(reduced, full) # 1.49e-12 *** :: 이 두 모델간에는 유의한 차이가 있다.
 
 # 상호작용 확인----
+par(mfrow = c(1, 1))
 head(Orange)
 range(Orange$age)
 with(Orange, interaction.plot(age, Tree, circumference)) # age, Tree와의 상호작용이 circumference에 어떤 영향??
@@ -341,7 +355,7 @@ df_imdb %>%
   ggplot(aes(movie_facebook_likes)) + geom_histogram()
 
 df_imdb %>%
-  ggplot(aes(movie_facebook_likes)) + geom_histogram() + scale_x_log10()
+  ggplot(aes(movie_facebook_likes)) + geom_histogram(bins = 20) + scale_x_log10()
 
 # 좋아요 개수와 스코어 간의 산점도
 df_imdb %>%
@@ -410,6 +424,9 @@ fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
 # 예측 모델 작성_1 ::: RandomForest
 # install.packages('e1071')
 library(e1071)
+
+titanic.train <- as.data.table(titanic.train)
+
 rf_fit <- train(survived ~ ., data=titanic.train,
                 preProcess = c("pca"),
                 method='rf', ntree=100, verbose=F, trControl=fitControl)
@@ -431,10 +448,11 @@ library(ROCR)
 # labels는 실제 분류true class가 저장된 벡터(actual vectors)
 
 yhat_rf <- predict(rf_fit, newdata = titanic.test, type='prob')$survived ## the predicted prob of survived
-head(yhat_rf)
+head(yhat_rf) # probability...
 y_obs <- titanic.test$survived # label :: actual vectors
-head(y_obs)
-# ROCR package를 적용하기 위해 prediction 를 생성해야 함
+head(y_obs) # label...
+
+ # ROCR package를 적용하기 위해 prediction 를 생성해야 함
 pred_rf <- prediction(yhat_rf, y_obs)
 plot(performance(pred_rf, 'tpr', 'fpr')) # ROC curve
 abline(0,1)
@@ -480,6 +498,10 @@ adult <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/ad
                               "capital_gain", "capital_loss", "hr_per_week","country", "income"),
                   fill=FALSE, 
                   strip.white=T)
+
+adult %>% write.csv("./data/adult.csv", row.names = F)
+adult <- read_csv("./data/adult.csv")
+
 glimpse(adult)
 levels(adult$income)
 adult$income <- factor(adult$income, levels=c("<=50K", ">50K" ), labels=c(0,1))
@@ -510,7 +532,11 @@ y_obs <- adult.test$income
 
 xtabs(~ yhat_m_class + y_obs)
 sum(yhat_m_class == y_obs) / length(y_obs)
-confusionMatrix(yhat_m_class, y_obs)
+
+yhat_m_class %>% class()
+y_obs %>% class()
+
+confusionMatrix(as.factor(yhat_m_class), y_obs)
 
 # ROC curve and AUC----
 library(ROCR)
@@ -539,7 +565,7 @@ hr %>%
 
 glimpse(hr)
 
-x <- model.matrix(~. -left, data=hr) # 선형 모형 formualtion을 위한 문자열 문법
+# x <- model.matrix(~. -left, data=hr) # 선형 모형 formualtion을 위한 문자열 문법
 
 ## data splitting into training, validation, test dataset----
 set.seed(2018)
@@ -598,6 +624,10 @@ names(data) <-
     paste0('worst_', feature_names))
 
 glimpse(data)
+
+data %>% write.csv("./data/breast_cancer_wisconsin.csv", row.names = F)
+data <- read_csv("./data/breast_cancer_wisconsin.csv")
+
 
 ## define needed functions----
 rmse <- function(y_obs, yhat){
