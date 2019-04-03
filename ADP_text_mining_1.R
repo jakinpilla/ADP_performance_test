@@ -1,3 +1,5 @@
+!diagnostics off
+
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
@@ -69,8 +71,11 @@ head(tvpro, 2)$date
 head(tvpro, 2)$title
 head(tvpro, 2)$contents
 
+dim(tvpro)
+
 ## titie text preprocessing----
 head(tvpro$title, 10)
+
 # remove punctuation 
 tvpro$title <- gsub("1박 2일", "1박_2일", tvpro$title)
 tvpro$title <- gsub("아는 형님", "아는_형님", tvpro$title)
@@ -118,20 +123,20 @@ ko.words <- function(doc) {
   extractNoun(d)
 }
 
-# SimplePos22 태그 부착하기
+# SimplePos09 태그 부착하기----
 title.vec <- tvpro$title
 length(title.vec)
 title.vec
 
-title.vec_01 <- NULL
-for (i in seq(length(title.vec))) {
-  if(nchar(title.vec[i] > 1)) {
-    title.vec_01 <- c(title.vec_01, SimplePos22(title.vec[i]))
-  }
-}
-
-title.vec_01 %>% length()
-title.vec[1] %>% strsplit(" ")
+# title.vec_01 <- NULL
+# for (i in seq(length(title.vec))) {
+#   if(nchar(title.vec[i] > 1)) {
+#     title.vec_01 <- c(title.vec_01, SimplePos22(title.vec[i]))
+#   }
+# }
+# 
+# title.vec_01 %>% length()
+# title.vec[1] %>% strsplit(" ")
 
 title.vec[1] %>% 
   SimplePos09() %>% 
@@ -140,49 +145,79 @@ title.vec[1] %>%
   strsplit("\\+") %>% 
   unlist() -> title.vec_1.tagged
 
-noun.vec_1 <- title.vec_1.tagged[grep("/N", title.vec_1.tagged)]
-title.vec_1.tagged[grep("/P", title.vec_1.tagged)]
+# 명사만 추출 ----
+noun.vec_1 <- title.vec_1.tagged[grep("/N", title.vec_1.tagged)]; noun.vec_1
 
+# 형용사만 추출 ----
+adj.vec_1 <- title.vec_1.tagged[grep("/P", title.vec_1.tagged)]; adj.vec_1
 
 noun.vec_1 %>% paste(collapse = " ")
 
-sam.vec <- title.vec[1:2]
 
-title.vec[is.na(title.vec)] <- "dummy"
-doc.vec <- NULL
-for (i in 1:length(title.vec)) {
+# sample title vec prac ----
+sam.vec <- title.vec[1:2]
+sam.vec_taged <- NULL
+for (i in 1:length(sam.vec)) {
+  sam.vec[i] %>% 
+    SimplePos09() %>% 
+    unlist() %>% 
+    unname() %>% 
+    strsplit("\\+") %>% 
+    unlist() -> ith.tagged
   
-  title.vec[i] %>% SimplePos09 %>% unlist() %>% unname() %>%
-    strsplit("\\+") %>% unlist() -> title.vec_ith_tagged
+  ith.tagged[grep("/N", ith.tagged)] %>%
+    paste(collapse = " ") -> ith.N_tagged
   
-  ith.noun_vec <- title.vec_ith_tagged[grep("/N", title.vec_ith_tagged)]
-  
-  ith.noun_vec %>% paste(collapse = " ") -> ith.noun_vec.pasted
-  
-  doc.vec <- c(doc.vec, ith.noun_vec.pasted)
+  sam.vec_taged <- append(sam.vec_taged, ith.N_tagged)
 }
 
+sam.vec_taged
 
-doc.vec
+# total title vec prac ----
+title.vec[is.na(title.vec)] <- "dummy"
 
-?grep()
+title_doc.vec <- NULL
+for (i in 1:length(title.vec)) {
+  
+  title.vec[i] %>% 
+    SimplePos09() %>% 
+    unlist() %>% 
+    unname() %>% 
+    strsplit("\\+") %>% 
+    unlist() -> ith.tagged
+  
+  ith.tagged[grep("/N", ith.tagged)] %>%
+    paste(collapse = " ") -> ith.N_tagged
+  
+  title_doc.vec <- c(title_doc.vec, ith.N_tagged)
+}
+
+title_doc.vec %>% length()
 
 # title data----
 
 ## TDM 생성----
 options(mc.cores=1)
-cps <- VCorpus(VectorSource(title))
-tdm_title <- TermDocumentMatrix(cps, 
+cps <- VCorpus(VectorSource(title_doc.vec))
+dtm_title <- DocumentTermMatrix(cps, 
                                 control = list(tokenize = ko.words,
                                                removePunctuation=T,
                                                wordLengths=c(2, 6),
                                                weighting = weightTf))
-tdm_title
-tdm_title_mat <- as.matrix(tdm_title)
-dim(tdm_title_mat)
+dtm_title
+dtm_title_mat <- as.matrix(dtm_title)
+dim(dtm_title_mat)
 
-# 만약 TDM이 너무 커서 메모리상에 할당되지 않을 때의 해결방법은??
-# 
+# 만약 TDM이 너무 커서 as.matrix() 이후 메모리상에 할당되지 않을 때의 해결방법은??
+
+# slam packaege 사용 ----
+dtm_title %>%
+  slam::col_sums(na.rm = T) %>%
+  as.data.frame() %>% 
+  rownames_to_column() %>%
+  as_tibble() ->  df.title_word_count
+  
+
 # 긍정, 부정 단어 사전, 카운트, 두 개의 집단으로  클러스터링, 시각화...
 # 
 # 영화 댓글, 점수 크롤링 후 데이터셋 만들기 / 형용사 추출 / 긍부정과 관련있는 형용사는 무엇

@@ -21,3 +21,10 @@ stocks
 
 gather(stocks, "stock", "price", -time)
 stocks %>% gather("stock", "price", -time)
+
+library(dplyr)
+mini_iris <-
+  iris %>%
+  group_by(Species) %>%
+  slice(1)
+mini_iris %>% gather(key = "flower_att", value = "measurement", -Species)

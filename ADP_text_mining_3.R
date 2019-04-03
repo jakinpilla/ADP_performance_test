@@ -9,95 +9,65 @@ library('KoNLP'); useSejongDic()
 library('tm')
 library('stringr')
 
-
-url_base <- 'http://movie.daum.net/moviedb/grade?movieId=99056&type=netizen&page='   # 크롤링 대상 URL
-
-
+url_base <- 'http://movie.daum.net/moviedb/grade?movieId=99056&type=netizen&page='
 
 all.reviews <- c() 
-
-for(page in 1:500){    ## 500페이지 까지만 수집 (본인이 나름대로 설정하면 됨) 
+for(page in 1:100){
   
-  url <- paste(url_base, page, sep='')   #url_base의 뒤에 페이지를 1~500 까지 늘리면서 접근
+  url <- paste(url_base, page, sep='')
   
-  htxt <- read_html(url)                       # html 코드 불러오기
+  read_html(url) %>%
+    html_nodes("p.desc_review") %>%
+    html_text() %>%
+    str_trim() -> ith_reviews
   
-  comments <- html_nodes(htxt, 'div') %>% html_nodes('p')  ## comment 가 있는 위치 찾아 들어가기 
-  
-  reviews <- html_text(comments)               # 실제 리뷰의 text 파일만 추출
-  
-  reviews <- repair_encoding(reviews, from = 'utf-8')  ## 인코딩 변경
-  
-  if( length(reviews) == 0 ){ break }                              #리뷰가 없는 내용은 제거
-  
-  reviews <- str_trim(reviews)                                      # 앞뒤 공백문자 제거
-  
-  all.reviews <- c(all.reviews, reviews)                          #결과값 저장
-  
+  all.reviews <- c(all.reviews, ith_reviews)
 }
 
-##불필요 내용 필터링
-
-all.reviews <- all.reviews[!str_detect(all.reviews,"평점")]   # 수집에 불필요한 단어가 포함된 내용 제거
-all.reviews[1]
-all.reviews[9]
-all.reviews[11]
-
+all.reviews
 all.reviews %>% length()
-all.reviews[317]
 
+url_base <- 'http://movie.daum.net/moviedb/grade?movieId=99056&type=netizen&page='
 
-?html_nodes
-url <- paste(url_base, 1, sep='')
-htxt <- read_html(url)
-html_nodes(htxt, 'em')
+all.scores <- c() 
+for(page in 1:100){
+  
+  url <- paste(url_base, page, sep='')
+  
+  read_html(url) %>%
+    html_nodes("em.emph_grade") %>%
+    html_text() %>%
+    as.numeric() -> ith_scores
 
-html_nodes(htxt, 'em') %>% html_text() -> id_score.vec
-
-id_score.vec %>% length()
-
-id_score <- NULL
-for(i in 1:length(id_score.vec)) {
-  if(i %% 2 == 0) {
-    id_score <- c(id_score, id_score.vec[i])
-  }
+  all.scores <- c(all.scores, ith_scores)
 }
 
+all.scores
+all.scores %>% length()
 
-?html_children
+tibble(comments = all.reviews,
+       scores = all.scores) -> small.txt_data
 
-all.id_scores <- c() 
+small.txt_data %>%
+  filter(nchar(comments) >=  3) -> small.txt_data
 
-for(page in 1:500){    ## 500페이지 까지만 수집 (본인이 나름대로 설정하면 됨) 
-  
-  url <- paste(url_base, page, sep='')   #url_base의 뒤에 페이지를 1~500 까지 늘리면서 접근
-  
-  htxt <- read_html(url)                       # html 코드 불러오기
-  
-  id_scores <- html_nodes(htxt, 'em') %>% html_text()  ## comment 가 있는 위치 찾아 들어가기 
-  
-  all.id_scores <- c(all.id_scores, id_scores)                          #결과값 저장
-  
-}
+small.txt_data %>% View()
 
-all.id_scores 
-id_score <- NULL
-for(i in 1:length(all.id_scores)) {
-  if(i %% 21 != 0) {
-    id_score <- c(id_score, all.id_scores[i])
-  }
-}
+small.txt_data %>%
+  write.csv('./data/movie_sing.review_score.csv', row.names = F, 
+            fileEncoding = 'utf-8')
 
-id_score
+movie_sing_review_score <- read_csv("data/movie_sing.review_score.csv")
+movie_sing_review_score %>%
+  mutate(posi_neg = ifelse(scores >= 6, 1, 0)) -> movie_sing_review_score
 
-score <- NULL
-for(i in 1:length(id_score)) {
-  if(i %% 2 == 0) {
-    score <- c(score, id_score[i])
-  }
-}
+table(movie_sing_review_score$posi_neg)
 
-score
-length(score)
+movie_sing_review_score %>%
+  filter(scores == 6)
 
-data.frame(review = all.reviews, score = score[1:317]) %>% View()
+
+
+
+
+
