@@ -66,7 +66,7 @@ table(movie_sing_review_score$posi_neg)
 movie_sing_review_score %>%
   filter(scores == 6)
 
-
+# 긍부정 단어사전 만들기 ----
 
 
 
