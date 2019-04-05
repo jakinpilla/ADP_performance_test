@@ -103,6 +103,8 @@ head(tvpro$title, 100)
 tvpro$contents <- gsub('[[:punct:]]+', "", tvpro$contents)
 tvpro$contents <- gsub('2016년도', "", tvpro$contents)  # 특정단어 제거
 tvpro$contents <- gsub('▲', "", tvpro$contents)  # 특정단어 제거
+tvpro$contents <- gsub('U00A0', "", tvpro$contents)  # 특정단어 제거
+tvpro$contents <- gsub('U00A07', "", tvpro$contents)  # 특정단어 제거
 # tvpro$contents <- gsub('\\d+', "", tvpro$contents) # 숫자 제거
 tvpro$contents <- gsub('[ㄱ-ㅣ]', '', tvpro$contents) # ㅋㅋㅋ, ㅜㅠ 등 제거
 tvpro$contents <- str_replace_all(tvpro$contents, '[[:lower:]]', '') # 영어 소문자 표현 모두 삭제
@@ -110,9 +112,9 @@ tvpro$contents <- str_replace_all(tvpro$contents, '[[:lower:]]', '') # 영어 �
 head(tvpro$contents, 10)
 
 ## NA 값 제거----
-title <- tvpro$title
-title[is.na(title)] <- 'dummy' # NA 있으면 추후 에러 발생, 제거 필ㅇ
+title.vec <- tvpro$title
 title[is.na(title)]
+title[is.na(title)] <- 'dummy' # NA 있으면 추후 에러 발생, 제거 필ㅇ
 
 contents <- tvpro$contents
 contents[is.na(contents)] # contents에는 NA 값 없음
@@ -124,7 +126,6 @@ ko.words <- function(doc) {
 }
 
 # SimplePos09 태그 부착하기----
-title.vec <- tvpro$title
 length(title.vec)
 title.vec
 
@@ -193,14 +194,23 @@ for (i in 1:length(title.vec)) {
 }
 
 title_doc.vec %>% length()
+title_doc.vec <- gsub('[[:punct:]]+', "", title_doc.vec)
+# title_doc.vec <- gsub('[[:digit:]]+', "", title_doc.vec) # 1박 2일 때문에 안 됨.
+title_doc.vec <- gsub('[[:lower:]]+', "", title_doc.vec)
+title_doc.vec <- gsub("n", "", title_doc.vec)
+title_doc.vec <- gsub("N", "", title_doc.vec)
 
 # title data----
 
-## TDM 생성----
+## DTM 생성----
+
+strsplit_space_tokenizer <- function(x) unlist(strsplit(as.character(x), " "))
+title_doc.vec[1] %>% strsplit_space_tokenizer()
+
 options(mc.cores=1)
 cps <- VCorpus(VectorSource(title_doc.vec))
 dtm_title <- DocumentTermMatrix(cps, 
-                                control = list(tokenize = ko.words,
+                                control = list(tokenize = strsplit_space_tokenizer,
                                                removePunctuation=T,
                                                wordLengths=c(2, 6),
                                                weighting = weightTf))
@@ -217,6 +227,7 @@ dtm_title %>%
   rownames_to_column() %>%
   as_tibble() ->  df.title_word_count
   
+df.title_word_count %>% View()
 
 # 긍정, 부정 단어 사전, 카운트, 두 개의 집단으로  클러스터링, 시각화...
 # 
@@ -224,13 +235,16 @@ dtm_title %>%
 # 영화의 긍부정 댓글 구분
 # 월별 긍부정 추이 확인
 #
-## pro_names가 있는 행들만 추출----
-tdm_title_extracted <- tdm_title[dimnames(tdm_title)$Terms %in% pro_names, ] # TDM 에서 추출한다.
-dim(tdm_title_extracted) # 9개의 행들만 추출된 matrix
+## tvpro_nm_union이 있는 행들만 이추출----
+dimnames(dtm_title)
+tvpro_nm_union
+dtm_title_extracted <- dtm_title_mat[, dimnames(dtm_title)$Terms %in% tvpro_nm_union] # TDM 에서 추출한다.
+dim(dtm_title_extracted) # 9개의 행들만 추출된 matrix
+dtm_title_extracted %>% colnames()
 
-title_mat <- as.matrix(tdm_title_extracted)
+title_mat <- dtm_title_extracted
 str(title_mat)
-rownames(title_mat)
+colnames(title_mat)
 
 ## title data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
 for (i in 1:length(pro_nm_pasted)) {
@@ -238,35 +252,64 @@ for (i in 1:length(pro_nm_pasted)) {
   cat(pro_nm_pasted[i], ':', pro_freq, "\n", sep=" ")
 }
 
+title_mat %>%
+  as.data.frame() %>%
+  col_sums()
+
 # contents data----
-## TDM 생성----
+
+contents.vec <- tvpro$contents
+contents.vec[is.na(contents)] # contents에는 NA 값 없음
+
+contents_doc.vec <- NULL
+for (i in 1:length(contents.vec)) {
+  
+  contents.vec[i] %>% 
+    SimplePos09() %>% 
+    unlist() %>% 
+    unname() %>% 
+    strsplit("\\+") %>% 
+    unlist() -> ith.tagged
+  
+  ith.tagged[grep("/N", ith.tagged)] %>%
+    paste(collapse = " ") -> ith.N_tagged
+  
+  contents_doc.vec <- c(contents_doc.vec, ith.N_tagged)
+}
+
+contents_doc.vec %>% length()
+contents_doc.vec <- gsub('[[:punct:]]+', "", contents_doc.vec)
+contents_doc.vec <- gsub('[[:lower:]]+', "", contents_doc.vec)
+contents_doc.vec <- gsub("n", "", contents_doc.vec)
+contents_doc.vec <- gsub("N", "", contents_doc.vec)
+
+# TDM 생성----
 options(mc.cores=1)
-cps <- VCorpus(VectorSource(contents))
-tdm_contents <- TermDocumentMatrix(cps, 
-                                   control = list(tokenize = ko.words,
+cps <- VCorpus(VectorSource(contents_doc.vec))
+strsplit_space_tokenizer <- function(x) unlist(strsplit(as.character(x), " "))
+
+dtm_contents <- DocumentTermMatrix(cps, 
+                                   control = list(tokenize = strsplit_space_tokenizer,
                                                   removePunctuation=T,
                                                   wordLengths=c(2, 6),
                                                   weighting = weightTf))
 
-tdm_contents
-tdm_contents_mat <- as.matrix(tdm_contents)
-dim(tdm_contents_mat)
+dtm_contents
+dtm_contents_mat <- as.matrix(dtm_contents)
+dim(dtm_contents_mat)
 
-## pro_names가 있는 행들만 추출----
-tdm_contents_extracted <- tdm_contents[dimnames(tdm_contents)$Terms %in% pro_names, ]
-contents_mat <- as.matrix(tdm_contents_extracted)
+# tvpro_nm_union 이 있는 행들만 추출----
+dtm_contents_extracted <- dtm_contents_mat[, dimnames(dtm_contents)$Terms %in% tvpro_nm_union]
+contents_mat <- dtm_contents_extracted
 str(contents_mat)
-rownames(contents_mat)
+colnames(contents_mat)
 
 ## contents data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
 
-length(pro_nm_pasted)
-pro_nm_pasted[1]
+contents_mat %>%
+  col_sums()
 
-for (i in 1:length(pro_nm_pasted)) {
-  pro_freq = sum(contents_mat[i, ])
-  cat(pro_nm_pasted[i], ':', pro_freq, "\n", sep=" ")
-}
+## named vector를 date.frame으로 바꾸어서 그래프를 그리는 방법은?
 
 # sum matrix----
 total_mat <- title_mat + contents_mat
@@ -279,10 +322,6 @@ class(tvpro$date)
 tvpro$month <- format(tvpro$date, '%Y-%m')
 tvpro$month[1:5]
 
-# TDM -> DTM
-total_mat <- t(total_mat)
-dim(total_mat)
-
 # add date and month columns----
 head(as.data.frame(total_mat))
 total_df <-  as.data.frame(total_mat)
@@ -292,11 +331,16 @@ dim(date_df)
 
 data <- cbind(date_df, total_df); head(data)
 
-# aggregate date grouped by month
+as.data.frame(total_mat) %>%
+  as_tibble() %>%
+  mutate(month = tvpro$month) -> data
+
+# 월별 단어 출현 횟수 ----
 head(data)
 class(data)
-colnames(data) <- c("date", "month", "day_night", "live_alone", "endless_challenge", "cohabitting",
-                    "masked_singer", "three_meals", "brother_known",  "juggle_life", "gimme_food" )
+colnames(data) <- c("day_night", "live_alone", "endless_challenge", "cohabitting",
+                    "masked_singer", "three_meals", "brother_known",  "juggle_life",
+                    "gimme_food", "month")
 
 head(data)
 
@@ -310,16 +354,26 @@ data %>%
             sum.three_meals = sum(three_meals),
             sum.brother_known = sum(brother_known),
             sum.juggle_life = sum(juggle_life),
-            sum.gimme_food = sum(gimme_food)) -> data_mon_sum; head(data_mon_sum)
+            sum.gimme_food = sum(gimme_food)) -> data_mon_sum; data_mon_sum
 
 melted <- melt(data_mon_sum , id.vars = 'month'); head(melted)
+data_mon_sum %>%
+  gather(pro_nm, value, -month)
 
-windows()
-ggplot(melted, aes(x=month, y=value, fill=variable)) +
-  geom_bar(position='dodge', stat='identity', color = 'black') + scale_y_continuous()
+# 시각화 ----
+data_mon_sum %>%
+  gather(pro_nm, value, -month) %>%
+  ggplot(aes(x = month, y = value, fill = pro_nm)) +
+  geom_bar(position = 'dodge', stat = 'identity', color = 'black') +
+  scale_y_continuous()
 
-ggplot(melted, aes(x=month, y=value, fill=variable)) +
-  geom_bar(position='fill', stat='identity', color='black') + scale_y_continuous(labels = scales :: percent)
+
+data_mon_sum %>%
+  gather(pro_nm, value, -month) %>%
+  ggplot(aes(x = month, y = value, fill = pro_nm)) +
+  geom_bar(position = 'dodge', stat = 'identity', color = 'black') +
+  scale_y_continuous(labels = scales::percent)
+
 
 # legend를 한글로 바꾸는 방법...
 
@@ -384,6 +438,13 @@ word_freq_df$words
 str(word_freq_df)
 
 nchar(word_freq_df$words)
+
+
+# 
+dtm_contents %>%
+  slam::col_sums() %>%
+  as.data.frame() %>%
+  rownames_to_column()
 
 word_freq_df %>%
   mutate(leng_words = str_length(words)) %>% # 각 단어의 character 수를 세기
