@@ -1,4 +1,4 @@
-!diagnostics off
+# !diagnostics off
 
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
@@ -19,8 +19,8 @@ library(slam)
 library(tm)
 library(wordcloud)
 
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 
+              'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
 
 Packages_tm <- c('rJava', 'KoNLP', 'SnowballC', 'slam', 'wordcloud')
 
@@ -113,31 +113,21 @@ head(tvpro$contents, 10)
 
 ## NA 값 제거----
 title.vec <- tvpro$title
-title[is.na(title)]
-title[is.na(title)] <- 'dummy' # NA 있으면 추후 에러 발생, 제거 필ㅇ
+title.vec[is.na(title.vec)]
+title.vec[is.na(title.vec)] <- 'dummy' # NA 있으면 추후 에러 발생, 제거 필ㅇ
 
-contents <- tvpro$contents
-contents[is.na(contents)] # contents에는 NA 값 없음
+contents.vec <- tvpro$contents
+contents.vec[is.na(contents.vec)] # contents에는 NA 값 없음
 
-# ko.words() 함수 만들기----
-ko.words <- function(doc) {
-  d <- as.character(doc)
-  extractNoun(d)
-}
+# # ko.words() 함수 만들기
+# ko.words <- function(doc) {
+#   d <- as.character(doc)
+#   extractNoun(d)
+# }
 
 # SimplePos09 태그 부착하기----
 length(title.vec)
 title.vec
-
-# title.vec_01 <- NULL
-# for (i in seq(length(title.vec))) {
-#   if(nchar(title.vec[i] > 1)) {
-#     title.vec_01 <- c(title.vec_01, SimplePos22(title.vec[i]))
-#   }
-# }
-# 
-# title.vec_01 %>% length()
-# title.vec[1] %>% strsplit(" ")
 
 title.vec[1] %>% 
   SimplePos09() %>% 
@@ -174,9 +164,7 @@ for (i in 1:length(sam.vec)) {
 
 sam.vec_taged
 
-# total title vec prac ----
-title.vec[is.na(title.vec)] <- "dummy"
-
+# title.vec 에 태그 부착, 명사(N) 추출 ----
 title_doc.vec <- NULL
 for (i in 1:length(title.vec)) {
   
@@ -187,7 +175,7 @@ for (i in 1:length(title.vec)) {
     strsplit("\\+") %>% 
     unlist() -> ith.tagged
   
-  ith.tagged[grep("/N", ith.tagged)] %>%
+  ith.tagged[grep("/N", ith.tagged)] %>% # 형용사일 경우 "/P" 로 변경...
     paste(collapse = " ") -> ith.N_tagged
   
   title_doc.vec <- c(title_doc.vec, ith.N_tagged)
@@ -202,8 +190,7 @@ title_doc.vec <- gsub("N", "", title_doc.vec)
 
 # title data----
 
-## DTM 생성----
-
+# DTM 생성----
 strsplit_space_tokenizer <- function(x) unlist(strsplit(as.character(x), " "))
 title_doc.vec[1] %>% strsplit_space_tokenizer()
 
@@ -225,9 +212,12 @@ dtm_title %>%
   slam::col_sums(na.rm = T) %>%
   as.data.frame() %>% 
   rownames_to_column() %>%
-  as_tibble() ->  df.title_word_count
+  as_tibble() %>%
+  rename(words = rowname) %>%
+  rename(freq = ".") ->  df.title_word_count
   
-df.title_word_count %>% View()
+df.title_word_count # %>% View()
+
 
 # 긍정, 부정 단어 사전, 카운트, 두 개의 집단으로  클러스터링, 시각화...
 # 
@@ -235,7 +225,7 @@ df.title_word_count %>% View()
 # 영화의 긍부정 댓글 구분
 # 월별 긍부정 추이 확인
 #
-## tvpro_nm_union이 있는 행들만 이추출----
+# tvpro_nm_union이 있는 행들만 이추출----
 dimnames(dtm_title)
 tvpro_nm_union
 dtm_title_extracted <- dtm_title_mat[, dimnames(dtm_title)$Terms %in% tvpro_nm_union] # TDM 에서 추출한다.
@@ -247,19 +237,30 @@ str(title_mat)
 colnames(title_mat)
 
 ## title data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
-for (i in 1:length(pro_nm_pasted)) {
-  pro_freq = sum(title_mat[i, ])
-  cat(pro_nm_pasted[i], ':', pro_freq, "\n", sep=" ")
-}
 
 title_mat %>%
   as.data.frame() %>%
-  col_sums()
+  col_sums() %>%
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  as_tibble() %>%
+  rename(words = rowname) %>%
+  rename(freq = ".")
+
+dtm_title %>%
+  slam::col_sums(na.rm = T) %>%
+  as.data.frame() %>% 
+  rownames_to_column() %>%
+  as_tibble() %>%
+  rename(words = rowname) %>%
+  rename(freq = ".") ->  df.title_word_count
+
+df.title_word_count %>%
+  filter(words %in% tvpro_nm_union)
 
 # contents data----
-
 contents.vec <- tvpro$contents
-contents.vec[is.na(contents)] # contents에는 NA 값 없음
+contents.vec[is.na(contents.vec)] # contents에는 NA 값 없음
 
 contents_doc.vec <- NULL
 for (i in 1:length(contents.vec)) {
@@ -283,7 +284,7 @@ contents_doc.vec <- gsub('[[:lower:]]+', "", contents_doc.vec)
 contents_doc.vec <- gsub("n", "", contents_doc.vec)
 contents_doc.vec <- gsub("N", "", contents_doc.vec)
 
-# TDM 생성----
+# DTM 생성----
 options(mc.cores=1)
 cps <- VCorpus(VectorSource(contents_doc.vec))
 strsplit_space_tokenizer <- function(x) unlist(strsplit(as.character(x), " "))
@@ -295,7 +296,7 @@ dtm_contents <- DocumentTermMatrix(cps,
                                                   weighting = weightTf))
 
 dtm_contents
-dtm_contents_mat <- as.matrix(dtm_contents)
+dtm_contents_mat <- as.matrix(dtm_contents) # 이렇게 하면 메모리 문제로 할당하지 못하는 경우가 많다.
 dim(dtm_contents_mat)
 
 # tvpro_nm_union 이 있는 행들만 추출----
@@ -303,6 +304,13 @@ dtm_contents_extracted <- dtm_contents_mat[, dimnames(dtm_contents)$Terms %in% t
 contents_mat <- dtm_contents_extracted
 str(contents_mat)
 colnames(contents_mat)
+
+# instead...
+inspect(dtm_contents[, dimnames(dtm_contents)$Terms %in% tvpro_nm_union])
+dtm_contents[, dimnames(dtm_contents)$Terms %in% tvpro_nm_union] %>% 
+  as.matrix() ->  dtm_contents_extracted # 이렇게 하면 필요한 열만 가지는 matrix를 메모리 할당 문제 없이 진행할 수 있다.
+
+contents_mat <- dtm_contents_extracted
 
 ## contents data만 보았을때 각 프로그램 이름이 들어간 문건의 횟수 확인
 
@@ -375,164 +383,29 @@ data_mon_sum %>%
   scale_y_continuous(labels = scales::percent)
 
 
-# legend를 한글로 바꾸는 방법...
-
-##-------------------------------------------------------------------------------------
-
-# 그냥 contents 자주 나오는 단어를 보고 tv program 이름 유추해보기
+# 그냥 contents 자주 나오는 단어를 보고 tv program 이름 유추해보기 ----
 # word count, word cloud 등
 
-# word count----
-# data loadinng ----
-tvpro <- read_delim("data/tvprograms.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
-head(tvpro$contents, 10)
-
-# text cleansing----
-tvpro$contents <- gsub('[[:punct:]]+', "", tvpro$contents)
-tvpro$contents <- gsub('2016년도', "", tvpro$contents)  # 특정단어 제거
-tvpro$contents <- gsub('▲', "", tvpro$contents)  # 특정단어 제거
-tvpro$contents <- gsub('△', "", tvpro$contents)  # 특정단어 제거
-
-# tvpro$contents <- gsub('\\d+', "", tvpro$contents) # 숫자 제거
-tvpro$contents <- gsub('[ㄱ-ㅣ]', '', tvpro$contents) # ㅋㅋㅋ, ㅜㅠ 등 제거
-
-# 영어 소문자 표현 모두 삭제
-# 잘 동작되지 않음
-tvpro$contents <- str_replace_all(tvpro$contents, '[[:lower:]]', '') 
-head(tvpro$contents, 10)
-
-contents <- tvpro$contents
-  
-# 명사 빈도 분석----
-## ko.words() :: 명사 추출 함수 정의----
-ko.words <- function(doc) {
-  d <- as.character(doc)
-  extractNoun(d)
-}
-
-## TermDocumentMatrix----
-options(mc.cores=1)
-cps <- VCorpus(VectorSource(contents))
-tdm_contents <- TermDocumentMatrix(cps, 
-                                   control = list(tokenize = ko.words,
-                                                  removePunctuation=T,
-                                                  wordLengths=c(2, 6),
-                                                  weighting = weightTf))
-
-tdm_contents_mat <- as.matrix(tdm_contents)
-dim(tdm_contents_mat)
-
-length(rownames(tdm_contents_mat))
-length(rowSums(tdm_contents_mat))
-word_freq_df <- data.frame(words = rownames(tdm_contents_mat),
-                           freq = rowSums(tdm_contents_mat))
-rownames(word_freq_df) <- NULL
-head(word_freq_df); str(word_freq_df)
-word_freq_df$words <- as.character(word_freq_df$words)
-
-word_freq_df %>%
-  arrange(desc(freq)) 
-
-head(word_freq_df);
-word_freq_df$words
-str(word_freq_df)
-
-nchar(word_freq_df$words)
-
-
-# 
 dtm_contents %>%
   slam::col_sums() %>%
   as.data.frame() %>%
-  rownames_to_column()
+  rownames_to_column() %>% 
+  rename(freq = ".") %>%
+  rename(words = rowname) %>%
+  filter(freq >= 50) %>% 
+  as_tibble() ->  data.for_wordcloud; data.for_wordcloud
 
-word_freq_df %>%
-  mutate(leng_words = str_length(words)) %>% # 각 단어의 character 수를 세기
-  arrange(desc(freq)) %>%
-  filter(leng_words > 2) %>%
-  slice(1:100) -> word_df; head(word_df)
-  
+# text cleansing----
+# data.for_wordcloud %>% View()
+
 # worocloud----
 windowsFonts(malgun=windowsFont("맑은 고딕"))
-wordcloud(words = word_df$words, 
-          freq=word_df$freq, 
-          random.order=FALSE, 
-          family = 'malgun')
 
-wordcloud(words = word_df$words, 
-          freq=(word_df$freq/min(word_df$freq)), 
+wordcloud(words = data.for_wordcloud$words, 
+          freq=(data.for_wordcloud$freq/min(data.for_wordcloud$freq)), 
           random.order=FALSE, 
           colors=brewer.pal(6,"Dark2"), 
           random.color=TRUE,
           family = 'malgun')
 
 ## 워드크라우드를 보고 프로그램명 유추 :: 무한도전, 복면가왕, 1박2일, 삼시세끼, 한끼줍쇼, 나혼자산다, 아는형님 등으로 유추가능
-
-
-# 월별 각 프로그램들의 등장 횟수 구하기
-## TDM rowname이 유추된 프로그램명과 동일한 것만 추출
-## extracted TDM -> DTM으로 변경
-## DTM에 날짜 컬럼 붙이기(일자 및 월별 컬럼 두 개)
-## 추출된 데이터를 월별로 집계로 -> 각 프로그램의 월별 등장 빈도수 파악
-## 시각화(wordcloud)
-
-## extracting pro_names rows from TDM
-pro_names <- c('무한도전', '1박2일', '복면가왕', '삼시세끼', '한끼줍쇼', '나혼자산다', '아는형님')
-tdm_contents_extracted <- tdm_contents[dimnames(tdm_contents)$Terms %in% pro_names, ]
-class(tdm_contents_extracted)
-
-contents_mat <- as.matrix(tdm_contents_extracted)
-dim(contents_mat)
-class(contents_mat)
-
-## TDM matix -> DTM matix
-dtm_contents_mat <- t(contents_mat)
-dim(dtm_contents_mat)
-
-# add date and month columns----
-# View(head(as.data.frame(dtm_contents_mat))[1:50, ])
-dtm_df <-  as.data.frame(dtm_contents_mat)
-dim(dtm_df)
-
-tvpro$month <- format(tvpro$date, '%Y-%m')
-date_df <- data.frame(date = tvpro$date, month=tvpro$month)
-dim(date_df)
-data <- cbind(date_df, dtm_df)
-colnames(data)
-
-glimpse(data)
-
-## aggregating by month----
-data %>% 
-  group_by(month) %>%
-  summarise(sum.day_night = sum(`1박2일`),
-            sum.live_alone = sum(나혼자산다),
-            sum.endless_challenge = sum(무한도전), 
-            sum.mask_singer = sum(복면가왕),
-            sum.three_meals = sum(삼시세끼),
-            sum.brother_known = sum(아는형님),
-            sum.gimme_food = sum(한끼줍쇼)) -> data_grouped
-
-pro_words <- c('1박2일', '나혼자산다', '무한도전', '복면가왕', '삼시세끼', '아는형님', '한끼줍쇼')
-
-# wordcloud for 2016-10 data----
-melt(data_grouped, id.var='month') %>%
-  filter(month == '2016-10') -> word_df
-
-words_df <- cbind(word_df, pro_words); head(words_df)
-
-wordcloud(words = words_df$pro_words, 
-          freq=words_df$value, 
-          random.order=FALSE,
-          family = 'malgun')
-
-
-wordcloud(words = words_df$pro_words, 
-          freq=(words_df$value/min(words_df$value)), 
-          random.order=FALSE, 
-          colors=brewer.pal(6,"Dark2"), 
-          random.color=TRUE, 
-          family='malgun')
-
-# ...
-
