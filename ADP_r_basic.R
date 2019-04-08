@@ -49,11 +49,39 @@ tran %>%
   summarise(sum.prod_ct = sum(amt)) -> tran_grouped; head(tran_grouped); dim(tran_grouped)
 
 # pivotting--
+
+# pivotting with melt and dcast...
 melted <- melt(tran_grouped, id.vars=c('custid', 'prod_ct'), measure.vars = c('sum.prod_ct')); head(melted)
 dcast(melted, custid ~ prod_ct, value.var = 'value') -> dcasted; head(dcasted)
 dcasted %>% replace(is.na(.), 0) -> cust_prod_ct_amt; head(cust_prod_ct_amt)
 
-# rowsum and ratio--
+# pivotting with simple spread...
+tran_grouped %>%
+  spread(prod_ct, sum.prod_ct, fill = 0) -> cust_prod_ct_amt; cust_prod_ct_amt
+
+# pivotting with more robust spread...
+tran_grouped %>%
+  rowid_to_column(var = "id") %>%
+  spread(prod_ct, sum.prod_ct, fill = 0) %>%
+  select(-id) %>%
+  group_by(custid) %>%
+  summarise_at(vars(-custid), sum) -> cust_prod_ct_amt; cust_prod_ct_amt
+
+# robust spread func...
+id_spread_sum <- function(df.grouped) {
+  df.grouped %>%
+    rowid_to_column(var = "id") %>%
+    spread(eval(colnames(df.grouped[, 2])), eval(colnames(df.grouped[, 3])), fill = 0) %>%
+    select(-id) %>%
+    group_by(custid) %>%
+    summarise_at(vars(-custid), sum) -> df.result
+  
+  return(df.result)
+}
+
+id_spread_sum(tran_grouped) -> cust_prod_ct_amt; cust_prod_ct_amt
+
+# rowsum and ratio----
 cust_prod_ct_amt %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_ct_sum; head(cust_prod_ct_sum)
 round(cust_prod_ct_amt[, -1] / cust_prod_ct_sum$total.amt, 2) -> cust_prod_ct_ratio
 class(cust_prod_ct_ratio)
@@ -154,6 +182,9 @@ melted <- melt(time_bin_paid, id.vars=c('custid', 'h_bin'),
 dcast(melted, custid ~ h_bin, value.var = 'value') -> dcasted; head(dcasted)
 dcasted %>% replace(is.na(.), 0) -> cust_time_bin_paid; head(cust_time_bin_paid)
 
+# instead...
+id_spread_sum(time_bin_paid)
+
 ## hf_xxx 변수 만들기--
 cust_time_bin_paid %>% mutate(total.amt = rowSums(.[-1])) -> cust_time_bin_sum; 
 head(cust_time_bin_sum)
@@ -205,7 +236,10 @@ tran %>%
 melted <- melt(cust_wd_sum, id.vars = c('custid', 'wd'), measure.vars = c('cust_wd_sum')) 
 head(melted)
 dcast(melted, custid ~ wd, value.var = 'value') -> dcasted; head(dcasted)
-dcasted %>% replace(is.na(.), 0) -> cust_wd_sum; head(cust_wd_sum)
+dcasted %>% replace(is.na(.), 0) -> cust_wd_sum.casted; head(cust_wd_sum.casted)
+
+# instead...
+id_spread_sum(cust_wd_sum)
 
 # rowSum and ratio-----
 cust_wd_sum %>% mutate(total.amt = rowSums(.[-1])) -> cust_wd_sum; head(cust_wd_sum)
