@@ -41,19 +41,25 @@ prod_ct_tbl <- read.csv('./data/prod_cate.csv'); head(prod_ct_tbl)
 colnames(prod_ct_tbl) <- c('prod', 'prod_ct') ; head(prod_ct_tbl)
 length(unique(prod_ct_tbl$prod_ct)) ## 84 --> 11
 
-## join--
+## join between transaction data and product category table...
 as.tibble(tran) -> tran
 tran %>% left_join(prod_ct_tbl, by='prod') -> tran
 tran %>% 
   group_by(custid, prod_ct) %>%
   summarise(sum.prod_ct = sum(amt)) -> tran_grouped; head(tran_grouped); dim(tran_grouped)
 
-# pivotting--
-
 # pivotting with melt and dcast...
 melted <- melt(tran_grouped, id.vars=c('custid', 'prod_ct'), measure.vars = c('sum.prod_ct')); head(melted)
 dcast(melted, custid ~ prod_ct, value.var = 'value') -> dcasted; head(dcasted)
 dcasted %>% replace(is.na(.), 0) -> cust_prod_ct_amt; head(cust_prod_ct_amt)
+
+# rowsum and ratio----
+cust_prod_ct_amt %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_ct_sum; head(cust_prod_ct_sum)
+round(cust_prod_ct_amt[, -1] / cust_prod_ct_sum$total.amt, 2) -> cust_prod_ct_ratio
+cust_prod_ct_ratio <- cbind(custid =cust_prod_ct_amt[, 1], cust_prod_ct_ratio); head(cust_prod_ct_ratio)
+paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1]))
+colnames(cust_prod_ct_ratio) <- c('custid', paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1])))
+head(cust_prod_ct_ratio)
 
 # pivotting with simple spread...
 tran_grouped %>%
@@ -67,7 +73,7 @@ tran_grouped %>%
   group_by(custid) %>%
   summarise_at(vars(-custid), sum) -> cust_prod_ct_amt; cust_prod_ct_amt
 
-# robust spread func...
+# robust spread function definition-----
 id_spread_sum <- function(df.grouped) {
   df.grouped %>%
     rowid_to_column(var = "id") %>%
@@ -81,54 +87,47 @@ id_spread_sum <- function(df.grouped) {
 
 id_spread_sum(tran_grouped) -> cust_prod_ct_amt; cust_prod_ct_amt
 
-# rowsum and ratio----
-cust_prod_ct_amt %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_ct_sum; head(cust_prod_ct_sum)
-round(cust_prod_ct_amt[, -1] / cust_prod_ct_sum$total.amt, 2) -> cust_prod_ct_ratio
-class(cust_prod_ct_ratio)
-cust_prod_ct_ratio <- cbind(custid =cust_prod_ct_amt[, 1], cust_prod_ct_ratio); head(cust_prod_ct_ratio)
-paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1]))
-colnames(cust_prod_ct_ratio) <- c('custid', paste0('ct', '_', colnames(cust_prod_ct_ratio[, -1])))
-head(cust_prod_ct_ratio)
+# instead rowsum and ratio with dplyr----
+#  rowSums, mutate_at, select_if, rename_at...
+tran_grouped %>%
+  id_spread_sum() %>%
+  mutate(total = rowSums(select_if(., is.numeric))) %>%
+  mutate_at(vars(-custid), funs(round(./total, 2))) %>%
+  rename_at(vars(-custid), ~ paste0("ct_", .))
 
-## instead pivotting with dplyr--
-head(tran_grouped)
 
 tran_grouped %>%
-  spread(prod_ct, value = sum.prod_ct) %>%
-  replace(is.na(.), 0) %>% as.data.frame() -> trans_grouped_df; head(trans_grouped_df)
+  id_spread_sum() %>%
+  mutate(total = rowSums(select_if(., is.numeric))) %>%
+  mutate_at(vars(-custid), funs(round(./total, 2))) %>%
+  rename_at(vars(-custid), ~ paste0("ct_", .)) %>% select(-ncol(.))
 
-dim(trans_grouped_df)
-data.frame(custid = trans_grouped_df$custid) -> custid_df; head(custid_df)
+# functionize...
+rowsum_ratio_df <- function(grouped_df, prefix) {
+  grouped_df %>%
+    id_spread_sum() %>%
+    mutate(total = rowSums(select_if(., is.numeric))) %>%
+    mutate_at(vars(-custid), funs(round(./total, 2))) %>%
+    rename_at(vars(-custid), ~ paste0(prefix, .)) %>% select(-ncol(.)) -> df.result
+  
+  return(df.result)
+}
 
-trans_grouped_df %>%  
-  select(-custid) %>%
-  mutate(total.sum = rowSums(.)) -> tran_g_spread; head(tran_g_spread)
+tran_grouped %>% rowsum_ratio_df(., "ct_")
 
-(as.matrix(tran_g_spread) / tran_g_spread$total.sum) %>%
-  round(2) %>% as.data.frame() %>%
-  select(-total.sum) -> prod_ct_ratio; head(prod_ct_ratio)
+# coverage var----
+head(cust_prod_ct_amt)
 
-colnames(prod_ct_ratio) <- paste0('ct_', colnames(prod_ct_ratio)); head(prod_ct_ratio)
+mat.cust_prod_ct_amt <- as.matrix(cust_prod_ct_amt[, -1])
+mat_bin.cust_prod_ct_amt <- ifelse(cust_prod_ct_amt_mat[, ] > 0, 1, 0) # 구매했으면 1, 안 했으면 0으로 치환
+round(rowSums(cust_prod_ct_amt_bin) / 11, 2) -> tmp; length(tmp) # vector로 rowSum value들을저장
 
-ct_ratio_df <- cbind(custid = custid_df$custid, 
-                     prod_ct_ratio); head(ct_ratio_df)
-
-##-----
-
-## 서로 다른 카테고리의 제품을 얼마나 다양하게 구매하였는지에 대한 비율 :: coverage 파생변수 만들기----
-head(trans_grouped_df)
-## 0이 아닌 컬럼의 수 구하기
-trans_grouped_mat <- as.matrix(trans_grouped_df[, -1])
-trans_grouped_mat_bin <- ifelse(trans_grouped_mat[, ] > 0, 1, 0) # 구매했으면 1, 안 했으면 0으로 치환
-round(rowSums(trans_grouped_mat_bin) / 11, 2) -> tmp; length(tmp) # vector로 rowSum value들을저장
-
-dim(trans_grouped_df)
-trans_grouped_df$coverage <- tmp
-head(trans_grouped_df)
-cust_coverage <- trans_grouped_df[, c('custid', 'coverage')]; head(cust_coverage)
+cust_prod_ct_amt$coverage <- tmp
+head(cust_prod_ct_amt)
+cust_coverage <- cust_prod_ct_amt[, c('custid', 'coverage')]; head(cust_coverage)
 
 ## instead...
-as.matrix(ct_ratio_df[, -1]) -> ct_ratio_mat; ct_ratio_mat[1:10, 1:11] # matrix 변환 전 custid 컬럼을 제거해야 함에 유의
+as.matrix(cust_prod_ct_amt[, -1]) -> ct_ratio_mat; ct_ratio_mat[1:10, 1:11] # matrix 변환 전 custid 컬럼을 제거해야 함에 유의
 ifelse(ct_ratio_mat > 0, 1, 0) -> ct_bin_mat; ct_bin_mat[1:10, 1:11]
 ncol(ct_bin_mat)
 
@@ -138,7 +137,15 @@ as.data.frame(ct_bin_mat) %>%
   mutate(coverage = round(coverage, 2)) %>%
   select(coverage) -> coverage_df; head(coverage_df)
 
-cbind(custid = trans_grouped_df$custid, coverage_df) -> coverage_df ; head(coverage_df)
+cbind(custid = cust_prod_ct_amt$custid, coverage_df) -> coverage_df ; head(coverage_df)
+
+# instead...
+tran_grouped %>%
+  id_spread_sum() %>%
+  mutate_at(vars(-custid), funs(ifelse(. > 0, 1, 0))) %>%
+  mutate(total = rowSums(select_if(., is.numeric))) %>% 
+  mutate(coverage = (total / (ncol(.) - 1))) %>%
+  select(custid, coverage)
 
 ##----
 
@@ -168,7 +175,7 @@ as.numeric(substr(tran$time, 1, 2)) -> tran$time; glimpse(tran)
 ## 시간 binning--
 tran %>% mutate(h_bin = cut(time, 
                             breaks = c(0, 6, 12, 18, 23),
-                            include.lowest = T, # 0을 그룹에 포함시키기 위해 반드시 필요, 아니면 NA값 반환됨.
+                            include.lowest = T, # 0을 그룹에 포함 위해 필요, 아니면 NA값 반환
                             labels=c('0-5', '6-11', '12-17', '18-23'))) -> tran; glimpse(tran)
 
 ## 고객별 시간대별 총 지출비용 구하기--
@@ -210,6 +217,10 @@ time_bin_paid %>%
   round(2) %>% as.data.frame() %>%
   select(-total.sum) %>% setNames(paste0('hf_', names(.))) %>% 
   cbind(custid = trans_grouped_df$custid, .) -> hf_df; head(hf_df)
+
+## instead--
+
+time_bin_paid %>% rowsum_ratio_df(., "hf_") -> hf_df
 
 ##----
 
