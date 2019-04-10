@@ -1,15 +1,3 @@
-#' ---
-#' title: "ADP_machine_learning"
-#' author: "jakinpilla"
-#' date : "`r format(Sys.time(), '%Y-%m-%d')`"
-#' output: 
-#'    github_document : 
-#'        toc : true
-#'        toc_depth : 4
-#' ---
-#' 
-#' 
-
 
 rm(list=ls()); gc()
 getwd()
