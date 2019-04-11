@@ -3,14 +3,11 @@ getwd()
 
 # install.packages('party')
 # install.packages('TH.data')
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
 
 lapply(Packages, library, character.only=T)
 
-# make new var with bodyfat dataset by binning
-# data loading
-# install.packages('mfp')
+# binning----
 library(mfp)
 data(bodyfat)
 glimpse(bodyfat);
@@ -20,72 +17,61 @@ bodyfat$bmi.bins <- cut(bodyfat$bmi,
                         c(0,25,30,200), 
                         include.lowest = T, 
                         labels=c('normal', 'overweight', 'obese'))
-
+bodyfat
 glimpse(bodyfat); levels(bodyfat$bmi.bins)
 
-# loading data
-# binning bt time
-tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
-rename(tran, hour = time) -> tran # colnames(tran)[which(names(tran) == "time")] <- "hour"와 같은 의미
-head(tran)
+# time binning ----
+tran <- read_csv('./data/transaction.csv'); tran %>% colnames()
+rename(tran, hour = time) -> tran #
 tran$hour <- as.numeric(substr(tran$hour, 1, 2))
-glimpse(tran)
 
-# h_bin
 tran %>% mutate(h_bin = cut(hour, 
                             breaks = c(0, 6, 12, 18, 23),
-                            include.lowest = T, # 0을 그룹에 포함시키기 위해 반드시 필요, 아니면 NA값 반환됨.
+                            include.lowest = T, # 0을 그룹에 포함....
                             labels=c('0-5', '6-11', '12-17', '18-23'))) -> tran
 head(tran)
 unique(tran$h_bin) # '0-5' 시간대가 없음에 유의
 
-# h_bin one-hot coding
+# h_bin one-hot coding----
 tran <- dummy.data.frame(tran, names=c('h_bin'), sep='_')
 colnames(tran)
 head(tran,20)
 
+tran %>%
+  select(custid, h_bin, amt) %>%
+  group_by(custid, h_bin) %>%
+  summarise(sum.amt = sum(amt)) %>%
+  spread(h_bin, sum.amt, fill = 0) %>%
+  mutate_all(funs(replace(., . > 0, 1))) # to dummies... that's it!
 
-# 고객별 구매시간 비율을 알아보기 위해 필요한 변수만 선택
-tran %>% select(custid, `h_bin_6-11`, `h_bin_12-17`, `h_bin_18-23`) -> df_h; head(df_h)
+# 고객별 구매시간 bin들의 합----
+tran %>%
+  select(custid, h_bin, amt) %>%
+  group_by(custid, h_bin) %>%
+  summarise(freq = n()) %>%
+  ungroup() %>%
+  spread(h_bin, freq, fill = 0) %>%
+  mutate(total_freq = rowSums(select_if(., is.numeric))) %>%
+  mutate_at(vars(-custid), funs(./total_freq)) 
+  
 
-# 고객별 구매시간 bin들의 합 구하기
-df_h %>% group_by(custid) %>%
-  summarise(sum.h_6_11 = sum(`h_bin_6-11`), 
-            sum.h_12_17 = sum(`h_bin_12-17`),
-            sum.h_18_23 = sum(`h_bin_18-23`)) -> cust_visit_h; head(cust_visit_h)
-
-cust_visit_h %>% mutate(total_visitcount = rowSums(.[2:4])) -> cust_visit_h_total
-
-ratio_visit_h <- round(cust_visit_h_total[, 2:4] / cust_visit_h_total$total_visitcount, 3)
-head(ratio_visit_h)
-
-dim(cust_visit_h)
-
-ratio_cust_visit <- cbind(custid = cust_visit_h[, 1], ratio_visit_h)
-head(ratio_cust_visit)
-
-# 시간별 변동계수(coefficient of variation, CV = 표준편차 / 평균) 추가하기
+# 시간별 변동계수(coefficient of variation, CV = 표준편차 / 평균) 추가----
 # 시간별 변동계수가 크다는 것은 시간에 따른 구매가 편향되어 있다는 뜻(즉, 특정시간대에 구매함)
 # 시간별 변동계수가 작다는 것은 시간대별 골고루 구매한다는 의미
 # 시간대별 골고루 구매한다는 것은 여성의 소비패턴과 유사하다고 할 수 있음
-
-# install.packages('matrixStats')
 library(matrixStats)
-dim(ratio_cust_visit)
-head(ratio_cust_visit)
+tran %>%
+  select(custid, h_bin, amt) %>%
+  group_by(custid, h_bin) %>%
+  summarise(freq = n()) %>%
+  ungroup() %>%
+  spread(h_bin, freq, fill = 0) %>%
+  mutate(time_b_mean = rowMeans(select_if(., is_numeric))) %>%
+  mutate(time_b_std = matrixStats::rowSds(as.matrix(select_if(., is_numeric)))) %>% 
+  mutate(time_b_cov = time_b_std/time_b_mean) %>%
+  select(custid, time_b_cov) -> cov_df; cov_df
 
-ratio_cust_visit[, -1] %>%
-  mutate(row_std = round(rowSds(as.matrix(.[1:3])), 3),
-         row_mean = round(rowMeans(as.matrix(.[1:3])), 3), 
-         h_cv = row_std/row_mean) -> h_df
-
-head(cust_visit_h)
-head(h_df)
-tran_h_df <- cbind(cust_visit_h[, 1], h_df); head(tran_h_df)
-
-# data select and arange
-
-##with gapminder dataset
+# with gapminder dataset----
 # install.packages('gapminder')
 library(gapminder)
 data("gapminder"); glimpse(gapminder)
@@ -93,7 +79,7 @@ unique(gapminder$country)
 gapminder %>% filter(country == 'Korea, Rep.' & year==2007)
 gapminder %>% arrange(year, country)
 
-## 요약 통계량 출력하기
+## 요약 통계량 출력하기----
 gapminder %>%
   summarise(n_obs = n(),
             n_countries = n_distinct(country),
@@ -101,20 +87,20 @@ gapminder %>%
             med_gdpc = median(gdpPercap),
             max_gdppc = max(gdpPercap))
 
-## 변수변환 > 컬럼추가하기(mutate())
+## 변수변환 / 컬럼추가하기(mutate())----
 gapminder %>%
   mutate(total_gdp = pop*gdpPercap,
          le_gdp_ratio = lifeExp / gdpPercap,
          lgrk = le_gdp_ratio*100)
 
-# 그룹연산
+# 그룹연산----
 gapminder %>%
   filter(year==2007) %>%
   group_by(continent) %>%
   summarise(n(), mean(lifeExp), median(lifeExp)) %>%
   arrange(-`median(lifeExp)`)
 
-# 요약통계량, 상관관계
+# 요약통계량, 상관관계----
 summary(gapminder)
 summary(gapminder$gdpPercap)
 cor(gapminder$gdpPercap, gapminder$lifeExp) # 0.5837062
@@ -122,7 +108,10 @@ cor(log10(gapminder$gdpPercap), gapminder$lifeExp) # 0.8076179 상관관계 증�
 plot(gapminder$gdpPercap, gapminder$lifeExp, cex=.5)
 plot(log10(gapminder$gdpPercap), gapminder$lifeExp, cex=.5)
 
-## with df_imdb dataset
+gapminder %>%
+  ggplot(aes(gdpPercap, lifeExp)) + geom_point()
+
+# with df_imdb dataset-----
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip'); glimpse(df_imdb)
 head(df_imdb)
 df_imdb$country <- as.factor(df_imdb$country); glimpse(df_imdb)
