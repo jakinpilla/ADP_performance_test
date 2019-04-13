@@ -50,7 +50,6 @@ mean(student3$키)
 mean(student3$키, na.rm=T)
 
 # 데이터 구경하기(glimpse, plot(numeric_var ~ factor_var, data))
-glimpse(mpg)
 summary(boston)
 plot(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 ggpairs(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
@@ -69,6 +68,16 @@ iris %>%
 
 iris %>%
   ggplot(aes(Sepal.Length, Sepal.Width, col = Species)) + geom_point()
+
+# 산점도행렬(GGally::ggpairs, 산점도, 상관계수를 한 번에 시각화)
+pairs(iris[, 1:4])
+iris %>% select_if(is.numeric) %>% ggpairs
+
+# 상관계수 행렬
+cor(iris[, 1:4])
+round(cor(iris[, 1:4]), 2)
+round(cor(iris[, 1:4]), 1)
+
 
 # titanic----
 ## 빈칸("")을 NA로 만들기
@@ -290,20 +299,8 @@ df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = �
 ## colname 들을 모두 소문자, 특정 문자를 또 다른 분자로 치환하여 정리하기
 ## "_" 문자를 "."로 바꾸어 보기
 make.names(names(df_imdb), unique=T)
-names(df_imdb) <- tolower(gsub('\\.', '_', make.names(names(df_imdb), unique = T)))
+names(df_imdb) <- tolower(gsub('_', '\\.', make.names(names(df_imdb), unique = T)))
 colnames(df_imdb)
-
-# 연속형 변수만 선택하기(dplyr::select_if)
-mpg %>% select_if(is.numeric)
-
-# 산점도행렬(GGally::ggpairs, 산점도, 상관계수를 한 번에 시각화)
-pairs(iris[, 1:4])
-iris %>% select_if(is.numeric) %>% ggpairs
-
-# 상관계수 행렬
-cor(iris[, 1:4])
-round(cor(iris[, 1:4]), 2)
-round(cor(iris[, 1:4]), 1)
 
 # melt / cast
 data("airquality"); head(airquality)
@@ -312,31 +309,64 @@ names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 �
 aql <- melt(airquality, id.vars = c('month', 'day')) ; head(aql)
 aqw <- dcast(aql, month + day ~ variable); head(aqw)
 
-aql <- melt(airquality, id.vars = c('month', 'day'))
-aqw <- dcast(aql, month + day ~ variable); aqw
+airquality %>% 
+  tbl_df() %>%
+  gather(variable, value, -c(month, day)) -> aql; aql
 
-## 고객별&제품별 총 구매비용 및 구매비율 및 구매변동계수 구하기(with melt/cast)
-tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
+aql %>%
+  spread(variable, value) -> aqw; aqw
+  
+# 고객별&제품별 총 구매비용 및 구매비율 및 구매변동계수 구하기(with melt/cast)-----
+tran <- read_csv('./data/transaction.csv')
 tran %>% 
   group_by(custid, prod) %>%
   summarise(sum.amt = sum(amt)) -> cust_prod_amt_sum; head(cust_prod_amt_sum)
 
-### pivotting :: (목적) 고객별 구매 상품종류에 대한 지출비용을 알아보기위해 실시
+# pivotting :: (목적) 고객별 구매 상품종류에 대한 지출비용을 알아보기위해 실시
 names(cust_prod_amt_sum)
 melted <- melt(cust_prod_amt_sum, id.vars=c('custid', 'prod'), measure.vars = c('sum.amt')); head(melted)
 dcasted <- dcast(melted, custid ~ prod, value.var = 'value'); head(dcasted)
 sample_dcasted <- dcasted[1:2, ]; sample_dcasted
 
-### NA를 0으로 채우기
-dcasted %>% replace(is.na(.), 0) -> cust_prod_amt_sum
+# instead...
+id_spread_sum <- function(df.grouped) {
+  df.grouped %>%
+    rowid_to_column(var = "id") %>%
+    spread(eval(colnames(df.grouped[, 2])), eval(colnames(df.grouped[, 3])), fill = 0) %>%
+    select(-id) %>%
+    group_by(custid) %>%
+    summarise_at(vars(-custid), sum) -> df.result
+  
+  return(df.result)
+}
+
+# rowsum_ratio_df function definition----
+rowsum_ratio_df <- function(grouped_df, prefix) {
+  grouped_df %>%
+    id_spread_sum() %>%
+    mutate(total = rowSums(select_if(., is.numeric))) %>%
+    mutate_at(vars(-custid), funs(round(./total, 2))) %>%
+    rename_at(vars(-custid), ~ paste0(prefix, .)) %>% select(-ncol(.)) -> df.result
+  
+  return(df.result)
+}
+
+cust_prod_amt_sum %>%
+  id_spread_sum()
+
+cust_prod_amt_sum %>%
+  rowsum_ratio_df(., "p.ratio_") # %>% View()
+
+# NA를 0으로 채우기----
 dcasted %>% mutate_all(funs(ifelse(is.na(.), 0, .))) -> cust_prod_amt_sum
-head(cust_prod_amt_sum)
-dim(cust_prod_amt_sum)
-names(cust_prod_amt_sum) ## 물품 종류의 수는 84 종류(custid 제외)
 
 # 고객별 총구매액(total.amt)에 대한 컬럼 만들기
 cust_prod_amt_sum %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_amt_total_sum; 
 head(cust_prod_amt_total_sum)
+
+# instead...
+tbl_df(cust_prod_amt_sum) %>% 
+  mutate(total.amt = rowSums(select_if(.,is_numeric))) -> cust_prod_amt_total_sum; cust_prod_amt_total_sum
 
 # 고객들의 상품 종류별 구매비율 구하기
 cust_prod_amt_total_sum %>%
@@ -345,29 +375,11 @@ cust_prod_amt_ratio <- cust_prod_amt_total_sum_tmp / cust_prod_amt_total_sum$tot
 cust_prod_amt_ratio %>% mutate(total.sum = rowSums(.)) -> cust_prod_amt_ratio # total.sum =1 이 되는지 확인
 head(cust_prod_amt_ratio)
 
+cust_prod_amt_total_sum %>%
+  mutate_at(vars(-custid), funs(round(./total.amt, 2))) -> cust_prod_amt_ratio; cust_prod_amt_ratio
+
 # 소수점 3째자리에서 반올림하여 수들을 정리
 cust_prod_amt_ratio[] <- lapply(cust_prod_amt_ratio, function(x) if(is.numeric(x)) round(x, 2) else x)
-head(cust_prod_amt_ratio)
 names(cust_prod_amt_ratio) <- paste('ratio', names(cust_prod_amt_ratio), sep='_')
-head(cust_prod_amt_ratio)
-
-dim(cust_prod_amt_total_sum)
-colnames(cust_prod_amt_total_sum)
-dim(cust_prod_amt_ratio)
-cust_prod_amt_ratio$custid <- cust_prod_amt_total_sum$custid 
-n_tmp <- length(colnames(cust_prod_amt_ratio))
-cust_prod_amt_ratio <- cust_prod_amt_ratio[, c(n_tmp, 1:(n_tmp-1))]
 glimpse(cust_prod_amt_ratio)
-
-# update
-
-
-
-
-
-
-
-
-
-
 
