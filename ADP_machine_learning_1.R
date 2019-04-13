@@ -1,41 +1,29 @@
-#' ---
-#' title: "ADP machine learning"
-#' author: "jakinpilla"
-#' date: "`r Sys.Date`"
-#' output: rmarkdown::github_document
-#' ---
-
-#' setting working dtrectory
-
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-
-#' 여러 개의 패키지를 한 번에 읽기
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only=T)
 
-#' 데이터 가공 > 예측할 변수 선정 > 데이터 분리 > 모델선택 > 학습 > 평가
-#' 타이타닉 모델링 다시 정밀하게 해보자...
+# 데이터 가공 > 예측할 변수 선정 > 데이터 분리 > 모델선택 > 학습 > 평가-----
+
+# Titanic modeling----
 
 # titanic data 가공하기
-## data loading
+# data loading...
 as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
 glimpse(titanic)
 nrow(titanic)
 
-#' var "sex" preprocessing as 0(female), 1(male)
-
+# var "sex" preprocessing as 0(female), 1(male)...
 as.factor(titanic$sex) -> titanic$sex
 (as.numeric(titanic$sex) - 1) -> titanic$sex #female -> 0, male -> 1
 glimpse(titanic)
 
-#' var "suvivied " preprocessing as factor with labels c("dead", "survived")
+# var "suvivied " preprocessing as factor with labels c("dead", "survived")...
 titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'survived'))
 glimpse(titanic)
 
-#' var "embarked" preprocessing
+# var "embarked" preprocessing...
 unique(titanic$embarked)
 
 titanic %>% 
@@ -44,13 +32,13 @@ titanic$embarked <- as.factor(titanic$embarked)
 titanic$embarked <- as.numeric(titanic$embarked) # "S" : 3, "C" : 1, "Q" : 2
 glimpse(titanic)
 
-
 titanic %>% 
   select_if(is.numeric) %>% 
   select(-body) %>%
-  replace(is.na(.), 0) %>%
-  cbind(survived = titanic$survived) -> titanic_preprocessed
-write.csv(titanic_preprocessed, './data/titanic_preprocessed.csv')
+  mutate_all(funs(ifelse(is.na(.), 0, .))) %>%
+  bind_cols(survived = titanic$survived) -> titanic_preprocessed; titanic_preprocessed
+
+write_csv(titanic_preprocessed, './data/titanic_preprocessed.csv')
 glimpse(titanic_preprocessed)
 
 #' 예측할 변수를 'survived'로 선택
