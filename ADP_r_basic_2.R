@@ -109,20 +109,22 @@ plot(gapminder$gdpPercap, gapminder$lifeExp, cex=.5)
 plot(log10(gapminder$gdpPercap), gapminder$lifeExp, cex=.5)
 
 gapminder %>%
-  ggplot(aes(gdpPercap, lifeExp)) + geom_point()
+  ggplot(aes(gdpPercap, lifeExp, col = country)) + geom_point() + theme(legend.position= "none")
 
 # with df_imdb dataset-----
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip'); glimpse(df_imdb)
 head(df_imdb)
 df_imdb$country <- as.factor(df_imdb$country); glimpse(df_imdb)
+
 # like pandas .value_count() method
 df_imdb %>% group_by(country) %>% tally() %>% arrange(-n)
  
-## 미국 영화의 예산 분포 알아보기
+# 미국 영화의 예산 분포 알아보기----
 df_imdb %>%
   filter(country == 'USA') %>%
-  ggplot(aes(budget)) + geom_histogram()
+  ggplot(aes(budget)) + geom_histogram(bins = 50)
 
+# 미국 영화 
 df_imdb %>%
   group_by(title_year) %>%
   summarise(avg_imdb_score = mean(imdb_score)) %>%

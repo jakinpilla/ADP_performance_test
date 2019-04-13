@@ -1,4 +1,4 @@
-# setwd("C:/Users/Daniel/ADP_performance_test")
+setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 # install.packages('yardstick')
@@ -6,15 +6,10 @@ getwd()
 # install.packages('randomForest')
 
 # 여러 개의 패키지를 한 번에 읽기
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only=T)
 
 
-# large data set reading
-fread('./data/titanic3.csv', data.table = F)
-as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
-tbl_df(fread('./data/titanic3.csv', data.table = F)) -> titanic
 
 read.table('./data/housing_data.csv') -> boston
 names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'rad',  
@@ -57,72 +52,133 @@ mean(student3$키, na.rm=T)
 # 데이터 구경하기(glimpse, plot(numeric_var ~ factor_var, data))
 glimpse(mpg)
 summary(boston)
-# windows()
 plot(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 ggpairs(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 plot(boston$crim) # numeric인 경우, axis-x에는 index
+
+# iris----
 plot(iris$Sepal.Length)
 plot(iris$Species) # factor인 경우, axis-x에는 factor, y에는 갯수
 plot(Species ~ Sepal.Length, data=iris) # lhs에 factor, rhs에 numeric일 경우, mosaic plot
 plot(Sepal.Length ~ Species, data=iris) # lhs에 numeric, rhs에 factor일 경우, boxplot
 
-# NA and outlier
-df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
-summary(df_imdb)
-# 변수가 nuneric
+iris %>%
+  ggplot(aes(Species,Sepal.Length, col = Species)) + 
+  geom_boxplot() + 
+  geom_point() + geom_jitter()
 
-## 특정 변수 내 NA 제거하기(dplyr::drop_na())
-summary(df_imdb) ## 전체적인 NA 현황 파악
-sum(is.na(df_imdb$gross)) ## 변수 별 NA 갯수 확인하기
-df_imdb$gross[df_imdb$gross < 0] <- NA # 0보다 작은 값을 NA로 만들기
-summary(df_imdb$budget) # budget 변수의 NA 제거 필요 확인
-df_imdb %>%
-  drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop)
-nrow(df_imdb_budget_na_drop) ; range(df_imdb_budget_na_drop$budget) # budget 변수 내 NA 제거 확인
+iris %>%
+  ggplot(aes(Sepal.Length, Sepal.Width, col = Species)) + geom_point()
 
+# titanic----
 ## 빈칸("")을 NA로 만들기
-as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
+tbl_df(fread('./data/titanic3.csv', data.table = F)) -> titanic
 summary(titanic)
 titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin); titanic$cabin ## 빈칸을 NA로 만들기
 
-## NA 값들을 전부 0으로 바꾸기(데이터 프레임 모든 열에 대하여)
-as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
+titanic %>%
+  mutate_all(funs(ifelse(. == "", NA, .)))
+
+# NA 값들을 전부 0으로 바꾸기(데이터 프레임 모든 열에 대하여)----
+# large data set reading
 titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; ## NA 값들을 전부 0으로 바꾸기
+# instead...
+titanic %>%
+  mutate_if(is.character, funs(ifelse(. == "", NA, .)))
+
+titanic %>% 
+  mutate_if(is.numeric, funs(ifelse(is.na(.), 0, .))) -> titanic_na_zero_replaced
+
 summary(titanic_na_zero_replaced)
 
-## NA 값들을 median 값으로 바꾸기
-as.tibble(fread('./data/titanic3.csv', data.table = F)) -> titanic
-titanic %>%
-  mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
-# '_imp' 로 끝나는 새로운 변수로 imputation 하기
-titanic %>%
-  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
-
-## 범주형 변수에 NA가 함께 있을 경우 문자 "NA"로 대체하기
 titanic %>%
   mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) %>%
   mutate_if(is.character, funs(imp=ifelse(is.na(.), "NA", .)))-> t_tmp; summary(t_tmp)
 
-## NA 포함한 관측치 모두 제거하기
+# NA 값들을 median 값으로 바꾸기----
+titanic %>%
+  mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
+
+# '_imp' suffix imputation 하기----
+titanic %>%
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
+
+
+# NA 포함한 관측치 모두 제거하기----
 na.omit(titanic) # NA 포함한 관측치 모두 제거
 
-## 특정 변수 내 oulier 찾고 제거하기(boxplot()$stat)
+# 데이터형 변환----
+titanic$pclass <- as.factor(titanic$pclass)
+titanic$ticket <- as.character(titanic$ticket)
+titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'survived'))
+glimpse(titanic)
+
+# 데이터형 확인----
+class(titanic$embarked) # characeter
+levels(titanic$embarked) # NULL
+table(titanic$embarked)
+
+titanic$embarked <- as.factor(titanic$embarked)
+table(titanic$embarked)
+table(titanic$embarked, useNA='always')
+
+titanic$cabin <- as.factor(titanic$cabin)
+table(titanic$cabin)
+cabin <- as.data.frame(table(titanic$cabin)); names(cabin) <- c('room', 'count')
+
+titanic %>%
+  mutate(cabin = as.character(cabin)) %>%
+  select(cabin) %>%
+  group_by(cabin) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  filter(cabin != "") -> df.cabin
+
+df.cabin %>% 
+  ggplot(aes(cabin, n)) + 
+  geom_bar(stat = "identity") +
+  theme(legend.position = 'none', axis.text.x = element_text(angle = 90))
+
+# imdb dataset----
+# NA and outlier----
+df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
+summary(df_imdb)
+
+## 특정 변수 내 NA 제거하기(dplyr::drop_na())----
+sum(is.na(df_imdb$gross)) ## 변수 별 NA 갯수 확인하기
+df_imdb$gross[df_imdb$gross < 0] <- NA # 0보다 작은 값을 NA로 만들기
+summary(df_imdb$budget) # budget 변수의 NA 제거 필요 확인
+
+df_imdb %>%
+  drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop)
+
+nrow(df_imdb_budget_na_drop) ; range(df_imdb_budget_na_drop$budget) # budget 변수 내 NA 제거 확인
+
 boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # 이상치 제거 필요성 확인
-boxplot(df_imdb_budget_na_drop$budget)$stat ## 
-# [,1]
+boxplot(df_imdb_budget_na_drop$budget)$stat 
 # [1,] 2.18e+02
 # [2,] 6.00e+06
 # [3,] 2.00e+07
 # [4,] 4.40e+07
 # [5,] 1.00e+08
-# attr(,"class")
-# 1 
-# "integer" 
 
 # 2.18e+02 ~ 1.00e+08를 벗어나면 이상치로 간주
 df_imdb_budget_na_drop %>%
   filter(budget >= 2.18e+02 & budget <= 1.00e+08) -> df_imdb_budget_na_oulier_drop
+
 boxplot(df_imdb_budget_na_oulier_drop$budget, horizontal = T)
+
+df_imdb_budget_na_oulier_drop %>%
+  ggplot(aes("", budget)) + 
+  geom_boxplot(notch = T, fill = "gray") +
+  coord_flip() +
+  geom_jitter(aes(colour = factor(country), alpha =.05)) +
+  theme(legend.position = "none")
+
+df_imdb_budget_na_oulier_drop %>% 
+  ggplot(aes(language, budget, col = language)) + 
+  geom_boxplot() + 
+  theme(legend.position = 'none', axis.text.x = element_text(angle = 90))
 
 nrow(df_imdb)
 nrow(df_imdb_budget_na_oulier_drop)
@@ -131,7 +187,9 @@ nrow(df_imdb_budget_na_oulier_drop)
 boxplot(df_imdb_budget_na_drop$budget)
 IQR(df_imdb_budget_na_drop$budget)
 1.5*IQR(df_imdb_budget_na_drop$budget)
+
 fivenum(df_imdb_budget_na_drop$budget)
+
 ## Q3
 fivenum(df_imdb_budget_na_drop$budget)[4]
 
@@ -146,40 +204,6 @@ min(df_imdb_budget_na_drop$budget)
 df_imdb %>% sample_n(10) # 비복원추출
 df_imdb %>% sample_n(100, replace=T) # 복원추출
 df_imdb %>% sample_frac(0.01, replace=T) # 복원추출
-
-# 연속형 변수만 선택하기(dplyr::select_if)
-mpg %>% select_if(is.numeric)
-
-# 산점도행렬(GGally::ggpairs, 산점도, 상관계수를 한 번에 시각화)
-pairs(iris[, 1:4])
-iris %>% select_if(is.numeric) %>% ggpairs
-
-# 상관계수 행렬
-cor(iris[, 1:4])
-round(cor(iris[, 1:4]), 2)
-round(cor(iris[, 1:4]), 1)
-
-# 데이터형 변환
-head(titanic)
-titanic$pclass <- as.factor(titanic$pclass)
-titanic$ticket <- as.character(titanic$ticket)
-titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'survived'))
-glimpse(titanic)
-
-# 데이터형 확인
-class(titanic$embarked) # characeter
-levels(titanic$embarked) # NULL
-table(titanic$embarked)
-
-titanic$embarked <- as.factor(titanic$embarked)
-table(titanic$embarked)
-table(titanic$embarked, useNA='always')
-
-titanic$cabin <- as.factor(titanic$cabin)
-table(titanic$cabin)
-cabin <- as.data.frame(table(titanic$cabin)); names(cabin) <- c('room', 'count')
-head(cabin)
-ggplot(cabin[-1, ], aes(x=room, y=count)) + geom_bar(stat='identity')
 
 # 컬럼 선택
 glimpse(df_imdb)
@@ -201,7 +225,7 @@ df_imdb %>% select(ends_with('likes')) ## 'direc'으로 시작하는 컬럼 모�
 ### 'actor'로 시작하고 'likes'로 끝나는 컬럼 선택하기
 df_imdb %>%
   select(starts_with('actor')) %>%
-  select(ends_with('likes'))
+  select
 
 ## 'facebook' 문자열을 포함한 컬럼 선택하기
 df_imdb %>%
@@ -235,17 +259,13 @@ df_imdb %>%
 ## n(), n_distinct(), first(), last(), nth(x, n)
 df_imdb %>% 
   select(director_name) %>%
-  summarise(count=n())
-
-df_imdb %>% 
-  select(director_name) %>%
   summarise(dict_count=n_distinct(director_name))
 
 df_imdb %>%
   drop_na() %>%
   group_by(director_name) %>%
-  summarise(count=n()) %>%
-  arrange(desc(count))
+  tally() %>%
+  arrange(desc(n))
 
 head(df_imdb)
 df_imdb %>%
@@ -264,15 +284,26 @@ df_imdb %>%
   select(director_name, last_duration) %>% 
   head(10)
 
-
 ## 특정 컬럼명 바꾸기(director_name --> direc_nm)
 df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = 기본 변수명(director_name)
 
 ## colname 들을 모두 소문자, 특정 문자를 또 다른 분자로 치환하여 정리하기
 ## "_" 문자를 "."로 바꾸어 보기
 make.names(names(df_imdb), unique=T)
-names(df_imdb) <- tolower(gsub('_', '.', make.names(names(df_imdb), unique = T)))
+names(df_imdb) <- tolower(gsub('\\.', '_', make.names(names(df_imdb), unique = T)))
 colnames(df_imdb)
+
+# 연속형 변수만 선택하기(dplyr::select_if)
+mpg %>% select_if(is.numeric)
+
+# 산점도행렬(GGally::ggpairs, 산점도, 상관계수를 한 번에 시각화)
+pairs(iris[, 1:4])
+iris %>% select_if(is.numeric) %>% ggpairs
+
+# 상관계수 행렬
+cor(iris[, 1:4])
+round(cor(iris[, 1:4]), 2)
+round(cor(iris[, 1:4]), 1)
 
 # melt / cast
 data("airquality"); head(airquality)

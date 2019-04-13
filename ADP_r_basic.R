@@ -259,6 +259,12 @@ head(cust_wd_sum_ratio)
 cust_wd_ratio <- cbind(custid = cust_wd_sum.casted[, 1], cust_wd_sum_ratio)
 head(cust_wd_ratio)
 
+tran %>%
+  select(custid) %>%
+  unique() %>%
+  arrange(custid) %>%
+  as_tibble() -> custid_df
+
 # instead...
 head(cust_wd_sum)
 cust_wd_sum %>%
@@ -421,7 +427,7 @@ tran %>%
   select(custid, prod) %>%
   rename(second_cnt.prod = prod) -> df.second_cnt.prod
 
-df.first_prod_1 %>% left_join(df.second_cnt.prod, by = 'custid') -> df.second_cnt.prod_1
+df.first_cnt.prod_1 %>% left_join(df.second_cnt.prod, by = 'custid') -> df.second_cnt.prod_1
 
 # third_count.prod 변수 : 두 번째로 많이 구매한 제품----
 tran %>%
@@ -433,7 +439,7 @@ tran %>%
   select(custid, prod) %>%
   rename(third_cnt.prod = prod) -> df.third_cnt.prod
 
-df.second_prod_1 %>% left_join(df.third_cnt.prod, by = 'custid') -> df.third_cnt.prod_1
+df.second_cnt.prod_1 %>% left_join(df.third_cnt.prod, by = 'custid') -> df.third_cnt.prod_1
 
 # first_money.prod_ct 변수 : 가장 많이 돈을 지출한 물품의 카테고리  ----
 tran <- read_csv('./data/transaction.csv')
