@@ -523,6 +523,8 @@ cust_prod_ct_ratio %>%
 # View(data_total)
 write_csv(data_total, './data/data_total.csv') 
 
+read_csv('./data/data_total.csv')
+
 # with click streaming data----
 ## click-streaming data에서 시간은 transaction 데이터에서의 구매비용이라고 생각하면 된다.
 ## click-streaming data에서 사이트는 transaction 데이터에서의 제품이라고 생각하면 된다.

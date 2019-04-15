@@ -80,7 +80,7 @@ predict(rf_fit, newdata = titanic.test) %>% confusionMatrix(titanic.test$survive
 confusionMatrix(predict(rf_fit, newdata = titanic.test), titanic.test$survived)
 
 #' 예측 모델 작성_2 ::: DecisonTree
-
+titanic.train %>% colnames()
 dt_fit <- train(survived ~ pclass + sex + age + sibsp + parch + fare + embarked, 
                 data=titanic.train,
                 method = 'ctree', na.action = na.pass,
@@ -153,6 +153,27 @@ cart_m <- train(credit_formula, data=training,
 #' 2.2.3 랜덤포레스트
 rf_m <- train(credit_formula, data=training, method='rf', 
               trControl=ml_control)
+
+
+model_arch <- validation %>% # model_val
+  mutate(GLM  = predict(glm_m, validation),
+         CART = predict(cart_m, validation),
+         RF = predict(rf_m, validation))
+
+model_arch[, c('Class', 'CART', 'RF')] # model_val
+
+library(yardstick)
+metrics(model_arch, truth=Class, estimate = GLM)
+metrics(model_arch, truth=Class, estimate = CART)
+metrics(model_arch, truth=Class, estimate = RF)
+
+predict(glm_m, validation, type='prob')
+
+# randomForest is winner...
+#' 예측값 저장
+predict(rf_m, testing)
+write.csv(predict(rf_m, testing), './data/predict_result.csv')
+
 
 #' 2.2.4 gbm(Geometric Brownian Motion)
 library(gbm)
