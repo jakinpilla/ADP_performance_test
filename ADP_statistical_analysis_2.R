@@ -2,12 +2,12 @@ setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 # 여러 개의 패키지를 한 번에 읽기
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
 
 lapply(Packages, library, character.only=T)
 
-# logistic trgression with spambase----
+# logistic regression with spambase---------------------------------------------
+
 # data loading(ham or spam)----
 h <- new_handle(copypostfields = "moo=moomooo")
 handle_setheaders(h,
@@ -42,8 +42,10 @@ names(data) <-
   )
 
 data$class <- factor(data$class); glimpse(data)
+dim(data)
 
-tmp <- as.data.frame(cor(data[,-58], as.numeric(data$class))); head(tmp)
+tmp <- as.data.frame(cor(data[,-58], as.numeric(data$class))); 
+tmp
 tmp <- tmp %>% rename(cor=V1)
 tmp$var <- rownames(tmp)
 head(tmp)
@@ -71,7 +73,7 @@ old_names <- names(data)
 old_names
 new_names <- make.names(names(data), unique=T) # make.names() :: 특수문자를 숫자로 바꾸어줌
 new_names
-cbind(old_names, new_names) [old_names != new_names,] # beautiful coding..
+cbind(old_names, new_names) [old_names != new_names,] # beautiful coding...
 names(data) <- new_names
 
 # splitting dataset----
@@ -85,6 +87,10 @@ test_idx <- setdiff(idx, validate_idx)
 training <- data[training_idx, ]
 validation <- data[validate_idx, ]
 test <- data[test_idx, ]
+
+training_idx %>% length()
+validate_idx %>% length()
+test_idx %>% length()
 
 # logistic regression----
 data_lm_full <- glm(class ~., data=training, family = binomial)
@@ -119,7 +125,7 @@ abline(0,1)
 performance(pred_lm, 'auc')@y.values[[1]]
 binomial_deviance(y_obs, yhat_lm)
 
-# confusion matrix
+# confusion matrix----
 range(yhat_lm_test)
 yhat_lm <- as.factor(ifelse(yhat_lm_test > .5, 1, 0))
 y_obs <- as.factor(test$class)
@@ -127,8 +133,9 @@ table(y_obs, yhat_lm) -> cm; print(cm)
 
 confusionMatrix(yhat_lm, y_obs)
 
+# Multi-logistic regression with iris dataset & nnet package...-----------------
 
-# 다항 로지스틱 회귀 : 예측하고자 하는 분류 여러개 :: multinom
+# 다항 로지스틱 회귀 : 예측하고자 하는 분류 여러개 :: multinom----
 library(nnet)
 m <- multinom(Species ~., data=iris)
 head(fitted(m))
@@ -140,8 +147,8 @@ yhat <- predict(m, newdata=iris)
 sum(yhat == iris$Species) / length(yhat)
 xtabs(~ yhat + iris$Species)
 
-# 의사결정나무----
-# 수량형 변수를 팩터로 변환, 의사결정나무에 적합
+# DT and RF modeling with titanic dataset---------------------------------------
+
 # loading titanic_preprocessed dataset
 read.csv('./data/titanic_preprocessed.csv') -> titanic; head(titanic)
 titanic$pclass <- as.factor(titanic$pclass)
@@ -149,8 +156,11 @@ titanic$sex <- as.factor(titanic$sex)
 titanic$embarked <- as.factor(titanic$embarked)
 glimpse(titanic)
 
-# splitting dataset----
-set.seed(2018)
+# DT with rpart package----
+# 수량형 변수를 팩터로 변환, 의사결정나무에 적합
+
+# Splitting dataset----
+set.seed(2019)
 n <- nrow(titanic)
 idx <- 1:n
 training_idx <- sample(idx, n * .6)
@@ -161,7 +171,7 @@ titanic.train <- titanic[training_idx, ]
 titanic.validation <- titanic[validate_idx, ]
 titanic.test <- titanic[test_idx, ]
 
-# plotting----
+# Plotting----
 m <- rpart(survived ~ pclass + sex + age + sibsp + parch + fare + embarked, data=titanic.train)
 plot(m)
 text(m, cex=.8)
@@ -169,49 +179,101 @@ text(m, cex=.8)
 printcp(m)
 summary(m)
 
-# var importance----
+# Var Importance----
 varImp(m) %>%
   mutate(var.name = rownames(.)) %>% 
   arrange(desc(Overall))
 
-# model evaluation----
-yhat <- predict(m, newdata = titanic.validation); head(yhat)
-ifelse(as.data.frame(predict(m, newdata = titanic.validation))$survived > .5, 'survived', 'dead') -> yhat
-yhat <- as.factor(yhat)
-length(yhat)
-levels(yhat)
+# Model Evaluation----
+y_hat <- predict(m, newdata = titanic.validation); head(y_hat)
+ifelse(as.data.frame(predict(m, newdata = titanic.validation))$survived > .5, 'survived', 'dead') -> y_hat
+y_hat <- as.factor(yhat)
+length(y_hat)
+levels(y_hat)
 y_obs <- titanic.validation$survived; head(y_obs)
 length(y_obs)
 levels(y_obs)
 
-confusionMatrix(yhat, y_obs)
+confusionMatrix(y_hat, y_obs)
 
 library(ROCR)
+as.numeric(titanic.validation$survived)
+as.numeric(titanic.validation$survived) - 1
 y_obs <- as.numeric(y_obs) - 1
-yhat_dt <- as.data.frame(predict(m, newdata=titanic.validation))$survived
-pred_dt <- prediction(yhat_dt, y_obs)
+y_hat_dt <- as.data.frame(predict(m, newdata=titanic.validation))$survived
+pred_dt <- prediction(y_hat_dt, y_obs)
 plot(performance(pred_dt, 'tpr', 'fpr'))
-abline(0,1)
-performance(pred_dt, 'auc')@y.values[[1]]
+abline(0,1, col = "red")
+performance(pred_dt, 'auc')@y.values[[1]] # 0.7861763
 
-# ctree :: 조건부 추론나무
-# 과적합, 변수선택 편중 문제 해결
-m_ctree <- ctree(Species ~ ., data=iris)
+# DT with ctree package :: 조건부 추론나무-----
+
+# Modeling ----
+m_ctree <- ctree(survived ~ pclass + sex + age + sibsp + parch + fare + embarked, data=titanic.train)
+
+# Plotting----
 plot(m_ctree)
-levels(iris$Species) # 가려서 안 보일때
-yhat_ctree <- predict(m_ctree, newdata = iris, type = 'response')
+levels(titanic.train$survived)
+
+# Model Evaluating with ConfusionMatrix and ROC curve----
+
+# ConfusionMatirx...
+y_hat_ctree <- predict(m_ctree, newdata = titanic.validation, type = 'response')
 head(yhat_ctree)
 
-# randomForest----
-# 변수 >> 팩터형 >> 분류!
+y_obs <- titanic.validation$survived
+head(y_obs)
 
-# survived or not with titanic dataset
+confusionMatrix(yhat_ctree, y_obs)
+
+# ROC curve...
+library(ROCR)
+y_hat_ctree_1 <- as.numeric(yhat_ctree ) - 1 
+y_hat_ctree_1 %>% enframe() %>% select(-name) -> y_hat_ctree_2
+
+y_obs_1 <- as.numeric(y_obs) - 1
+pred_ctree <- prediction(y_hat_ctree_2, y_obs_1)
+
+plot(performance(pred_ctree, "tpr", "fpr"))
+abline(0, 1, col = "red")
+
+# AUC...
+performance(pred_ctree, 'auc')@y.values[[1]] # 0.5290044
+
+# RandomForest----
+
+# Modeling...
 fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
 rf_fit <- train(survived ~ ., data=titanic.train,
                 preProcess = c("pca"),
                 method='rf', ntree=100, verbose=F, trControl=fitControl)
 
-# left or not with hr dataset
+# Model Evaluating with confusion matrix and ROC curve----
+
+# ConfusionMatrix...
+y_hat_rf <- predict(rf_fit, titanic.validation)
+y_obs <- titanic.validation$survived
+
+confusionMatrix(y_hat_rf, y_obs)
+
+# ROC curve...
+library(ROCR)
+y_hat_rf_1 <- as.numeric(y_hat_rf ) - 1 
+y_hat_rf_1 %>% enframe() %>% select(-name) -> y_hat_rf_2
+
+y_obs_1 <- as.numeric(y_obs) - 1
+pred_rf <- prediction(y_hat_rf_2, y_obs_1)
+
+plot(performance(pred_rf, "tpr", "fpr"))
+abline(0, 1, col = "red")
+
+# AUC...
+performance(pred_rf, 'auc')@y.values[[1]] # 0.7502536
+
+
+# Left or not with HR dataset---------------------------------------------------
+
+# Data Loading....
 hr <- read_csv("data/hr_comma_sep.csv")
 colnames(hr) <- tolower(colnames(hr)); glimpse(hr)
 
@@ -219,8 +281,8 @@ table(hr$left)
 table(hr$sales)
 table(hr$salary)
 
-# splitting dataset----
-set.seed(2018)
+# Splitting dataset----
+set.seed(2019)
 n <- nrow(hr)
 idx <- 1:n
 training_idx <- sample(idx, n * .6)
@@ -231,65 +293,79 @@ hr.train <- hr[training_idx, ]
 hr.validation <- hr[validate_idx, ]
 hr.test <- hr[test_idx, ]
 
-# factorising var fot rf model
+# RF modeling----
+# Factorising var for RF model....
 rf <- randomForest(as.factor(left) ~., hr.train %>% 
                      mutate(salary = as.factor(salary),
                             sales = as.factor(sales)))
 
-# select rf model----
+
+# What are varables important?....
+
 importance(rf) # not arranged...
 importance(rf)[, 1]
 data.frame(var=rownames(importance(rf)), gini_desc=importance(rf)[, 1]) -> var_imp_df
 var_imp_df %>%
   arrange(desc(gini_desc))
 
-# what are varables important?
 varImpPlot(rf) ## 변수 중요도를 한 번에 시각화 가능
 
-# how many trees are need to make model?
+# How many trees are need to make model?
 plot(rf) # MSE variance to decide how many trees
 
-# predict----
-yhat <- predict(rf, newdata=hr.validation %>% 
-                  mutate(left = as.factor(left), # 자료혐을 training과 같게
-                         salary = as.factor(salary), # 자료혐을 training과 같게
-                         sales = as.factor(sales)), type='prob')[, '1'] # left 인 경우만 선택하기 위해
+# Evaluaing----
 
-yhat[1:5]
+# Prediction obj...
+y_hat_rf <- predict(rf, newdata=hr.validation %>% 
+                      mutate(left = as.factor(left), # 자료형을 training과 같게
+                             salary = as.factor(salary), # 자료형을 training과 같게
+                             sales = as.factor(sales)), type='prob')[, '1'] # left 인 경우만 선택
 
-# evaluaing----
+y_hat_rf[1:5]
+
 y_obs <- hr.validation$left; y_obs[1:5]
-pred <- prediction(yhat, y_obs)
-plot(performance(pred, 'tpr', 'fpr'))
-abline(0, 1)
+pred_rf <- prediction(y_hat_rf, y_obs)
+
+# Performance obj...
+perf_rf <- performance(pred_rf, 'tpr', 'fpr')
+
+# ROC curve...
+plot(perf_rf)
+abline(0, 1, col = "red")
+
+# AUC...
 plot(performance(pred, 'acc'))
 performance(pred, 'auc')@y.values[[1]]
 
+# GLM---------------------------------------------------------------------------
 
-# ROC 및 AUC 모델 비교 평가----
-
-## glm model
+# Modeling...
 hr_glm_full <- glm(left ~., data=hr.train, family = binomial); summary(hr_glm_full)
-yhat_glm <- predict(hr_glm_full, newdata = hr.validation,  type='response')
+
+# Evaluatiing----
+
+# Prediction obj...
+y_hat_glm <- predict(hr_glm_full, newdata = hr.validation,  type='response')
 y_obs <- hr.validation$left
-pred_glm <- prediction(yhat_glm, y_obs)
+pred_glm <- prediction(y_hat_glm, y_obs)
+
+# Performaec obj...
 perf_glm <- performance(pred_glm, 'tpr', 'fpr')
 
-## rf model
-yhat_rf <- predict(rf, newdata=hr.validation %>% 
-                     mutate(left = as.factor(left), # 자료혐을 training과 같게
-                            salary = as.factor(salary), # 자료혐을 training과 같게
-                            sales = as.factor(sales)), type='prob')[, '1']
-
-pred_rf <- prediction(yhat_rf, as.factor(y_obs))
-perf_rf <- performance(pred_rf, 'tpr', 'fpr')
-
-## comparison betweem perf_glm, perf_rm
+# ROC curve...
 plot(perf_glm)
-plot(perf_rf, add=T, col='red')
-abline(0, 1, col='blue')
+abline(0, 1, col = "red")
 
-### 'auc' daya.frame
+# AUC...
+plot(performance(pred_glm, 'acc'))
+performance(pred_glm, 'auc')@y.values[[1]]
+
+# Comparison betweem perf_glm, perf_rf----
+plot(perf_glm)
+plot(perf_rf, add=T, col='blue')
+abline(0, 1, col='red')
+
+# 'AUC' data.frame----
 data.frame(method=c('glm', 'rf'), 
            auc = c(performance(pred_glm, 'auc')@y.values[[1]], 
                    performance(pred_rf, 'auc')@y.values[[1]]))
