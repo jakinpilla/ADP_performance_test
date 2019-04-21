@@ -68,10 +68,10 @@ p4 <- data %>% ggplot(aes(class, capital_run_length_longest)) +
   scale_y_log10()
 grid.arrange(p1, p2, p3, p4, ncol=2)
 
-# 변수명의 특수문자 처리----
+# Punc character change----
 old_names <- names(data)
 old_names
-new_names <- make.names(names(data), unique=T) # make.names() :: 특수문자를 숫자로 바꾸어줌
+new_names <- make.names(names(data), unique=T) # make.names() : change punc character...
 new_names
 cbind(old_names, new_names) [old_names != new_names,] # beautiful coding...
 names(data) <- new_names
@@ -121,7 +121,7 @@ y_obs <- as.numeric(as.character(validation$class))
 yhat_lm <- predict(data_lm_full, newdata=validation, type='response')
 pred_lm <- prediction(yhat_lm, y_obs)
 plot(performance(pred_lm, 'tpr', 'fpr'))
-abline(0,1)
+abline(0, 1, col = "red")
 performance(pred_lm, 'auc')@y.values[[1]]
 binomial_deviance(y_obs, yhat_lm)
 
@@ -143,14 +143,15 @@ predict(m, newdata = iris[c(1,51,101), ], type='class')
 predict(m, newdata = iris[c(1,51,101), ], type='probs') # default :: probs
 
 # accuracy----
-yhat <- predict(m, newdata=iris) 
-sum(yhat == iris$Species) / length(yhat)
-xtabs(~ yhat + iris$Species)
+y_hat <- predict(m, newdata=iris) 
+sum(y_hat == iris$Species) / length(y_hat)
+xtabs(~ y_hat + iris$Species)
 
 # DT and RF modeling with titanic dataset---------------------------------------
 
 # loading titanic_preprocessed dataset
-read.csv('./data/titanic_preprocessed.csv') -> titanic; head(titanic)
+read_csv('./data/titanic_preprocessed.csv') %>%
+  mutate(survived = as.factor(survived))-> titanic; head(titanic)
 titanic$pclass <- as.factor(titanic$pclass)
 titanic$sex <- as.factor(titanic$sex)
 titanic$embarked <- as.factor(titanic$embarked)
@@ -187,19 +188,23 @@ varImp(m) %>%
 # Model Evaluation----
 y_hat <- predict(m, newdata = titanic.validation); head(y_hat)
 ifelse(as.data.frame(predict(m, newdata = titanic.validation))$survived > .5, 'survived', 'dead') -> y_hat
-y_hat <- as.factor(yhat)
+y_hat <- as.factor(y_hat)
 length(y_hat)
 levels(y_hat)
 y_obs <- titanic.validation$survived; head(y_obs)
+y_obs <- as.factor(y_obs)
 length(y_obs)
 levels(y_obs)
 
 confusionMatrix(y_hat, y_obs)
 
 library(ROCR)
-as.numeric(titanic.validation$survived)
-as.numeric(titanic.validation$survived) - 1
+as.numeric(as.factor(titanic.validation$survived))
+as.numeric(as.factor(titanic.validation$survived)) - 1
 y_obs <- as.numeric(y_obs) - 1
+
+predict(m, newdata=titanic.validation)
+
 y_hat_dt <- as.data.frame(predict(m, newdata=titanic.validation))$survived
 pred_dt <- prediction(y_hat_dt, y_obs)
 plot(performance(pred_dt, 'tpr', 'fpr'))
@@ -224,11 +229,11 @@ head(yhat_ctree)
 y_obs <- titanic.validation$survived
 head(y_obs)
 
-confusionMatrix(yhat_ctree, y_obs)
+confusionMatrix(y_hat_ctree, y_obs)
 
 # ROC curve...
 library(ROCR)
-y_hat_ctree_1 <- as.numeric(yhat_ctree ) - 1 
+y_hat_ctree_1 <- as.numeric(y_hat_ctree ) - 1 
 y_hat_ctree_1 %>% enframe() %>% select(-name) -> y_hat_ctree_2
 
 y_obs_1 <- as.numeric(y_obs) - 1
@@ -238,7 +243,7 @@ plot(performance(pred_ctree, "tpr", "fpr"))
 abline(0, 1, col = "red")
 
 # AUC...
-performance(pred_ctree, 'auc')@y.values[[1]] # 0.5290044
+performance(pred_ctree, 'auc')@y.values[[1]] # 0.7901751
 
 # RandomForest----
 
@@ -268,7 +273,7 @@ plot(performance(pred_rf, "tpr", "fpr"))
 abline(0, 1, col = "red")
 
 # AUC...
-performance(pred_rf, 'auc')@y.values[[1]] # 0.7502536
+performance(pred_rf, 'auc')@y.values[[1]] # 0.7272015
 
 
 # Left or not with HR dataset---------------------------------------------------
@@ -334,8 +339,8 @@ plot(perf_rf)
 abline(0, 1, col = "red")
 
 # AUC...
-plot(performance(pred, 'acc'))
-performance(pred, 'auc')@y.values[[1]]
+plot(performance(pred_rf, 'acc'))
+performance(pred_rf, 'auc')@y.values[[1]]
 
 # GLM---------------------------------------------------------------------------
 
