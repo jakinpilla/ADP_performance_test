@@ -214,6 +214,7 @@ qplot(mtcars$mpg)
 
 qplot(mpg, data=mtcars, binwidth=4)
 # This is equivalent to:
+ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=1)
 ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=4)
 
 # ==============================
@@ -324,7 +325,7 @@ corrplot(M, order = "hclust")
 # Analyss of Variance
 # ==============================
 
-# One-way ANOVA
+# One-way ANOVA...
 boxplot(weight ~ group, PlantGrowth,
         xlab = "group",
         ylab = "weight")
@@ -338,7 +339,7 @@ plant.ph <- TukeyHSD(plant.aov)
 plant.ph
 plot(plant.ph)
 
-# Two-way ANOVA
+# Two-way ANOVA with tw.csv dataset...
 tw <- read_csv("./data/tw.csv")
 
 boxplot(Satisfaction ~ Format*Subject, tw,
@@ -347,3 +348,115 @@ boxplot(Satisfaction ~ Format*Subject, tw,
 
 with(tw, 
      interaction.plot(Subject, Format, Satisfaction))
+
+tw.aov <- aov(Satisfaction~ Format*Subject, tw)
+summary(tw.aov)
+model.tables(tw.aov, type = "means")
+
+tw.format.ph <- TukeyHSD(tw.aov, which = "Format")
+tw.format.ph
+plot(tw.format.ph)
+
+tw.subject.ph <- TukeyHSD(tw.aov, which = "Subject")
+tw.subject.ph
+plot(tw.subject.ph)
+
+# Two-way ANOVA with pw.csv dataset...
+pw <- read_csv("./data/pw.csv"); pw
+
+boxplot(height ~ plant*water, pw,
+        xlab = "interaction",
+        ylab = "height")
+
+with(pw, 
+     interaction.plot(water, plant, height))
+
+pw.aov <- aov(height ~ plant*water, pw)
+summary(pw.aov)
+model.tables(pw.aov, type ="means")
+
+pw.ph <- TukeyHSD(pw.aov, which = "plant:water")
+pw.ph
+
+op <- par(mar = c(5, 8, 4, 2))
+plot(pw.ph, cex.axis = .7, las = 1)
+par(op)
+
+# Regression Analysis...
+library(ggplot2)
+
+ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+  geom_point(aes(shape = Species), size = 1.5) +
+  geom_smooth(method = "lm") +
+  xlab("Sepal Length") + ylab("Sepal Width")
+
+# ANCOVA model...
+sepals.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris)
+anova(sepals.lm)
+summary(sepals.lm)
+
+# ANCOVA model...
+iris2 = subset(iris, Species != "setosa", drop = T)
+sepal2.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris2)
+anova(sepal2.lm)
+
+# ANCOVA model...
+sepal3.lm <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris2)
+anova(sepal3.lm)
+
+# ANCOVA model...
+sepal4.lm <- lm(Sepal.Width ~ Sepal.Length, data = iris2)
+summary(sepal4.lm)
+
+ggplot(data = iris2, aes(x=Sepal.Length, y=Sepal.Width)) +
+  geom_point(aes(shape = Species, color = Species), size = 1.5) +
+  geom_smooth(method = "lm") +
+  xlab("Sepal Length") + ylab("Sepal Width")
+
+# ANCOVA model...
+sepal5.lm <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris)
+anova(sepal5.lm)
+
+sepals.full <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris)
+
+sepal.rest <- lm(Sepal.Width ~ Sepal.Length, data = iris)
+
+anova(sepals.full, sepal.rest)
+
+# Regression Analysis...
+powerplant <- read_csv("./data/powerplant.csv")
+lm(Output ~ Pressure + Temp, powerplant)
+lm(Output ~ Pressure*Temp, powerplant)
+
+lm.fit <- lm(Volume ~ Girth, trees)
+lm.fit
+summary(lm.fit)
+anova(lm.fit)
+
+poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
+anova(lm.fit, poly.fit)
+
+lm.fit <- lm(Volume ~ Girth, trees)
+coef(lm.fit)
+confint(lm.fit)
+
+plot(Volume ~ Girth, trees,
+     main = "Scatter plot with polynomial curve")
+abline(lm.fit, col = "red")
+lines(lowess(trees$Girth, trees$Volume), col = "blue")
+
+poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
+b <- coef(poly.fit)
+
+plot(Volume ~ Girth, trees,
+     main = "Scatter plot with polynomial curve")
+curve(b[1] + b[2]*x + b[3]*x^2, col = "red", add = T)
+lines(lowess(trees$Girth, trees$Volume), col = "blue")
+
+
+
+
+
+
+
+
