@@ -2,8 +2,8 @@
 setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
+              'ROCR', 'randomForest', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only=T)
 
 
@@ -96,8 +96,8 @@ glimpse(iris_pca)
 
 # data spliting----
 idx <- createDataPartition(iris_pca$Species, p=c(.8, .2), list=F)
-iris_pca_train <- iris_pca[idx, ] ; dim(iris_train)
-iris_pca_test <- iris_pca[-idx, ] ; dim(iris_test)
+iris_pca_train <- iris_pca[idx, ] ; dim(iris_pca_train)
+iris_pca_test <- iris_pca[-idx, ] ; dim(iris_pca_test)
 
 # modeling----
 m_svm <- svm(Species ~ ., data = iris_pca_train)
@@ -111,7 +111,7 @@ predict(m_svm, newdata=iris_pca_test[, 1:4]) %>% confusionMatrix(iris_pca_test$S
 # visualise----
 yhat_df <- data.frame(yhat=yhat_svm, iris_pca_test[, 1:4]); head(yhat_df)
 ggplot(yhat_df,
-       aes(x=PC1, y=PC2, col=yhat, shape=yhat)) + geom_point(size=5)
+       aes(x=PC1, y=PC2, col=yhat, shape=yhat)) + geom_point(size=2)
 
 # with caret things----
 fitControl <- trainControl(method='repeatedcv', number = 10, repeats=3)
