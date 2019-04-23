@@ -1,5 +1,5 @@
 # PCA
-setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
@@ -117,13 +117,13 @@ ggplot(yhat_df,
 fitControl <- trainControl(method='repeatedcv', number = 10, repeats=3)
 iris_svm <- train(Species ~ ., data=iris_pca_train, method='svmLinear',
                   trControl = fitControl)
-predict(iris_svm, newdata = iris_pca_test) %>% confusionMatrix(iris_test$Species)
+predict(iris_svm, newdata = iris_pca_test) %>% confusionMatrix(iris_pca_test$Species)
 
 data.frame(yhat = predict(iris_svm, newdata = iris_pca_test) , iris_pca_test[, 1:4]) -> df
 head(df)
-ggplot(df, aes(PC1, PC2, col=yhat, shape=yhat)) + geom_point(size=3)
+ggplot(df, aes(PC1, PC2, col=yhat, shape=yhat)) + geom_point(size=2)
 ir$rotation[, 1:2]
-ggplot(df, aes(PC1, PC2, col=yhat, shape=yhat)) + geom_point(size=3) +
+ggplot(df, aes(PC1, PC2, col=yhat, shape=yhat)) + geom_point(size=2) +
   xlab('PC1=0.52*Sepal.Length - 0.27*Sepal.Width + 0.58*Petal.Length  + 0.56*Petal.Width') +
   ylab('PC2=-0.38*Sepal.Length - 0.92*Sepal.Width - 0.02*Petal.Length  - 0.07*Petal.Width')
 
@@ -191,7 +191,7 @@ d <- dist(nutrient.scaled)
 position <- cmdscale(d)
 
 plot(position)
-text(positon, as.character(rownames(nutrient)), cex=.5)
+text(position, as.character(rownames(nutrient)), cex=.5)
 abline(v=0, h=0)
 
 # 인공신경망----
