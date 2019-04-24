@@ -13,7 +13,7 @@ setting working dtrectory
 
 ```{r setup, message=FALSE}
 Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
-              'ROCR', 'party', 'randomForest', 'knitr')
+              'ROCR', 'randomForest', 'knitr')
 lapply(Packages, library, character.only=T)
 ```
 
