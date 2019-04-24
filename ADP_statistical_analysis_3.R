@@ -236,6 +236,7 @@ plot(lm.fit, which=6) # cook's distance against leverage
 # VIF as an indicator :: the larger the value of VIF, the more 'troublesome' or collinear the variable X
 # if the VIF of a variable exceeds 10, which will happen if multiple correlation coefficient 
 # for j-th variable R^2 exceeds .9, that variable is said to be highly collinear.
+library(GGally)
 
 ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')])
 fit <- lm(mpg ~ disp + hp + wt + drat , data=mtcars)
