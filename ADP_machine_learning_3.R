@@ -9,7 +9,7 @@
 setwd("/home/insa/ADP_performance_test/")
 getwd()
 
-#+ setup, message = FALSE
+#+ setup, include= FALSE
 Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
               'ROCR', 'ranger', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only = T)
@@ -33,7 +33,7 @@ cor(heptathlon)
 ggpairs(heptathlon)
 
 #' scale()----
-scale(heptathlon)
+scale(heptathlon) %>% head()
 
 iris %>%
   select_if(is.numeric) %>%
@@ -84,10 +84,11 @@ screeplot(h.pca, type ='lines')
 #' first and second components...
 h.pca
 h.pca$rotation[, 1:2] # What is principal components...
-h.pca$x # principal components per persons...
+h.pca$x %>% head() # principal components per persons...
 
 biplot(h.pca, cex=.7)
 
+#' ykmeans()-----
 library(ykmeans)
 
 h <- data.frame(h.pca$x)
@@ -102,22 +103,24 @@ km <- ykmeans(h,
               3:6 # number of cluster...
 )
 
-km
+km %>% head()
 
 table(km$cluster)
+
 ggplot(km, 
        aes(x = PC1, y = PC2, col = as.factor(cluster))) +
-  geom_point(size = 3)
+  geom_point(size = 2)
 
 
 head(h)
+
 k <- kmeans(h[, 1:2], 5)
 
-plot(h[, 1:2], col = k$cluster, pch = k$cluster, size =3)
+plot(h[, 1:2], col = k$cluster, pch = k$cluster, size = 2)
 
 k$cluster %>% as.factor() -> k$cluster
 
-ggplot(h, aes(PC1, PC2, col = k$cluster)) + geom_point(size = 3)
+ggplot(h, aes(PC1, PC2, col = k$cluster)) + geom_point(size = 2)
 
 #' PCA ==> SVM Classification----
 
@@ -159,7 +162,7 @@ confusionMatrix(y_hat_svm, iris_pca_test$species)
 #' Visualization....
 y_hat_df <- data.frame(iris_pca_test[, 1:4], y_hat = y_hat_svm)
 
-y_hat_df
+y_hat_df %>% as_tibble()
 
 ggplot(y_hat_df,
        aes(x = PC1, y = PC2, col = y_hat)) + geom_point(size = 3)
@@ -190,7 +193,7 @@ confusionMatrix(y_hat_caret_svm, iris_pca_test$species)
 cbind(iris_pca_test[, 1:4], 
       species = y_hat_caret_svm) -> iris_hat_data
 
-ggplot(iris_hat_data, aes(PC1, PC2, col = species)) + geom_point(size = 1)
+ggplot(iris_hat_data, aes(PC1, PC2, col = species)) + geom_point(size = 2)
 
 #' Hclust----
 protein <- read_delim("./data/protein.txt", "\t", 
@@ -289,10 +292,10 @@ idx <- createDataPartition(iris$Species, p = c(.7, .3), list = F)
 dim(idx)
 
 iris_train <- iris[idx, ]
-iris_train
+iris_train %>% as_tibble()
 
 iris_test <- iris[-idx, ]
-iris_test
+iris_test %>% as_tibble()
 
 nn.iris <- nnet(Species ~., data = iris_train, size= 2, rang = 0, 
                 decay = 5e-4, maxit = 200)

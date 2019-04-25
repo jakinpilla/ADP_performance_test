@@ -9,9 +9,12 @@ setwd("/home/insa/ADP_performance_test/")
 getwd()
 
 #+ setup, include = FALSE
-Packages <- c('plyr', 'dplyr','tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
-              'randomForest')
+       'rpart', 'GGally', 'ROCR', 'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages_tm <- c('tm', 'rJava', 'KoNLP', 'SnowballC', 'slam', 'wordcloud')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 
+       
 lapply(Packages, library, character.only=T)
+lapply(Packages_tm, library, character.only=T); useSejongDic()
 
 #' Statistic Basic
 cor(iris$Sepal.Width, iris$Sepal.Length)
@@ -541,9 +544,7 @@ fitted(m)[c(1:5, 51:55)] # 모델에 적합된 값 with probability
 ifelse(fitted(m) >= .5, 1,0)[c(1:5, 51:55)] # 모델에 적합된 값 with 1(">50K"), 0("<=50K")
 
 #' predicting with test dataset
-predict(m, newdata = adult.test, type='response')
 pred <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
-
 range(predict(m, newdata = adult.test, type='response'))
 range(predict(m, newdata = adult.test))
 
@@ -561,8 +562,8 @@ confusionMatrix(as.factor(yhat_m_class), y_obs)
 
 #' ROC curve and AUC----
 library(ROCR)
-yhat_glm <- predict(m, newdata = adult.test, type='response'); yhat_glm
-y_obs  <- adult.test$income; y_obs
+yhat_glm <- predict(m, newdata = adult.test, type='response')
+y_obs  <- adult.test$income
 
 pred <- prediction(yhat_glm, y_obs)
 plot(performance(pred, 'tpr', 'fpr'))
@@ -702,6 +703,8 @@ test <- data[test_idx, ]
 #' Logistic regression modeling----
 data_lm_full <- glm(class ~., data=training, family=binomial)
 summary(data_lm_full)
+
+#+ message = FALSE
 anova(data_lm_full)
 
 #' Predict----

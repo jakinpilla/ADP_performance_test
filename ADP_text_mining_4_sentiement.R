@@ -1,25 +1,37 @@
-library(tidyverse)
-library(data.table)
-library(caret)
+#' ---
+#' title: "ADP Statistics_1"
+#' author: "jakinpilla"
+#' date: "`r Sys.Date()`"
+#' output: rmarkdown::github_document
+#' ---
 
+setwd("/home/insa/ADP_performance_test/")
+getwd()
+
+#+ setup, include = FALSE
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 
+              'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages_tm <- c('rJava', 'KoNLP', 'slam', 'wordcloud')
+
+lapply(Packages, library, character.only=T)
+lapply(Packages_tm, library, character.only=T); useSejongDic()
+
+#' Data Loading------------------------------------
 mobile <- read_csv("data/mobile_2014.csv")
 mobile %>%
-  select(-X1) %>%
   write_csv("./data/mobile_2014.csv")
 
 mobile$Texts <- gsub("가-힣", "", mobile$Texts)
-# 
-# mobile %>% 
-#   write_csv('./data/mobile_2014.csv')
 
 glimpse(mobile)
 names(mobile)
 mobile[2, ]
 mobile[1035, ]
 
-
+#' EDA----
 table(mobile$Sentiment)
 
+#' DTM----
 library(tm)
 corpus <- VCorpus(VectorSource(mobile$Texts))
 stopwords()
@@ -33,6 +45,8 @@ dtm <- DocumentTermMatrix(corpus,
                                          weighting = weightTfIdf))
 dtm
 
+
+#' GLM----
 library(glmnet)
 
 X <- as.matrix(dtm)
