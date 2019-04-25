@@ -6,8 +6,13 @@
 #' ---
 
 
+<<<<<<< HEAD
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
+lapply(Packages, library, character.only=T)
+=======
 setwd("/home/insa/ADP_performance_test/")
 getwd()
+>>>>>>> 9fda319421bdf14ccb2b53ae84e5af2d7190e711
 
 #+ setup, include= FALSE
 Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
