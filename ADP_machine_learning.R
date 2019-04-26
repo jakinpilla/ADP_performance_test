@@ -168,9 +168,9 @@ colAUC(y_hat_rf, y_obs, plotROC = T)
 #' AUC ------------------------------------------------
 performance(pred_rf, 'auc')@y.values[[1]] # auc
 
-#' xgBoost----
+#' xgBoost ------------------------------------------------
 #'
-#' Evaluation with validation data----
+#' Evaluation with validation data ------------------------------------------------
 model_arch <- df.valid %>% # model_val
   mutate(GLM  = predict(glm_m, df.valid),
          CART = predict(cart_m, df.valid),

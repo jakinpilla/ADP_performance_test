@@ -383,8 +383,6 @@ plot(pw.ph, cex.axis = .7, las = 1)
 par(op)
 
 # Regression Analysis...
-library(ggplot2)
-
 ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
   geom_point(aes(shape = Species), size = 1.5) +
   geom_smooth(method = "lm") +
@@ -452,6 +450,169 @@ plot(Volume ~ Girth, trees,
      main = "Scatter plot with polynomial curve")
 curve(b[1] + b[2]*x + b[3]*x^2, col = "red", add = T)
 lines(lowess(trees$Girth, trees$Volume), col = "blue")
+
+lm.fit <- lm(Volume ~ Girth, trees)
+newtrees <- data.frame(Girth = c(17.2, 12.0, 11.4))
+predict(lm.fit, newtrees, interval = "prediction")
+
+head(faithful)
+ggplot(faithful, aes(x = waiting, y = eruptions)) +
+  geom_point() + geom_smooth(method = "lm")
+
+eruption.lm <- lm(eruptions ~ waiting, data = faithful)
+summary(eruption.lm)
+
+anova(eruption.lm)
+
+coeffs <- coefficients(eruption.lm)
+coeffs
+
+waiting <- 80
+
+duration <- coeffs[1] + coeffs[2] * waiting
+duration
+
+newdata <- data.frame(waiting = 80)
+predict(eruption.lm, newdata)
+predict(eruption.lm, newdata, interval = "confidence")
+
+head(stackloss)
+ggpairs(stackloss)
+
+stackloss.lm <- lm(stack.loss ~ Air.Flow + Water.Temp + Acid.Conc., 
+                   data = stackloss)
+summary(stackloss.lm)
+
+stackloss.rlm <- lm(stack.loss ~ Air.Flow + Water.Temp, 
+                   data = stackloss)
+summary(stackloss.rlm)
+
+anova(stackloss.lm, stackloss.rlm)
+
+newdata <- data.frame(Air.Flow = 72, Water.Temp = 20)
+predict(stackloss.rlm, newdata)
+predict(stackloss.rlm, newdata, interval = "confidence")
+predict(stackloss.rlm, newdata, interval = "prediction")
+
+
+# Model Diagnostics -------------------------------------------------------
+
+lm.fit <- lm(Volume ~ Girth, trees)
+resids <- rstandard(lm.fit)
+resid(lm.fit)
+rstudent(lm.fit)
+
+shapiro.test(resids)
+plot(lm.fit, which = 2)
+
+plot(lm.fit, which = 1)
+plot(lm.fit, which = 3)
+
+plot(lm.fit, which = 4)
+abline(h = 4/(31-1+1), col = "red")
+
+plot(lm.fit, which = 5)
+abline(v=2*(1+1)/31, col = "blue")
+
+plot(lm.fit, which = 6)
+
+
+# Multicollinearity -------------------------------------------------------
+
+mtcars %>%
+  select(mpg, disp, hp, wt, drat) %>%
+  ggpairs()
+
+fit <- lm(mpg ~ disp + hp + wt + drat, data = mtcars)
+
+summary(fit)
+
+anova(fit)
+
+# install.packages("car")
+library(car)
+
+vif(fit)
+
+
+# The "Best" Regression Model with state.x77 dataset -------------------------------------------------------
+
+state.x77 %>% 
+  as_tibble() %>%
+  select(Population, Income, Illiteracy, Frost, Murder) %>% GGally::ggpairs()
+
+fit <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+
+summary(fit)
+
+fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
+
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+
+anova(fit1, fit2)
+
+AIC(fit1, fit2)
+
+fit1 <- lm(Murder ~ 1, data = state.x77)
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+
+library(MASS)
+stepAIC(fit2, direction = "backward")
+stepAIC(fit1, direction = "forward", 
+        scope = list(lower = fit1, upper = fit2))
+stepAIC(fit1, direction = "both")
+
+# install.packages("leaps")
+library(leaps)
+
+leaps <- regsubsets(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77, nbest = 4)
+
+plot(leaps, scale = "adjr2")
+plot(leaps, scale = "bic")
+
+
+# Standardized Regression Coefficients -------------------------------------
+
+fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
+fit2 <- lm(scale(Murder) ~ scale(Population) + scale(Illiteracy), data = state.x77)
+
+summary(fit2)
+
+# install.packages("QuantPsyc")
+library(QuantPsyc)
+lm.beta(fit1)
+
+
+# Ridge Regression --------------------------------------------------------
+
+library(glmnet)
+
+y <- mtcars$hp
+x <- mtcars %>%
+  select(mpg, wt, drat) %>%
+  data.matrix()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
