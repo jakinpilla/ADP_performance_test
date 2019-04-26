@@ -1,5 +1,5 @@
 #' ---
-#' title: "ADP transaction data analysis"
+#' title: "ADP ML with transaction dataset"
 #' author: "jakinpilla"
 #' date: "`r Sys.Date()`"
 #' output: rmarkdown::github_document
@@ -8,12 +8,13 @@
 rm(list=ls()); gc()
 getwd()
 
+#+setup, include = FALSE
 Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 
               'ROCR', 'randomForest', 'ranger','e1071')
 lapply(Packages, library, character.only=T)
 
 #' Data Wraggling > Sectecting vars > Spilting Data > Modeling > Evaluating > Comparing > Predicting...
-
+#' 
 #' Date Loading----
 data_with_gender <- read_csv('./data/data_total_with_gender_final.csv') 
 data_with_gender %>%
@@ -30,39 +31,39 @@ data %>% colnames()
 data %>%
   select_if(is.numeric) -> var_num
 
-summary(var_num); glimpse(var_num)
+glimpse(var_num)
 
-#' Scaling----
+#' Scaling and Making gender var ------------------------------------------------
 scale(var_num) -> scaled_var_num # return matrix
 as_tibble(scaled_var_num) -> var_num_tibble; head(var_num_tibble)
-str(data$gender)
-
-colnames(data)
 
 data %>% 
   select(gender) %>%
   cbind(var_num_tibble) %>%
   as_tibble() -> data_with_sex.tibble
 
-glimpse(data_with_sex.tibble)
-
-data_with_sex.tibble$gender %>% as.factor()
-data_with_sex.tibble$gender  <- factor(data_with_sex.tibble$gender, levels = c("f", "m"), labels = c(0, 1))
+#' Changing gender var class into factor ------------------------------------------------
+data_with_sex.tibble$gender  <- factor(data_with_sex.tibble$gender, 
+                                       levels = c("f", "m"), labels = c(0, 1))
 
 df <- data_with_sex.tibble
 nrow(df)
 
+#' Cleansing colname for ML with `janitor` package
 library(janitor)
 df <- clean_names(df)
-df %>% colnames()
 
-#' ML----
+df %>% glimpse()
+
+colnames(df) <- colnames(df) %>% make.names()
+
+#' ML ------------------------------------------------
 #'
-#' Data splitting---
-idx <- createDataPartition(df$gender, p=c(.6, .4), list=F); 
+#' Data splitting ------------------------------------------------
+idx <- caret::createDataPartition(df$gender, p=c(.6, .4), list=F); 
 idx[1:10]; length(idx)
 
-#' df.train data
+#' df.train data ------------------------------------------------
 df.train <- df[idx, ]
 df.valid.test <- df[-idx, ]
 
@@ -72,7 +73,7 @@ nrow(df.valid.test)
 dim(df.train)
 head(df.train)
 
-#' Validation data-----
+#' Validation data ------------------------------------------------
 head(df.valid.test)
 idx <- createDataPartition(df.valid.test$gender, p=c(.5, .5), list=F)
 idx[1:5]; length(idx)
@@ -83,36 +84,46 @@ dim(df.valid); head(df.valid)
 dim(df.test); head(df.test)
 
 1255 + 417 + 417 
-#' There are disappeared data which have NA values and so on...
-
-#' Model Training with df.train dataset
+#' There are disappeared data which have NA values and so on -------------------
+#' 
+#' Model Training with df.train dataset ------------------------------------------------
 #'
-#' Setting fitControl----
-fitControl <- trainControl(method='repeatedcv', number=10, repeats = 3)
+#' Setting fitControl ------------------------------------------------
+fitControl <- trainControl(method='repeatedcv', 
+                           number=10,
+                           repeats = 3)
 
-#' Models Fitting----
+#' Models Fitting ------------------------------------------------
 #'
-#' GLM----
+#' GLM ------------------------------------------------
+#' 
+
+colnames(df.train) %>% make.names() -> colnames(df.train)
+colnames(df.test) %>% make.names() -> colnames(df.test)
+
 glm_m <- train(gender ~ ., data = df.train, 
                method = 'glm', 
+               trControl = fitControl,
                family = binomial(link='logit'))
 
 glm_m
 
-#' CART----
-colnames(df.train)
-glimpse(df.train)
+#' CART ------------------------------------------------
 
 cart_m <- train(gender ~ ., data = df.train, 
                 method = 'rpart',
-                trControl = trainControl(method='none', sampling='up'))
+                trControl = fitControl)
 
+cart_m
 
-#' RF----
+#' `The final value used for the model was cp = 0.006963788` mean?
+#' 
+#' RF ------------------------------------------------
 rf_m <- train(gender ~ ., data = df.train, method='rf', 
               trControl=fitControl)
 rf_m
 
+#' Model Evaluating ------------------------------------------------
 model_arch <- df.valid %>% # model_val
   mutate(GLM  = predict(glm_m, df.valid),
          CART = predict(cart_m, df.valid),
@@ -130,28 +141,35 @@ metrics(model_arch, truth=gender, estimate = RF)
 #' RF is winner...
 varImp(rf_m)
 
-yhat_rf <- predict(rf_m, df.test, type='prob')$`1`
-yhat_rf[1:10]
+#' Predict with winner model and test datset ------------------------------------------------
+predict(rf_m, df.test, type='prob') %>% write_csv("./data/predicted_data.csv")
+
+y_hat_rf <- predict(cart_m, df.test, type='prob')$`1`
+y_hat_rf[1:10]
 y_obs <- df.test$gender
 
-# ROC curve and AUC----
+#' ROC curve and AUC ------------------------------------------------
 library(ROCR)
 
-#' Prediction Objection :: Probability and Labels...
-pred_rf <- prediction(yhat_rf, y_obs) 
+#' Prediction Objection :: Probability and Labels ------------------------------------------------
+pred_rf <- prediction(y_hat_rf, y_obs) 
 
-#' Performance Object :: Prediction Object, 'tpr', 'fpr'...
+#' Performance Object :: Prediction Object, 'tpr', 'fpr' ------------------------------------------------
 perf_rf <- performance(pred_rf, 'tpr', 'fpr')
 
-#' ROC Curve...
-plot(perf_rf, main='ROC curve for glm model', col = 'red') 
+#' ROC Curve ------------------------------------------------
+plot(perf_rf, main='ROC curve for glm model') 
 abline(0,1)
 
-#' AUC...
+#' Instead ------------------------------------------------
+library(caTools)
+colAUC(y_hat_rf, y_obs, plotROC = T)
+
+#' AUC ------------------------------------------------
 performance(pred_rf, 'auc')@y.values[[1]] # auc
 
 #' xgBoost----
-
+#'
 #' Evaluation with validation data----
 model_arch <- df.valid %>% # model_val
   mutate(GLM  = predict(glm_m, df.valid),
@@ -184,3 +202,4 @@ metrics(df.test_perf, truth=gender, estimate = GLM)
 metrics(df.test_perf, truth=gender, estimate = CART)
 metrics(df.test_perf, truth=gender, estimate = RF)
 # metrics(df.test_perf, truth=gender, estimate = XGB)
+
