@@ -5,20 +5,12 @@
 #' output: rmarkdown::github_document
 #' ---
 
-
-<<<<<<< HEAD
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
-lapply(Packages, library, character.only=T)
-=======
-setwd("/home/insa/ADP_performance_test/")
-getwd()
->>>>>>> 9fda319421bdf14ccb2b53ae84e5af2d7190e711
-
 #+ setup, include= FALSE
 Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
               'ROCR', 'ranger', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only = T)
 
+#' Data Loading ------------------------------
 library(HSAUR)
 data('heptathlon')
 
@@ -26,18 +18,17 @@ head(heptathlon)
 dim(heptathlon)
 rownames(heptathlon)
 
-#' score transform...
+#' Score transform ------------------------------
 heptathlon %>%
   as_tibble() %>%
   mutate(hurdles = max(hurdles) - hurdles) %>%
   mutate(run200m = max(run200m) - run200m) %>%
   mutate(run800m = max(run800m) - run800m) -> heptathlon
 
-
 cor(heptathlon)
 ggpairs(heptathlon)
 
-#' scale()----
+#' scale() ------------------------------
 scale(heptathlon) %>% head()
 
 iris %>%
@@ -46,23 +37,46 @@ iris %>%
   as_tibble() %>%
   cbind(., iris$Species) -> iris_scaled
 
-#' select vars----
-library(mlbench)
-data("Soybean")
-dim(Soybean)
+# ?scale()
+# require(stats)
+# x <- matrix(1:10, ncol = 2)
+# centered.x <- scale(x, scale = F)
+# scale(x) %>% cov()
 
-Soybean %>% as_tibble()
+#' If scale is TRUE then scaling is done by dividing the (centered) columns of x by their standard deviations
+#' if center is TRUE, and the root mean square otherwise. If scale is FALSE, no scaling is done.
 
-#' caret::nearZeroVar()----
-nearZeroVar(Soybean)
+#' Select vars ------------------------------
+library(mlbench); data("Soybean")
+
+summary(Soybean)
+
+Soybean %>% as_tibble() -> Soybean
+Soybean %>% select(Class) %>% unique() # 19 Species...
+
+#' caret::nearZeroVar() ------------------------------
+#' 
+#' nearZeroVar diagnoses predictors that have one unique value (i.e. are zero variance predictors) or 
+#' predictors that are have both of the following characteristics: they have very few unique values 
+#' relative to the number of samples and the ratio of the frequency of the most common value 
+#' to the frequency of the second most common value is large. 
+
+colnames(Soybean)[nearZeroVar(Soybean)]
 
 Soybean %>%
   as_tibble() %>%
   select(-nearZeroVar(.)) -> mySoybean; mySoybean
 
-#' caret::findCorrelation()----
+#' caret::findCorrelation() ------------------------------
+#' 
+#' This function searches through a correlation matrix and returns a vector of integers corresponding 
+#' to columns to remove to reduce pair-wise correlations.
+#' 
+
 data('Vehicle')
 Vehicle %>% as_tibble() -> vehicle; vehicle
+
+# vehicle %>% View()
 
 vehicle %>%
   select(-Class) %>%
@@ -77,7 +91,8 @@ vehicle %>%
 vehicle %>%
   select(-high_cor) -> vehicle_filered; vehicle_filered
 
-#' PCA ==> K-means Clustering----
+#' PCA ==> K-means Clustering ------------------------------
+#' 
 heptathlon %>%
   select(-score) %>%
   prcomp(scale = T) -> h.pca; h.pca
@@ -86,15 +101,19 @@ summary(h.pca)
 
 screeplot(h.pca, type ='lines')
 
-#' first and second components...
-h.pca
-h.pca$rotation[, 1:2] # What is principal components...
-h.pca$x %>% head() # principal components per persons...
+#' First and Second Components ------------------------------
+#' 
+
+h.pca$rotation[, 1:2] # What is principal components(data features to PC)...
+h.pca$x %>% head() # principal components per persons(per data objects)...
 
 biplot(h.pca, cex=.7)
 
-#' ykmeans()-----
+#' ykmeans() ------------------------------
+#' 
 library(ykmeans)
+
+?ykmeans
 
 h <- data.frame(h.pca$x)
 
@@ -116,23 +135,21 @@ ggplot(km,
        aes(x = PC1, y = PC2, col = as.factor(cluster))) +
   geom_point(size = 2)
 
-
-head(h)
-
+#' kmeans() ------------------------------
+#' 
 k <- kmeans(h[, 1:2], 5)
-
-plot(h[, 1:2], col = k$cluster, pch = k$cluster, size = 2)
-
 k$cluster %>% as.factor() -> k$cluster
 
+plot(h[, 1:2], col = k$cluster, pch = k$cluster, size = 2)
 ggplot(h, aes(PC1, PC2, col = k$cluster)) + geom_point(size = 2)
 
-#' PCA ==> SVM Classification----
+#' PCA ==> SVM Classification ------------------------------
 
-#' Data Loading...
+#' Data Loading ------------------------------
+#' 
 library(e1071)
 
-iris %>%
+iris %>% 
   select(-Species) %>%
   prcomp(scale = T) -> ir.pca; ir.pca
 
@@ -144,7 +161,7 @@ ir %>%
 
 iris_pca
 
-#' Data Spliting...
+#' Data Spliting ------------------------------
 idx <- caret::createDataPartition(iris_pca$species, p = c(.8, .2), list = F)
 iris_pca_train <- iris_pca[idx, ]
 dim(iris_pca_train)
@@ -152,29 +169,30 @@ dim(iris_pca_train)
 iris_pca_test <-iris_pca[-idx, ]
 dim(iris_pca_test)
 
-#' Modeling...
+#' Modeling ------------------------------
 m_svm <- svm(species ~ ., data = iris_pca_train)
 m_svm
 
-#' Predicting...
+#' Predicting ------------------------------
 y_hat_svm <- predict(m_svm, newdata = iris_pca_test[, 1:4])
 
 table(y_hat_svm)
 
-#' Evaluating...
+#' Evaluating ------------------------------
 confusionMatrix(y_hat_svm, iris_pca_test$species)
 
-#' Visualization....
+#' Visualization ------------------------------
 y_hat_df <- data.frame(iris_pca_test[, 1:4], y_hat = y_hat_svm)
 
 y_hat_df %>% as_tibble()
 
 ggplot(y_hat_df,
-       aes(x = PC1, y = PC2, col = y_hat)) + geom_point(size = 3)
+       aes(x = PC1, y = PC2, col = y_hat)) + geom_point(size = 2)
 
-#' With caret style...
+#' With caret style ------------------------------
 #'
-#' setting fitControl...
+#' setting fitControl ------------------------------
+#' 
 fitControl = trainControl(method = 'repeatedcv', 
                           number = 10, 
                           repeats = 3,

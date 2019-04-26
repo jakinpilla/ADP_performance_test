@@ -5,22 +5,23 @@
 #' output: rmarkdown::github_document
 #' ---
 
-#' setting working dtrectory
+#' Setting working dtrectory
 
-setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
 #' install.packages('arules')
 library(arules)
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
+              'randomForest', 'dummies', 'curl', 'gridExtra')
 
 lapply(Packages, library, character.only=T)
 
-# data loading----
+#' Data loading----
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
 head(tran); dim(tran) ## 27,993건의 거래내역
 
-# invoice numbering----
+#' Invoice numbering----
 i=0
 group_number = (function(){i = 0; function() i <<- i+1 })()
 # df %>% group_by(u,v) %>% mutate(label = group_number())
@@ -31,33 +32,39 @@ tran %>%
   as.data.frame() %>% # to avoid adding grouped var...
   select(basket_id, prod) -> tran_basket; head(tran_basket)
 
-# make basket.transaction and basket.transaction sparse format---- 
+#' Make basket.transaction and basket.transaction sparse format---- 
 basket.transaction <- split(tran_basket$prod, tran_basket$basket_id)
-basket.transaction[1:5]
+basket.transaction[1:5] # list class... 
 
 basket.transaction <- as(basket.transaction, 'transactions')
-basket.transaction
+basket.transaction # transaction class...
 
-# 처음 5개 거래 확인----
+
+#' 1~5 baskets -------------------------------------------------------------
+
 inspect(basket.transaction[1:5])
 
-# 식료품의 빈도 확인----
+
+#' Item Frequency :: itemFrequency()----------------------------------------------------------
+
 itemFrequency(basket.transaction[, 1:5])
 
-# 식료품의 빈도 시각화
+
+#' Item Frequency Plot :: itemFrequencyPlot() ------------------------------
+
 itemFrequencyPlot(basket.transaction, topN = 20)
 itemFrequencyPlot(basket.transaction, support = .05, 
                   main = 'item frequency plot above support 1%')
 
-# 처음 5개 거래에 대한 희소 매트릭스 시각화
+#' Visualize Sparse Marix ------------------------------
 # windows()
-image(basket.transaction[1:100])
+image(basket.transaction[1:100]) # 100 transaction, 100 items...
 
-# 100개 식료품의 무작위 샘플 시각화
+#' 200 transaction, 100 items....
 image(sample(basket.transaction, 200))
 
  
-# 규칙을 좀 더 학습히기 위해 지지도(support)와 신뢰도(confidence) 설정 변경
+#' How to set support and confidence? ------------------------------
 groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
 groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
                                                     confidence = 0.0001,
@@ -66,58 +73,60 @@ groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001,
 summary(groceryrules)
 inspect(groceryrules[1:5])
 
-# arrrange by support----
+#' Arrange by support ------------------------------
 inspect(sort(groceryrules, by='support')[1:5])
 
-# arrange by lift----
+#' Arrange by lift ------------------------------
 inspect(sort(groceryrules, by = "lift")[1:5])
  
-# `harddrinks` 아이템을 포함하는 규칙의 부분 규칙 찾기
+#' Find rules which contrain `harddrinks` item ------------------------------
 harddrinks_rules <- subset(groceryrules, items %in% "harddrinks")
 inspect(harddrinks_rules[1:5])
 
-# item based rules finding----
+#' Item based rules finding ------------------------------
 rule_interest_lhs <- subset(groceryrules, lhs %in% c('icecream'))
 inspect(rule_interest_lhs[1:5])
 
 
-# %in%, %pin%, %ain%----
-## %in% :: 적어도 하나의 제품이라도 존재하면 연관규칙을 indexing 
-## %pin% :: 부분일치만 하더라도 연관규칙을 indexing
-## %ain% :: 완전일치하는 연관규칙만을 indexing
+#' %in%, %pin%, %ain% ------------------------------
+# %in% :: at least one item rule matched rules' indexing 
+# %pin% :: partially name character matched rules' indexing
+# %ain% :: totallgy matched rules' indexing
 
 rule_interest_lhs <- subset(groceryrules, lhs %in% c('bread', 'milk'))
 inspect(rule_interest_lhs[1:5])
 
-rule_interest_lhs <- subset(groceryrules, lhs %pin% c('mi'))
-inspect(rule_interest_lhs[1:5]) ## rule 안에 "mi"란 문자가 들어가 있으면 indexing
+rule_interest_lhs <- subset(groceryrules, lhs %pin% c('mi')) # if "mi" character is contained in the rule, the rules are detected...
+inspect(rule_interest_lhs[1:5]) 
 
 rule_interest_lhs <- subset(groceryrules, lhs %ain% c('cooky/cakes', 'fermentedmilk'))
 inspect(rule_interest_lhs[1:5])
 
-# write groceryrules(write())----
+#' Write groceryrules(write()) ------------------------------
 write(harddrinks_rules, file = "./data/harddrinks_rules.csv", sep = ",", 
       quote = TRUE, row.names = FALSE)
 
-# convert rules as datafame----
+#' Convert rules as datafame ------------------------------
 harddrinks_rules_df <- as(harddrinks_rules, "data.frame")
 str(harddrinks_rules_df)
 head(harddrinks_rules_df)
 
-# Visualization arules :: arulesViz
+harddrinks_rules_df # %>% View()
+
+# Visualization arules :: arulesViz  ------------------------------
 # install.packages('arulesViz')
 # install.packages('viridisLite')
 library(viridisLite)
 library(arulesViz)
 
-# plotting rules----
+# Plotting rules ------------------------------
 groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
                                                              confidence = 0.0001,
                                                              minlen = 3))
 plot(groceryrules)
 plot(sort(groceryrules, by='support')[1:20], method='grouped')
 
-windows()
+# windows()
 plot(groceryrules, method='graph', control=list(type='items'),
      vertex.label.cex = .7, 
      edge.arrow.size= .3,
@@ -146,36 +155,40 @@ plot(groceryrules_by_lift[1:20], method='graph',
 plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
 plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
 
-# before item----
-# milk를 장바구니에 넣기 전에 구매할 가능성이 높은 제품
+#' Before item ------------------------------
+#' 
+#' Before buying milk, what items would be purchased? ------------------------------
 milk_before <- apriori(basket.transaction, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
-                                        minlen = 2), # 공백제거
-                       appearance = list(default='lhs', rhs='milk'),
+                                        minlen = 2), # eliminate white space...
+                       appearance = list(default='lhs', rhs='milk'), # to know before items, put the item on rhs 
                        control = list(verbose=F))
 
 inspect(milk_before)[1:2]
 inspect(sort(milk_before, by='confidence', decreasing = T))
 
-# after item----
-# milk를 장박구니에 넣었다면 추가로 구매할 가능성이 높은 제품
+#' After item ------------------------------
+#' 
+#' After byying milk, what items would be purchased? ------------------------------
 milk_after <- apriori(basket.transaction, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
-                                        minlen = 2), # 공백제거
+                                        minlen = 2), # eliminate white space...
                        appearance = list(default='rhs', lhs='milk'),
                        control = list(verbose=F))
 
 inspect(sort(milk_after, by='confidence', decreasing = T))
 
 
-# ----
-# LoL Champoion Dataset :: sample-data.csv
-# load data and transder it into transactions format for apriori----
+#' ----
+#' LoL Champoion Dataset :: sample-data.csv... ------------------------------
+#' 
+#' Load data and transder it into transactions format for apriori ------------------------------
 library(arules)
-df <- read.csv('./data/sample-data-1.csv'); str(df)
-table(df$id) # 총 18명의 챔피언 플레이 정보
+df <- read_csv("data/sample-data-1.csv", locale = locale(encoding = "cp949"))
+
+table(df$id) # 18 game players...
 head(df)
 dim(df)
 length(unique(df$names))
@@ -184,7 +197,7 @@ rioter.list <- split(df$names, df$id)
 rioter.transaction <- as(rioter.list, 'transactions')
 rioter.transaction
 
-# generate rules----
+#' Generate Rules ------------------------------
 rules <- apriori(rioter.transaction)
 summary(rules)
 
@@ -201,36 +214,26 @@ glimpse(rule_df)
 rule_df %>%
   arrange(-lift)
 
-# itemFrequencyPlot()----
+#' itemFrequencyPlot() ------------------------------
 itemFrequencyPlot(rioter.transaction, topN=10)
 
-# image()----
+#' image() ------------------------------
 image(rioter.transaction[1:10])
 
-# inspect rules----
+#' Inspect rules ------------------------------
 inspect(rules[1:5])
 
-# lift로 규칙 정렬----
+#' Arrangging with list ------------------------------
 inspect(sort(rules, by = "lift")[1:5])
 
-# `자이라` 를 포함하는 규칙의 부분 규칙 찾기
+#' Find all rules which contains `자이라` ...------------------------------
 zaira_rules <- subset(rules, items %in% "자이라")
 inspect(zaira_rules)
 
-# generate rules with condition list----
+#' Generate rules with condition list ------------------------------
 rules <- apriori(rioter.transaction, parameter = list(supp=.001,
                                                       conf=.8))
 summary(rules)
-
-itemFrequencyPlot(basket.transaction, topN = 20)
-
-# 처음 5개 거래에 대한 희소 매트릭스 시각화
-# windows()
-image(basket.transaction[1:4000])
-
-# 100개 식료품의 무작위 샘플 시각화
-image(sample(basket.transaction, 100))
-
 
 
 # 상품 방문 코너 예측...
