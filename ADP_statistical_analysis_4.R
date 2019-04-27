@@ -745,6 +745,67 @@ wine.numeric %>%
 wine.scaled %>% kmeans(., 3) -> wine.kmeans
 
 wine.kmeans$centers
+wine.kmeans$cluster
+wine.kmeans$size
+wine.kmeans$withinss
+
+wssplot <- function(data, nc = 15, seed = 1234) {
+  wss <- (nrow(data) - 1)*sum(apply(data, 2, var))
+  for (i in 2:nc) {
+    set.seed(seed)
+    wss[i] <- sum(kmeans(data, centers = i)$withinss)}
+  
+  plot(1:nc, wss, type = "b",
+       xlab = "Number of Clusters",
+       ylab = "Within Groups Sum of Squares")
+}
+
+wssplot(wine.scaled, nc = 6)
+
+library(cluster)
+
+clusplot(wine.scaled, wine.kmeans$cluster,
+         main = '2D Representation of the Cluster solution',
+         color = T, 
+         shape = T, 
+         labels = 2, 
+         lines = 0)
+
+table(wine[, 1], wine.kmeans$cluster)
+
+autoplot(wine.kmeans, data = wine)
+autoplot(clara(wine.numeric, 3), label = T)
+autoplot(fanny(wine.numeric, 3), frame = T)
+autoplot(pam(wine.numeric, 3), frame.type = 'norm')
+
+
+# Plotting with Grid ------------------------------------------------------
+
+library(gridExtra)
+
+p1 <- autoplot(wine.kmeans, data = wine) +
+  theme(legend.position = "none")
+
+p2 <- autoplot(clara(wine.numeric, 3), label = T) +
+  theme(legend.position = "none")
+
+p3 <- autoplot(fanny(wine.numeric, 3), frame = T) +
+  theme(legend.position = "none")
+
+p4 <- autoplot(pam(wine.numeric, 3), frame.type = 'norm') + 
+  theme(legend.position = "none")
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+
+# Hierarchical Clustering -------------------------------------------------
+
+wine.scaled %>% 
+  dist(method = "euclidean") %>% 
+  hclust(method = "ward.D") -> wine.hclust
+
+
+
 
 
 
