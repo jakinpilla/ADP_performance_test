@@ -1,305 +1,815 @@
-# anova(analysis of variance)
 
-# an analysis of variance(anova) allows you to compare the means of three or more independent samples.
 
-# It is suitable when the values are drawn from a normal distribution and when the variance is
-# approximately the same in each group.
+# install.packages("tidyverse")
+library(tidyverse)
 
-# You can check the assumption of equal variance with a Barlett's test
+# install.packages("nycflights13")
+library(nycflights13)
 
-# The null hypothesis for the test is that the mean for all groups is the same, and the alternative
-# hypothesis is that the mean is different for at least one pair of groups
+flights
 
-# anova takes advantage of the additivity property of variance, and we partition the variance into 
-# treatment effect (real differences) and error (differences due to sampling errror or individual differences)
+##
 
-# the ratio of two variance follows the F distribution (named after Fisher)
+filter(flights, month == 1, day == 1)
+flights[flights$month == 1 & flights$day == 1, ]
 
-## One-way ANOVA
-## two-way ANOVA
-## Post-hoc Tests
+##
 
-# One-way ANOVA
-# we compare the means for three or more groups. Each group is defined by a different level of the factor.
-# If the overall F test is significant, we are justified in conducting post-hoc tests to determine which
-# pairs of means are significantly different
+arrange(flights, year, month, day)
+arrange(flights, desc(arr_delay))
 
-# Patition of variance
+##
 
-# treatment variance :: the differences among the group means. we compare each group mean to the overall
-# average treating all the variances as a single group(between variation)
+select(flights, year, month, day)
+select(flights, year:day)
+select(flights, -(year:day))
 
-# error variance :: the differencesss among values within each group(within variation)
+select(flights, starts_with("dep"))
+select(flights, ends_with("delay"))
+select(flights, contains("time"))
+# select(flights, matches("^dep"))
 
-# the null hypothesis in one-way anova is that all the means are equal in the population. the alternative
-# hypothesis is that at least one of the means is different from the others
+select(flights, tail_num = tailnum)
+rename(flights, tail_num = tailnum)
 
-setwd("C:/Users/Daniel/ADP_performance_test")
-getwd()
+##
 
-# 여러 개의 패키지를 한 번에 읽기
-# install.packages('car')
-Packages_stat <- c('car', 'MASS', 'leaps') # Packages_stat을 먼저 불러드려야 함.
+mutate(flights,
+       gain = arr_delay - dep_delay,
+       speed = distance / air_time * 60
+) # %>% View()
 
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 
-              'randomForest', 'dummies', 'curl', 'gridExtra', 'car', 'MASS', 'leaps')
+transform(flights,
+          gain = arr_delay - dep_delay,
+          speed = distance / air_time * 60
+) # %>% View()
 
-lapply(Packages_stat, library, character.only=T)
-lapply(Packages, library, character.only=T)
+mutate(flights,
+       gain = arr_delay - dep_delay,
+       gain_per_hour = gain / (air_time / 60)
+)
 
-glimpse(PlantGrowth); str(PlantGrowth)
-PlantGrowth %>%
-  select(group) %>%
-  unique
+transmute(flights,
+          gain = arr_delay - dep_delay,
+          gain_per_hour = gain / (air_time / 60)
+)
 
-boxplot(weight ~ group, PlantGrowth)
+##
 
-# one-way anova
+summarise(flights,
+          delay = mean(dep_delay, na.rm = TRUE)
+)
+
+##
+
+sample_n(flights, 10)
+sample_frac(flights, 0.01)
+
+##
+
+by_tailnum <- group_by(flights, tailnum)
+delay <- summarise(by_tailnum,
+                   count = n(),
+                   dist = mean(distance, na.rm = TRUE),
+                   delay = mean(arr_delay, na.rm = TRUE))
+delay
+
+by_dest <- group_by(flights, dest)
+destinations <- summarise(by_dest,
+                          planes = n_distinct(tailnum),
+                          flights = n()
+)
+destinations
+
+daily <- group_by(flights, year, month, day)
+(per_day <- summarise(daily, flights = n()))
+(per_month <- summarise(per_day, flights = sum(flights)))
+(per_year <- summarise(per_month, flights = sum(flights)))
+
+##
+
+a1 <- group_by(flights, year, month, day)
+a2 <- select(a1, arr_delay, dep_delay)
+a3 <- summarise(a2,
+                arr = mean(arr_delay, na.rm = TRUE),
+                dep = mean(dep_delay, na.rm = TRUE))
+a4 <- filter(a3, arr > 30 | dep > 30)
+
+filter(
+  summarise(
+    select(
+      group_by(flights, year, month, day),
+      arr_delay, dep_delay
+    ),
+    arr = mean(arr_delay, na.rm = TRUE),
+    dep = mean(dep_delay, na.rm = TRUE)
+  ),
+  arr > 30 | dep > 30
+)
+
+flights %>%
+  group_by(year, month, day) %>%
+  select(arr_delay, dep_delay) %>%
+  summarise(
+    arr = mean(arr_delay, na.rm = TRUE),
+    dep = mean(dep_delay, na.rm = TRUE)
+  ) %>%
+  filter(arr > 30 | dep > 30)
+
+# ==============================
+# Creating a Scatter Plot
+# ==============================
+
+help(mtcars)
+str(mtcars)
+
+plot(mtcars$wt, mtcars$mpg)
+
+plot(mtcars$wt, mtcars$mpg,
+     main="Scatter plot with base graphics",
+     xlab="wt", ylab="mpg")
+
+###
+
+library(ggplot2)
+qplot(mtcars$wt, mtcars$mpg) # qplot: quick plot
+
+qplot(wt, mpg, data=mtcars)
+# This is equivalent to:
+ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() # aes: aesthetics
+
+# ==============================
+# Creating a Line Graph
+# ==============================
+
+help(pressure)
+str(pressure)
+
+plot(pressure$temperature, pressure$pressure, type="l")
+
+plot(pressure$temperature, pressure$pressure, type="l",
+     main="Line graph with base graphics",
+     xlab="temperature", ylab="pressure")
+
+plot(pressure$temperature, pressure$pressure, type="l")
+points(pressure$temperature, pressure$pressure)
+
+lines(pressure$temperature, pressure$pressure/2, col="red")
+points(pressure$temperature, pressure$pressure/2, col="red")
+
+###
+
+library(ggplot2)
+qplot(pressure$temperature, pressure$pressure, geom="line")
+
+qplot(temperature, pressure, data=pressure, geom="line")
+# This is equivalent to:
+ggplot(pressure, aes(x=temperature, y=pressure)) + geom_line()
+
+# Lines and points together
+qplot(temperature, pressure, data=pressure, geom=c("line", "point"))
+# This is equivalent to:
+ggplot(pressure, aes(x=temperature, y=pressure)) + geom_line() + geom_point()
+
+# ==============================
+# Creating a Bar Graph
+# ==============================
+
+help(BOD)
+str(BOD)
+
+barplot(BOD$demand, names.arg=BOD$Time)
+
+table(mtcars$cyl)
+# There are 11 cases of the value 4, 7 cases of 6, and 14 cases of 8
+
+# Generate a bar graph of counts
+barplot(table(mtcars$cyl))
+
+###
+
+library(ggplot2)
+ggplot(BOD, aes(x=factor(Time), y=demand)) + geom_bar(stat="identity")
+
+###
+
+qplot(mtcars$cyl)
+# Treat cylas discrete
+qplot(factor(mtcars$cyl))
+
+qplot(factor(cyl), data=mtcars)
+# This is equivalent to:
+ggplot(mtcars, aes(x=factor(cyl))) + geom_bar()
+
+# ==============================
+# Creating a Histogram
+# ==============================
+
+hist(mtcars$mpg)
+# Specify approximate number of bins with breaks
+hist(mtcars$mpg, breaks=10)
+
+###
+
+library(ggplot2)
+qplot(mtcars$mpg)
+
+qplot(mpg, data=mtcars, binwidth=4)
+# This is equivalent to:
+ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=1)
+ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=4)
+
+# ==============================
+# Creating a Box Plot
+# ==============================
+
+help(ToothGrowth)
+str(ToothGrowth)
+
+plot(ToothGrowth$supp, ToothGrowth$len)
+
+# Formula syntax
+boxplot(len~ supp, data=ToothGrowth)
+
+# Put interaction of two variables on x-axis
+boxplot(len~ supp+dose, data=ToothGrowth)
+
+###
+library(ggplot2)
+qplot(ToothGrowth$supp, ToothGrowth$len, geom="boxplot")
+
+qplot(supp, len, data=ToothGrowth, geom="boxplot")
+
+# This is equivalent to:
+ggplot(ToothGrowth, aes(x=supp, y=len)) + geom_boxplot()
+
+qplot(interaction(supp, dose), len, data=ToothGrowth, geom="boxplot")
+
+# This is equivalent to:
+ggplot(ToothGrowth, aes(x=interaction(supp, dose), y=len)) + geom_boxplot()
+
+# ==============================
+# Plotting a Function Curve
+# ==============================
+
+curve(x^3-5*x, from=-4, to=4)
+
+# Plot a user-defined function
+myfun<-function(xvar) {
+  1/(1+exp(-xvar+10))
+}
+
+curve(myfun(x), from=0, to=20)
+# Add a line:
+curve(1-myfun(x), add=TRUE, col="red")
+
+###
+library(ggplot2)
+# This is equivalent to:
+ggplot(data.frame(x=c(0, 20)), aes(x=x)) +
+  stat_function(fun=myfun, geom="line")
+
+# ==============================
+# Correlation Analysis
+# ==============================
+
+cov(trees$Height, trees$Volume)
+cov(trees)
+
+cov(trees, use="pairwise")
+# cov(trees, use="complete")
+
+##
+
+cor(trees$Height, trees$Volume)
+# same as cor(trees$Height, trees$Volume, method="pearson")
+cor(trees) # same as cor(trees, method="pearson")
+
+cor(trees, use="pairwise")
+# cor(trees, use="complete")
+
+##
+
+cor(trees$Height, trees$Volume, method="spearman")
+cor(trees, method="spearman")
+
+cor(trees, method="spearman", use="pairwise")
+# cor(trees, method="spearman", use="complete")
+
+##
+
+cor.test(trees$Girth, trees$Volume)
+# cor.test(trees$Girth, trees$Volume, method="pearson")
+
+##
+
+# install.packages("corrplot")
+library(corrplot)
+
+M <- cor(mtcars)
+# head(round(M, 2))
+
+# method = "circle""
+corrplot(M, method = "circle")
+
+# method = "color"
+corrplot(M, method = "color")
+
+# method = "number"
+corrplot(M, method = "number")
+
+##
+
+# correlogram with hclust reordering
+corrplot(M, order = "hclust")
+
+# ==============================
+# Analyss of Variance
+# ==============================
+
+# One-way ANOVA...
+boxplot(weight ~ group, PlantGrowth,
+        xlab = "group",
+        ylab = "weight")
+
 plant.aov <- aov(weight ~ group, PlantGrowth)
 summary(plant.aov)
-anova(plant.aov)
-model.tables(plant.aov, type='means')
 
-# post-hoc test
-plant.ph <- TukeyHSD(plant.aov); plant.ph
+model.tables(plant.aov, type = "means")
+
+plant.ph <- TukeyHSD(plant.aov)
+plant.ph
 plot(plant.ph)
 
-# Two-way ANOVA
-# In two-way ANOVA, there are two factors. We will illustrate only the most basic version of two-way
-# fixed effects ANOVA, which is a balanced factorial design.
-# Let us call the factors A and B. If there are r levels of A and c levels of B, there will be rXc total
-# groups, each of which will have the same number of data values.
+# Two-way ANOVA with tw.csv dataset...
+tw <- read_csv("./data/tw.csv")
 
-# Partition of Variation
-# We partition the total sums of squares into respective sums of squares.
-# The two-way ANOVA is an effecient design because it allow us to conduct three hypothesis tests.
-# The three null hypotheses are:
-# 1. There is no main effect of A considered sepatately.
-# 2. There is no main effect of B considered separately.
-# 3. There is no interaction of A and B considered together.
+boxplot(Satisfaction ~ Format*Subject, tw,
+        xlab = "interaction",
+        ylab = "satisfaction")
 
-tw <- read.csv('./data/tw.csv'); head(tw)
-glimpse(tw)
+with(tw, 
+     interaction.plot(Subject, Format, Satisfaction))
 
-tw %>%
-  select(Format) %>%
-  unique
-
-tw %>%
-  select(Subject) %>%
-  unique
-
-boxplot(Satisfaction ~ Format*Subject, tw)
-with(tw, interaction.plot(Subject, Format, Satisfaction)) # 교호작용이 없음
-
-tw.aov <- aov(Satisfaction ~ Format*Subject, tw)
+tw.aov <- aov(Satisfaction~ Format*Subject, tw)
 summary(tw.aov)
-model.tables(tw.aov, type = 'means')
+model.tables(tw.aov, type = "means")
 
-# Post-hoc Test
-tw.format.ph <- TukeyHSD(tw.aov, which = 'Format')
+tw.format.ph <- TukeyHSD(tw.aov, which = "Format")
 tw.format.ph
 plot(tw.format.ph)
 
-tw.subject.ph <- TukeyHSD(tw.aov, which = 'Subject')
+tw.subject.ph <- TukeyHSD(tw.aov, which = "Subject")
 tw.subject.ph
 plot(tw.subject.ph)
 
-# Two-way ANOVA (2)
-pw <- read.csv('./data/pw.csv')
-head(pw)
+# Two-way ANOVA with pw.csv dataset...
+pw <- read_csv("./data/pw.csv"); pw
 
-pw %>% 
-  select(plant) %>%
-  unique
+boxplot(height ~ plant*water, pw,
+        xlab = "interaction",
+        ylab = "height")
 
-pw %>% 
-  select(water) %>%
-  unique
-
-boxplot(height ~ plant*water, pw)
-with(pw, interaction.plot(water, plant, height)) # 교호작용이 있음
+with(pw, 
+     interaction.plot(water, plant, height))
 
 pw.aov <- aov(height ~ plant*water, pw)
 summary(pw.aov)
-model.tables(pw.aov, type='means')
+model.tables(pw.aov, type ="means")
 
-# Post-hoc Test
-pw.ph <- TukeyHSD(pw.aov, which= 'plant:water')
+pw.ph <- TukeyHSD(pw.aov, which = "plant:water")
 pw.ph
-op <- par(mar=c(5, 8, 4, 2))
-plot(pw.ph, cex.axis=.7, las=1)
 
+op <- par(mar = c(5, 8, 4, 2))
+plot(pw.ph, cex.axis = .7, las = 1)
+par(op)
 
-# Regression Analysis----
+# Regression Analysis...
+ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+  geom_point(aes(shape = Species), size = 1.5) +
+  geom_smooth(method = "lm") +
+  xlab("Sepal Length") + ylab("Sepal Width")
 
-# simple linear regression
-head(trees)
-glimpse(trees)
-lm(Volume ~ Girth, trees)
+# ANCOVA model...
+sepals.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris)
+anova(sepals.lm)
+summary(sepals.lm)
 
-# multiple linear regression
-powerplant <- read.csv('./data/powerplant.csv'); glimpse(powerplant)
+# ANCOVA model...
+iris2 = subset(iris, Species != "setosa", drop = T)
+sepal2.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris2)
+anova(sepal2.lm)
+
+# ANCOVA model...
+sepal3.lm <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris2)
+anova(sepal3.lm)
+
+# ANCOVA model...
+sepal4.lm <- lm(Sepal.Width ~ Sepal.Length, data = iris2)
+summary(sepal4.lm)
+
+ggplot(data = iris2, aes(x=Sepal.Length, y=Sepal.Width)) +
+  geom_point(aes(shape = Species, color = Species), size = 1.5) +
+  geom_smooth(method = "lm") +
+  xlab("Sepal Length") + ylab("Sepal Width")
+
+# ANCOVA model...
+sepal5.lm <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris)
+anova(sepal5.lm)
+
+sepals.full <- lm(Sepal.Width ~ Sepal.Length + Species, data = iris)
+
+sepal.rest <- lm(Sepal.Width ~ Sepal.Length, data = iris)
+
+anova(sepals.full, sepal.rest)
+
+# Regression Analysis...
+powerplant <- read_csv("./data/powerplant.csv")
 lm(Output ~ Pressure + Temp, powerplant)
-
-# interaction terms
 lm(Output ~ Pressure*Temp, powerplant)
 
-# update model :: update()
-# The update function allows you build a new model by adding or removing terms from an existing model.
-
-# t-test ::: Significance test for model coefficients
-## significance test for model coefficients tell you whether indivisual coefficient estimates are significantly differnt from 0.
-
-# F-test :: Analysis of Variance :: ANOVA
-## F-test tells you whether the model is significantly better at predicting compared with using the overalll mean value as a prediction.
-## F-test can also be used to compare two models.
-## the anova() function to perform an F_test to compare a more complex model to simpler model.
-
-
 lm.fit <- lm(Volume ~ Girth, trees)
+lm.fit
 summary(lm.fit)
 anova(lm.fit)
 
 poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
 anova(lm.fit, poly.fit)
 
+lm.fit <- lm(Volume ~ Girth, trees)
 coef(lm.fit)
 confint(lm.fit)
-plot(trees$Volume, trees$Girth)
-plot(Girth ~ Volume, trees) # same as plot(trees$Volume, trees$Girth)
-abline(coef(lm.fit))
-abline(lm.fit) # same as abline(coef(lm.fit))
 
-lm.fit <-lm(Volume ~ Girth, trees)
-plot(Volume ~  Girth, trees, main = 'Scatter plot with line of best fit')
-abline(lm.fit, col = 'red')
-lines(lowess(trees$Girth, trees$Volume), col = 'blue')
+plot(Volume ~ Girth, trees,
+     main = "Scatter plot with polynomial curve")
+abline(lm.fit, col = "red")
+lines(lowess(trees$Girth, trees$Volume), col = "blue")
 
 poly.fit <- lm(Volume ~ Girth + I(Girth^2), trees)
-b <- coef(poly.fit); b
-curve(b[1] + b[2]*x + b[3]*x^2, col='gray', add=T, lwd=2)
+b <- coef(poly.fit)
 
-# make predictions----
-# predict(model, newdata, interval = 'prediction', level=.99)
+plot(Volume ~ Girth, trees,
+     main = "Scatter plot with polynomial curve")
+curve(b[1] + b[2]*x + b[3]*x^2, col = "red", add = T)
+lines(lowess(trees$Girth, trees$Volume), col = "blue")
+
 lm.fit <- lm(Volume ~ Girth, trees)
-newtrees <- data.frame(Girth=c(17.2, 12.0, 11.4))
-predict(lm.fit, newdata = newtrees, interval='prediction')
+newtrees <- data.frame(Girth = c(17.2, 12.0, 11.4))
+predict(lm.fit, newtrees, interval = "prediction")
 
-# with faithful dataset--
 head(faithful)
-ggplot(faithful, aes(x=waiting, y=eruptions)) + 
-  geom_point() +
-  geom_smooth(method='lm')
+ggplot(faithful, aes(x = waiting, y = eruptions)) +
+  geom_point() + geom_smooth(method = "lm")
 
-eruption.lm <- lm(eruptions ~ waiting, data=faithful)
+eruption.lm <- lm(eruptions ~ waiting, data = faithful)
 summary(eruption.lm)
+
 anova(eruption.lm)
 
-b <- coef(eruption.lm); b
+coeffs <- coefficients(eruption.lm)
+coeffs
+
 waiting <- 80
-duration = b[1] + b[2]*waiting; duration 
 
-newdata <- data.frame(waiting=80)
+duration <- coeffs[1] + coeffs[2] * waiting
+duration
+
+newdata <- data.frame(waiting = 80)
 predict(eruption.lm, newdata)
+predict(eruption.lm, newdata, interval = "confidence")
 
-# with stackloss--
 head(stackloss)
-colnames(stackloss) <- tolower(colnames(stackloss))
+ggpairs(stackloss)
 
-stack.loss.lm <- lm(stack.loss ~ air.flow + water.temp + acid.conc., data = stackloss)
-summary(stack.loss.lm)
+stackloss.lm <- lm(stack.loss ~ Air.Flow + Water.Temp + Acid.Conc., 
+                   data = stackloss)
+summary(stackloss.lm)
 
-stack.loss.rlm <- lm(stack.loss ~ air.flow+ water.temp, data = stackloss)
-summary(stack.loss.rlm)
+stackloss.rlm <- lm(stack.loss ~ Air.Flow + Water.Temp, 
+                   data = stackloss)
+summary(stackloss.rlm)
 
-anova(stack.loss.lm, stack.loss.rlm)
+anova(stackloss.lm, stackloss.rlm)
 
-## predict--
-newdata = data.frame(air.flow = 72, water.temp = 20)
-predict(stack.loss.rlm, newdata)
-predict(stack.loss.rlm, newdata, interval = 'confidence')
-predict(stack.loss.rlm, newdata, interval = 'prediction')
+newdata <- data.frame(Air.Flow = 72, Water.Temp = 20)
+predict(stackloss.rlm, newdata)
+predict(stackloss.rlm, newdata, interval = "confidence")
+predict(stackloss.rlm, newdata, interval = "prediction")
 
-## resid(), fitted(), hatvalues(), cooks.distance()--
+
+# Model Diagnostics -------------------------------------------------------
+
 lm.fit <- lm(Volume ~ Girth, trees)
-resids <- rstandard(lm.fit); resids
-shapiro.test(resids) # p-value > .05 so residuals' normal distribution
-plot(lm.fit, which=2) ## QQ plot :: Normal probability plot (QQ plot) of standardized residuals
-plot(lm.fit, which=1) ## residuals against fitted values
-plot(lm.fit, which=3) ## similar to the residual against fitted values but it uses the square root of the standardized residuals
-plot(lm.fit, which=4); abline(h=4/(31-1+1), col='red') # cook's distance with rule of thumb
-plot(lm.fit, which=5); abline(v=2*(1+1)/31, col='blue') # residuals against leverage with rule of thumb
-plot(lm.fit, which=6) # cook's distance against leverage
+resids <- rstandard(lm.fit)
+resid(lm.fit)
+rstudent(lm.fit)
 
-# multicolinearity----
-# VIF as an indicator :: the larger the value of VIF, the more 'troublesome' or collinear the variable X
-# if the VIF of a variable exceeds 10, which will happen if multiple correlation coefficient 
-# for j-th variable R^2 exceeds .9, that variable is said to be highly collinear.
-library(GGally)
+shapiro.test(resids)
+plot(lm.fit, which = 2)
 
-ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')])
-fit <- lm(mpg ~ disp + hp + wt + drat , data=mtcars)
-summary(fit) 
-anova(fit)
-library(car); vif(fit)
+plot(lm.fit, which = 1)
+plot(lm.fit, which = 3)
 
-# select best regression model----
-head(state.x77)
-colnames(state.x77) <- tolower(colnames(state.x77))
-glimpse(state.x77); class(state.x77)
-states <- as.data.frame(state.x77)
-glimpse(states)
-states %>%
-  rename(life.exp = `life exp`) %>%
-  rename(hs.grad = `hs grad`) -> states; head(states)
+plot(lm.fit, which = 4)
+abline(h = 4/(31-1+1), col = "red")
 
-fit <- lm(murder ~ population + illiteracy + income + frost, data = states)
+plot(lm.fit, which = 5)
+abline(v=2*(1+1)/31, col = "blue")
+
+plot(lm.fit, which = 6)
+
+
+# Multicollinearity -------------------------------------------------------
+
+mtcars %>%
+  select(mpg, disp, hp, wt, drat) %>%
+  ggpairs()
+
+fit <- lm(mpg ~ disp + hp + wt + drat, data = mtcars)
+
 summary(fit)
+
 anova(fit)
 
-fit1 <- lm(murder ~ population + illiteracy, data=states)
-fit2 <- lm(murder ~ population + illiteracy + income + frost, data=states)
+# install.packages("car")
+library(car)
+
+vif(fit)
+
+
+# The "Best" Regression Model with state.x77 dataset -------------------------------------------------------
+
+state.x77 %>% 
+  as_tibble() %>%
+  select(Population, Income, Illiteracy, Frost, Murder) %>% GGally::ggpairs()
+
+fit <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+
+summary(fit)
+
+fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
+
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+
 anova(fit1, fit2)
 
-AIC(fit1, fit2) # model with small AIC values (indicating adequate fit with fewer parameters) are prefered
+AIC(fit1, fit2)
 
-# stepwise selection
-fit1 <- lm(murder ~ 1, data=states)
-fit2 <- lm(murder ~ population + illiteracy + income + frost, data=states)
+fit1 <- lm(Murder ~ 1, data = state.x77)
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
 
-# library(MASS)
-stepAIC(fit2, direction = 'backward')
-stepAIC(fit1, direction = 'forward', scope=list(lower=fit1, upper=fit2))
-stepAIC(fit1, direction= 'both', scope=list(lower=fit1, upper=fit2))
+library(MASS)
+stepAIC(fit2, direction = "backward")
+stepAIC(fit1, direction = "forward", 
+        scope = list(lower = fit1, upper = fit2))
+stepAIC(fit1, direction = "both")
 
-
-write.csv(bio, './data/bio.csv', row.names = F)
-bio <- read.csv('./data/bio.csv')
-head(bio)
-step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'forward')
-step(lm(pemax~age+weight+bmp+rv+frc+tlc, bio), direction = 'backward')
-step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'both')
-
-# all-subsets regression
+# install.packages("leaps")
 library(leaps)
-leaps <- regsubsets(murder ~ population + illiteracy + income + frost, data=states, nbest=4)
-plot(leaps, scale='adjr2') # scale = 'Cp', 'adjr2', 'r2', 'bic'
 
-leaps <- regsubsets(pemax ~ age + weight + bmp + rv + frc + tlc, data=bio, nbest=6)
-plot(leaps, scale = 'adjr2')
+leaps <- regsubsets(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77, nbest = 4)
 
-# standardized regression coef
-fit1 <- lm(murder ~ population + illiteracy, data=states); summary(fit1)
-fit2 <- lm(scale(murder) ~ scale(population) + scale(illiteracy), data=states); summary(fit2)
+plot(leaps, scale = "adjr2")
+plot(leaps, scale = "bic")
 
 
+# Standardized Regression Coefficients -------------------------------------
+
+fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
+fit2 <- lm(scale(Murder) ~ scale(Population) + scale(Illiteracy), data = state.x77)
+
+summary(fit2)
+
+# install.packages("QuantPsyc")
+library(QuantPsyc)
+lm.beta(fit1)
 
 
+# Ridge and Lasso Regression --------------------------------------------------------
+
+#' The glmnet() requires a vector input and matrix of predictors.
+#' 
+#' alpha = 0 for ridge regression. (L2 Regularization)
+#' 
+#' alpha = 1 for lasso regression. (L1 Regularization)
+#' 
+#' Ridge :: it shrink the value of coefficients but doesn't reached aero, which suggests no feature selection
+#' 
+#' Lasso :: it shrink coefficients to zero (exactly zero), which certainly helps ni feature selection
+#' 
+#' 
+library(glmnet)
+
+# Ridge -------------------------------------------------------------------
+
+y <- mtcars$hp
+x <- mtcars %>%
+  select(mpg, wt, drat) %>%
+  data.matrix()
+
+cv_ridge <- cv.glmnet(x, y, alpha=0) # ridge
+plot(cv_ridge)
+
+lambda_ridge <- cv_ridge$lambda.min
+lambda_ridge
+
+coef(cv_ridge)
 
 
+# Lasso -------------------------------------------------------------------
+
+cv_lasso <- cv.glmnet(x, y, alpha = 1)
+plot(cv_lasso)
+
+lambda_lasso <- cv_lasso$lambda.min
+lambda_lasso
+
+coef(cv_lasso)
 
 
+# PCA ---------------------------------------------------------------------
 
+iris %>%
+  select(-Species) -> ir
+
+iris %>%
+  select(Species) -> ir.species
+
+cor(ir) %>% 
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  as_tibble()
+ 
+ir %>% 
+  prcomp(center = T, scale = T) -> ir.pca
+
+ir.pca$rotation # about each axis
+ir.pca$x %>% as_tibble()  # about each data obj...
+
+plot(ir.pca, type = 'l')
+
+summary(ir.pca)
+
+tail(ir, 2)
+predict(ir.pca, newdata = tail(ir, 2))
+scale(tail(ir, 2)) %*% ir.pca$rotation # not same...why?
+
+
+# biplot with ggfortify() ----------------------------------------------------------------
+
+install.packages("ggfortify")
+library(ggfortify)
+autoplot(ir.pca, data = iris, colour = "Species")
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         label = T)
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         # label = T,
+         loadings = T, 
+         loadings.colour = "steelblue",
+         loadings.label = T
+         )
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         # label = T,
+         loadings = T, 
+         loadings.colour = "steelblue",
+         loadings.label = T,
+         scale = 0)
+
+
+# Discriminant Analysis ---------------------------------------------------
+
+# LDA : Linear Discriminant Analysis
+
+library(MASS)
+set.seed(2019)
+
+iris %>%
+  select(-Species) -> ir
+
+
+train.idx <- sample(c(T, F), nrow(iris), replace = T, prob= c(.6, .4))
+
+ir.train <- iris[train.idx, ]
+ir.test <- iris[!train.idx, ]
+
+dim(ir.train)
+dim(ir.test)
+
+ir.lda <- lda(Species ~., ir.train)
+plot(ir.lda, col = as.integer(ir.train$Species))
+plot(ir.lda, dimen = 1, type = "b")
+
+lda.train_pred <- predict(ir.lda)
+ir.train$lda <- lda.train_pred$class
+table(ir.train$lda, ir.train$Species)
+
+lda.test_pred <- predict(ir.lda, ir.test)
+ir.test$lda <- lda.test_pred$class
+
+table(ir.test$lda, ir.test$Species)
+
+# Local Fisher Discriminant Analysis --------------------------------------
+
+install.packages("lfda")
+library(lfda)
+
+m.lfda <- lfda(ir, ir.species, r = 3, metric = "plain")
+
+autoplot(m.lfda, 
+         data = iris, 
+         colour = "Species",
+         frame = T, 
+         frame.colour = 'Species')
+
+
+# K-means -----------------------------------------------------------------
+
+install.packages("rattle.data")
+library(rattle.data)
+
+data("wine")
+head(wine)
+dim(wine)
+colnames(wine)
+
+wine %>%
+  select_if(is.numeric) -> wine.numeric
+
+wine.numeric %>%
+  scale() -> wine.scaled
+
+wine.scaled %>% kmeans(., 3) -> wine.kmeans
+
+wine.kmeans$centers
+wine.kmeans$cluster
+wine.kmeans$size
+wine.kmeans$withinss
+
+wssplot <- function(data, nc = 15, seed = 1234) {
+  wss <- (nrow(data) - 1)*sum(apply(data, 2, var))
+  for (i in 2:nc) {
+    set.seed(seed)
+    wss[i] <- sum(kmeans(data, centers = i)$withinss)}
+  
+  plot(1:nc, wss, type = "b",
+       xlab = "Number of Clusters",
+       ylab = "Within Groups Sum of Squares")
+}
+
+wssplot(wine.scaled, nc = 6)
+
+library(cluster)
+
+clusplot(wine.scaled, wine.kmeans$cluster,
+         main = '2D Representation of the Cluster solution',
+         color = T, 
+         shape = T, 
+         labels = 2, 
+         lines = 0)
+
+table(wine[, 1], wine.kmeans$cluster)
+
+autoplot(wine.kmeans, data = wine)
+autoplot(clara(wine.numeric, 3), label = T)
+autoplot(fanny(wine.numeric, 3), frame = T)
+autoplot(pam(wine.numeric, 3), frame.type = 'norm')
+
+
+# Plotting with Grid ------------------------------------------------------
+
+library(gridExtra)
+
+p1 <- autoplot(wine.kmeans, data = wine) +
+  theme(legend.position = "none")
+
+p2 <- autoplot(clara(wine.numeric, 3), label = T) +
+  theme(legend.position = "none")
+
+p3 <- autoplot(fanny(wine.numeric, 3), frame = T) +
+  theme(legend.position = "none")
+
+p4 <- autoplot(pam(wine.numeric, 3), frame.type = 'norm') + 
+  theme(legend.position = "none")
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+
+# Hierarchical Clustering -------------------------------------------------
+
+wine.scaled %>% 
+  dist(method = "euclidean") %>% 
+  hclust(method = "ward.D") -> wine.hclust
+
+wine.hclust %>% plot()
+rect.hclust(wine.hclust, k=3, border = "red")
+
+groups <- cutree(wine.hclust, k=3)
+table(wine[, 1], groups)
 
 
