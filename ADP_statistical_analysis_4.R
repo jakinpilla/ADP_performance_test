@@ -583,41 +583,168 @@ library(QuantPsyc)
 lm.beta(fit1)
 
 
-# Ridge Regression --------------------------------------------------------
+# Ridge and Lasso Regression --------------------------------------------------------
 
+#' The glmnet() requires a vector input and matrix of predictors.
+#' 
+#' alpha = 0 for ridge regression. (L2 Regularization)
+#' 
+#' alpha = 1 for lasso regression. (L1 Regularization)
+#' 
+#' Ridge :: it shrink the value of coefficients but doesn't reached aero, which suggests no feature selection
+#' 
+#' Lasso :: it shrink coefficients to zero (exactly zero), which certainly helps ni feature selection
+#' 
+#' 
 library(glmnet)
+
+# Ridge -------------------------------------------------------------------
 
 y <- mtcars$hp
 x <- mtcars %>%
   select(mpg, wt, drat) %>%
   data.matrix()
 
+cv_ridge <- cv.glmnet(x, y, alpha=0) # ridge
+plot(cv_ridge)
+
+lambda_ridge <- cv_ridge$lambda.min
+lambda_ridge
+
+coef(cv_ridge)
 
 
+# Lasso -------------------------------------------------------------------
+
+cv_lasso <- cv.glmnet(x, y, alpha = 1)
+plot(cv_lasso)
+
+lambda_lasso <- cv_lasso$lambda.min
+lambda_lasso
+
+coef(cv_lasso)
 
 
+# PCA ---------------------------------------------------------------------
+
+iris %>%
+  select(-Species) -> ir
+
+iris %>%
+  select(Species) -> ir.species
+
+cor(ir) %>% 
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  as_tibble()
+ 
+ir %>% 
+  prcomp(center = T, scale = T) -> ir.pca
+
+ir.pca$rotation # about each axis
+ir.pca$x %>% as_tibble()  # about each data obj...
+
+plot(ir.pca, type = 'l')
+
+summary(ir.pca)
+
+tail(ir, 2)
+predict(ir.pca, newdata = tail(ir, 2))
+scale(tail(ir, 2)) %*% ir.pca$rotation # not same...why?
 
 
+# biplot with ggfortify() ----------------------------------------------------------------
+
+install.packages("ggfortify")
+library(ggfortify)
+autoplot(ir.pca, data = iris, colour = "Species")
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         label = T)
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         # label = T,
+         loadings = T, 
+         loadings.colour = "steelblue",
+         loadings.label = T
+         )
+
+autoplot(ir.pca, data = iris, 
+         colour = "Species",
+         # label = T,
+         loadings = T, 
+         loadings.colour = "steelblue",
+         loadings.label = T,
+         scale = 0)
 
 
+# Discriminant Analysis ---------------------------------------------------
+
+# LDA : Linear Discriminant Analysis
+
+library(MASS)
+set.seed(2019)
+
+iris %>%
+  select(-Species) -> ir
 
 
+train.idx <- sample(c(T, F), nrow(iris), replace = T, prob= c(.6, .4))
+
+ir.train <- iris[train.idx, ]
+ir.test <- iris[!train.idx, ]
+
+dim(ir.train)
+dim(ir.test)
+
+ir.lda <- lda(Species ~., ir.train)
+plot(ir.lda, col = as.integer(ir.train$Species))
+plot(ir.lda, dimen = 1, type = "b")
+
+lda.train_pred <- predict(ir.lda)
+ir.train$lda <- lda.train_pred$class
+table(ir.train$lda, ir.train$Species)
+
+lda.test_pred <- predict(ir.lda, ir.test)
+ir.test$lda <- lda.test_pred$class
+
+table(ir.test$lda, ir.test$Species)
+
+# Local Fisher Discriminant Analysis --------------------------------------
+
+install.packages("lfda")
+library(lfda)
+
+m.lfda <- lfda(ir, ir.species, r = 3, metric = "plain")
+
+autoplot(m.lfda, 
+         data = iris, 
+         colour = "Species",
+         frame = T, 
+         frame.colour = 'Species')
 
 
+# K-means -----------------------------------------------------------------
 
+install.packages("rattle.data")
+library(rattle.data)
 
+data("wine")
+head(wine)
+dim(wine)
+colnames(wine)
 
+wine %>%
+  select_if(is.numeric) -> wine.numeric
 
+wine.numeric %>%
+  scale() -> wine.scaled
 
+wine.scaled %>% kmeans(., 3) -> wine.kmeans
 
-
-
-
-
-
-
-
-
+wine.kmeans$centers
 
 
 
