@@ -5,7 +5,7 @@
 #' output: rmarkdown::github_document
 #' ---
 
-setwd("C:/Users/Daniel/ADP_performance_test")
+setwd("/home/insa/ADP_performance_test")
 getwd()
 
 rm(list = ls()); gc()
