@@ -1,16 +1,20 @@
-setwd("C:/Users/Daniel/ADP_performance_test")
+#' ---
+#' title: "ADP R_BASIC_1"
+#' author: "jakinpilla"
+#' date: "`r Sys.Date()`"
+#' output: rmarkdown::github_document
+#' ---
+
+#+setup, include = FALSE
+# setwd("C:/Users/Daniel/ADP_performance_test")
+setwd("/home/insa/ADP_performance_test")
 getwd()
-
-# install.packages('yardstick')
-# install.packages('party')
-# install.packages('randomForest')
-
-# 여러 개의 패키지를 한 번에 읽기
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 'party', 'randomForest', 'dummies', 'curl', 'gridExtra')
+Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 
+              'randomForest', 'dummies', 'curl', 'gridExtra')
 lapply(Packages, library, character.only=T)
 
 
-
+#' Loading housing data -----------------------------------------------------------------------------
 read.table('./data/housing_data.csv') -> boston
 names(boston) <- c('crim', 'zn', 'indus', 'chas', 'nox', 'rm', 'age', 'dis', 'rad',  
                    'tax', 'ptratio', 'black', 'lstat', 'medv')
@@ -30,36 +34,40 @@ head(boston)
 # lstat :: % lower status of the population
 # medv :: Median value of owner-occupied homes in $1000's
 
-# 파일 읽기(다양한 형태의 파일 읽어오기)
-read.table('./data/students.txt', sep='\t', header=F) -> student ; head(student) # 헤더가 없을 경우
-d1 <- read.table("./data/student-mat.csv",sep=";",header=TRUE) ; head(d1) # 구분자가 ;일 경우
+#' Reading various file types --------------------------------------------------------------------------
+read.table('./data/students.txt', sep='\t', header=F) -> student ; head(student) # If there is no header...
+d1 <- read.table("./data/student-mat.csv",sep=";",header=TRUE) ; head(d1) # deliminator is ";"
 
-student <- read_delim("data/student.txt",  "\t", col_names = FALSE); student # 구분자가 tab이고 헤더가 없는 경우
-student1 <- read_delim("data/student1.txt", "\t"); student1 # 구분자가 tab이고 헤더가 있는 경우
-student2 <- read_delim("data/student2.txt", ";"); student2 # 구분자가 ;인 경우
-## 특정 문자의 NA 처리 방법
-student3 <- read_delim("data/student3.txt", "\t", na= '-') # -를 NA로 처리하고자 할 경우
-## strip.white
+student <- read_delim("data/student.txt",  "\t", col_names = FALSE); student # delim is "tap" and no header...
+student1 <- read_delim("data/student1.txt", "\t"); student1 # delim is "tap" and there is header...
+student2 <- read_delim("data/student2.txt", ";"); student2  # delim is ";" and there is header...
+
+#' In case when NA has certain character...
+student3 <- read_delim("data/student3.txt", "\t", na= '-') # converet '-' to NA...
+
+#' strip.white ---------------------------------------------------------------------------
 student4 <- read_csv("data/student4.txt", col_names = FALSE); head(student4)
 white_wine <- read.table('./data/winequality-white.csv', strip.white = F, sep=';', 
                          header=T); head(white_wine)
 
-# na.rm=T
+white_wine <- read.table('./data/winequality-white.csv',sep=';', 
+                         header=T); head(white_wine)
+#' na.rm=T ---------------------------------------------------------------------------
 student3
 mean(student3$키)
 mean(student3$키, na.rm=T)
 
-# 데이터 구경하기(glimpse, plot(numeric_var ~ factor_var, data))
+#' EDA basic (glimpse, plot(numeric_var ~ factor_var, data))
 summary(boston)
 plot(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 ggpairs(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
-plot(boston$crim) # numeric인 경우, axis-x에는 index
+plot(boston$crim) # if one numeric var, index on axis-x
 
-# iris----
+#' iris ---------------------------------------------------------------------------
 plot(iris$Sepal.Length)
-plot(iris$Species) # factor인 경우, axis-x에는 factor, y에는 갯수
-plot(Species ~ Sepal.Length, data=iris) # lhs에 factor, rhs에 numeric일 경우, mosaic plot
-plot(Sepal.Length ~ Species, data=iris) # lhs에 numeric, rhs에 factor일 경우, boxplot
+plot(iris$Species) # only one factor var, factor on x-axis , frequency on y-axis
+plot(Species ~ Sepal.Length, data=iris) # factor on LHS, numeric on RHS => mosaic plot
+plot(Sepal.Length ~ Species, data=iris) # numericl on LHS , factor on RHS ==> boxplot
 
 iris %>%
   ggplot(aes(Species,Sepal.Length, col = Species)) + 
@@ -69,18 +77,19 @@ iris %>%
 iris %>%
   ggplot(aes(Sepal.Length, Sepal.Width, col = Species)) + geom_point()
 
-# 산점도행렬(GGally::ggpairs, 산점도, 상관계수를 한 번에 시각화)
+#' GGally::ggpairs() ---------------------------------------------------------------------------
 pairs(iris[, 1:4])
 iris %>% select_if(is.numeric) %>% ggpairs
 
-# 상관계수 행렬
+#' Correlations Matrix ---------------------------------------------------------------------------
 cor(iris[, 1:4])
 round(cor(iris[, 1:4]), 2)
 round(cor(iris[, 1:4]), 1)
 
 
-# titanic----
-## 빈칸("")을 NA로 만들기
+#' Titanic ----
+#' 
+#' Convert whitespace("") value into NA ---------------------------------------------------------------------------
 tbl_df(fread('./data/titanic3.csv', data.table = F)) -> titanic
 summary(titanic)
 titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin); titanic$cabin ## 빈칸을 NA로 만들기
@@ -88,12 +97,15 @@ titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin); titanic$cabin #
 titanic %>%
   mutate_all(funs(ifelse(. == "", NA, .)))
 
-# NA 값들을 전부 0으로 바꾸기(데이터 프레임 모든 열에 대하여)----
-# large data set reading
-titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; ## NA 값들을 전부 0으로 바꾸기
-# instead...
+#' How to replace all NA values into 0 --------------------------------------------------------------------------
+#' 
+#' large data set reading
+
+titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; 
+
+#' Instead... --------------------------------------------------------------------------
 titanic %>%
-  mutate_if(is.character, funs(ifelse(. == "", NA, .)))
+  mutate_if(is.character, funs(ifelse(. == "", "NA", .)))
 
 titanic %>% 
   mutate_if(is.numeric, funs(ifelse(is.na(.), 0, .))) -> titanic_na_zero_replaced
@@ -104,25 +116,32 @@ titanic %>%
   mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) %>%
   mutate_if(is.character, funs(imp=ifelse(is.na(.), "NA", .)))-> t_tmp; summary(t_tmp)
 
-# NA 값들을 median 값으로 바꾸기----
+#' Convert NA values into median values --------------------------------------------------------------------------
 titanic %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
 
-# '_imp' suffix imputation 하기----
+head(t_tmp)
+
+# '_imp' suffix imputation --------------------------------------------------------------------------
 titanic %>%
-  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp) # notice the "imp="
 
+head(t_tmp) %>% View()
 
-# NA 포함한 관측치 모두 제거하기----
-na.omit(titanic) # NA 포함한 관측치 모두 제거
+#' Eliminate all data which has at least a NA --------------------------------------------------------------------------
+na.omit(titanic) 
 
-# 데이터형 변환----
+#' Convert data classes --------------------------------------------------------------------------
 titanic$pclass <- as.factor(titanic$pclass)
 titanic$ticket <- as.character(titanic$ticket)
 titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'survived'))
 glimpse(titanic)
 
-# 데이터형 확인----
+titanic %>%
+  mutate(pclass = as.factor(pclass),
+         ticket = as.character(ticket))
+
+#' Check the data class --------------------------------------------------------------------------
 class(titanic$embarked) # characeter
 levels(titanic$embarked) # NULL
 table(titanic$embarked)
@@ -148,20 +167,21 @@ df.cabin %>%
   geom_bar(stat = "identity") +
   theme(legend.position = 'none', axis.text.x = element_text(angle = 90))
 
-# imdb dataset----
-# NA and outlier----
+#' Imdb Dataset --------------------------------------------------------------------------
+#' 
+#' NA and outlier --------------------------------------------------------------------------
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
 summary(df_imdb)
 
-## 특정 변수 내 NA 제거하기(dplyr::drop_na())----
-sum(is.na(df_imdb$gross)) ## 변수 별 NA 갯수 확인하기
-df_imdb$gross[df_imdb$gross < 0] <- NA # 0보다 작은 값을 NA로 만들기
+#' dplyr::drop_na() --------------------------------------------------------------------------
+sum(is.na(df_imdb$gross)) # how many NAs in a certain column...
+df_imdb$gross[df_imdb$gross < 0] <- NA # replace data which is below 0 to NA...
 summary(df_imdb$budget) # budget 변수의 NA 제거 필요 확인
 
-df_imdb %>%
-  drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop)
+df_imdb %>% nrow()
 
-nrow(df_imdb_budget_na_drop) ; range(df_imdb_budget_na_drop$budget) # budget 변수 내 NA 제거 확인
+df_imdb %>%
+  drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop); nrow(df_imdb_budget_na_drop)
 
 boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # 이상치 제거 필요성 확인
 boxplot(df_imdb_budget_na_drop$budget)$stat 
