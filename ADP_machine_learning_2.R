@@ -1,20 +1,17 @@
 #' ---
-#' title: "ADP machine learning with transaction dataset"
+#' title: "ADP ML_2_apriori"
 #' author: "jakinpilla"
-#' date: "`r Sys.Date`"
+#' date: "`r Sys.Date()`"
 #' output: rmarkdown::github_document
 #' ---
 
-#' Setting working dtrectory
-
-# setwd("C:/Users/Daniel/ADP_performance_test")
+#+setup, include = FALSE
+setwd("C:/Users/Daniel/ADP_performance_test")
 getwd()
 
-#' install.packages('arules')
 library(arules)
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
-              'randomForest', 'dummies', 'curl', 'gridExtra')
-
+              'randomForest', 'dummies', 'curl', 'gridExtra', 'arules', 'arulesViz','viridisLite')
 lapply(Packages, library, character.only=T)
 
 #' Data loading----
@@ -111,15 +108,11 @@ harddrinks_rules_df <- as(harddrinks_rules, "data.frame")
 str(harddrinks_rules_df)
 head(harddrinks_rules_df)
 
-harddrinks_rules_df # %>% View()
+harddrinks_rules_df[1:10, ] # %>% View()
 
-# Visualization arules :: arulesViz  ------------------------------
-# install.packages('arulesViz')
-# install.packages('viridisLite')
-library(viridisLite)
-library(arulesViz)
-
-# Plotting rules ------------------------------
+#' Visualization arules :: arulesViz  ------------------------------
+#' 
+#' Plotting rules ------------------------------
 groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
                                                              confidence = 0.0001,
                                                              minlen = 3))
@@ -165,8 +158,8 @@ milk_before <- apriori(basket.transaction,
                        appearance = list(default='lhs', rhs='milk'), # to know before items, put the item on rhs 
                        control = list(verbose=F))
 
-inspect(milk_before)[1:2]
-inspect(sort(milk_before, by='confidence', decreasing = T))
+inspect(milk_before[1:2, ])
+inspect(sort(milk_before, by='confidence', decreasing = T)[1:5, ])
 
 #' After item ------------------------------
 #' 
@@ -178,14 +171,12 @@ milk_after <- apriori(basket.transaction,
                        appearance = list(default='rhs', lhs='milk'),
                        control = list(verbose=F))
 
-inspect(sort(milk_after, by='confidence', decreasing = T))
+inspect(sort(milk_after, by='confidence', decreasing = T)[1:10, ])
 
 
-#' ----
 #' LoL Champoion Dataset :: sample-data.csv... ------------------------------
 #' 
 #' Load data and transder it into transactions format for apriori ------------------------------
-library(arules)
 df <- read_csv("data/sample-data-1.csv", locale = locale(encoding = "cp949"))
 
 table(df$id) # 18 game players...
@@ -231,9 +222,17 @@ zaira_rules <- subset(rules, items %in% "자이라")
 inspect(zaira_rules)
 
 #' Generate rules with condition list ------------------------------
-rules <- apriori(rioter.transaction, parameter = list(supp=.001,
+rules <- apriori(rioter.transaction, parameter = list(supp=.06,
                                                       conf=.8))
 summary(rules)
+
+plot(sort(rules, by='support')[1:20], method='grouped')
+
+# windows()
+plot(rules, method='graph', control=list(type='items'),
+     vertex.label.cex = .7, 
+     edge.arrow.size= .3,
+     edge.arrow.size= 2)
 
 
 # 상품 방문 코너 예측...

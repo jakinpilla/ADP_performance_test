@@ -16,7 +16,7 @@ nrow(titanic)
 
 # var "sex" preprocessing as 0(female), 1(male)...
 as.factor(titanic$sex) -> titanic$sex
-(as.numeric(titanic$sex) - 1) -> titanic$sex #female -> 0, male -> 1
+(as.numeric(titanic$sex) - 1) -> titanic$sex # female -> 0, male -> 1
 glimpse(titanic)
 
 # var "suvivied " preprocessing as factor with labels c("dead", "survived")...
