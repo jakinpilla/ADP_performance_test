@@ -6,13 +6,68 @@
 #' ---
 
 #+setup, include = FALSE
-setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("C:/Users/Daniel/ADP_performance_test")
+
+rm(list=ls()); gc()
+setwd("/home/insa/ADP_performance_test")
 getwd()
 
-library(arules)
-Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
-              'randomForest', 'dummies', 'curl', 'gridExtra', 'arules', 'arulesViz','viridisLite')
+Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
+              'randomForest', 'dummies', 'curl', 'gridExtra', 'arules', 'arulesViz',
+              'viridisLite')
 lapply(Packages, library, character.only=T)
+
+#' Data loading----
+tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
+head(tran); dim(tran) ## 27,993건의 거래내역
+
+tran %>% 
+  arrange(ymd, time, custid) %>%
+  group_by(ymd, time, custid) %>%
+  summarise(basket_prods = paste(prod, collapse = ", "))
+
+tran %>% 
+  arrange(ymd, time, custid) %>%
+  group_by(ymd, time, custid) %>%
+  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
+  rowid_to_column() %>%
+  rename(invoice_no = rowid)
+
+tran %>% 
+  arrange(ymd, time, custid) %>%
+  group_by(ymd, time, custid) %>%
+  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
+  rowid_to_column() %>%
+  rename(invoice_no = rowid) %>%
+  ungroup() %>%
+  select(invoice_no, basket_prods) 
+
+tran %>% 
+  arrange(ymd, time, custid) %>%
+  group_by(ymd, time, custid) %>%
+  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
+  rowid_to_column() %>%
+  rename(invoice_no = rowid) %>%
+  ungroup() %>%
+  select(invoice_no, basket_prods) %>%
+  rename(items = basket_prods) %>%
+  write_csv("./data/market_basket_transactions.csv")
+  
+basket.transaction_1 <- read.transactions("./data/market_basket_transactions.csv",
+                                        format = "single",
+                                        cols = c(1, 2),
+                                        header = T, # if not, there would be column name in transaction data
+                                        sep = ",")
+
+basket.transaction_1 # sparse matrix...
+summary(basket.transaction_1)
+
+# ?read.transactions()
+  
+#' 1~5 baskets -------------------------------------------------------------
+inspect(basket.transaction_1[1:5])
+inspect(basket.transaction_1[10]) 
+
 
 #' Data loading----
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
@@ -22,50 +77,61 @@ head(tran); dim(tran) ## 27,993건의 거래내역
 i=0
 group_number = (function(){i = 0; function() i <<- i+1 })()
 # df %>% group_by(u,v) %>% mutate(label = group_number())
-tran %>% 
+
+tran %>%
   arrange(ymd, time, custid) %>%
   group_by(ymd, time, custid) %>%
   mutate(basket_id = group_number()) %>%
   as.data.frame() %>% # to avoid adding grouped var...
   select(basket_id, prod) -> tran_basket; head(tran_basket)
 
-#' Make basket.transaction and basket.transaction sparse format---- 
+#' Make basket.transaction and basket.transaction sparse format----
 basket.transaction <- split(tran_basket$prod, tran_basket$basket_id)
-basket.transaction[1:5] # list class... 
+basket.transaction[1:5] # list class...
 
-basket.transaction <- as(basket.transaction, 'transactions')
-basket.transaction # transaction class...
+basket.transaction_2 <- as(basket.transaction, 'transactions')
+basket.transaction_2 # transaction class...
 
 
 #' 1~5 baskets -------------------------------------------------------------
 
-inspect(basket.transaction[1:5])
+inspect(basket.transaction_2[1:5])
 
 
 #' Item Frequency :: itemFrequency()----------------------------------------------------------
 
-itemFrequency(basket.transaction[, 1:5])
+itemFrequency(basket.transaction_2[, 1:5])
 
 
 #' Item Frequency Plot :: itemFrequencyPlot() ------------------------------
 
-itemFrequencyPlot(basket.transaction, topN = 20)
-itemFrequencyPlot(basket.transaction, support = .05, 
+itemFrequencyPlot(basket.transaction_2, topN = 20)
+
+library(RColorBrewer)
+itemFrequencyPlot(basket.transaction_2, topN = 20,
+                  type = "absolute", 
+                  col = brewer.pal(8, 'Pastel2'),
+                  main = "Absolute Item Frequency Plot")
+
+itemFrequencyPlot(basket.transaction, support = .01, 
                   main = 'item frequency plot above support 1%')
 
 #' Visualize Sparse Marix ------------------------------
 # windows()
-image(basket.transaction[1:100]) # 100 transaction, 100 items...
+image(basket.transaction_2[1:100]) # 100 transaction, 100 items...
 
 #' 200 transaction, 100 items....
-image(sample(basket.transaction, 200))
+image(sample(basket.transaction_2, 200))
 
  
 #' How to set support and confidence? ------------------------------
-groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
-groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
-                                                    confidence = 0.0001,
-                                                    minlen = 2))
+groceryrules <- apriori(basket.transaction) # default...
+
+groceryrules <- apriori(basket.transaction, 
+                        parameter = list(support = 0.0001, 
+                                         confidence = 0.000001, 
+                                         minlen = 2,
+                                         maxlen = 10))
 
 summary(groceryrules)
 inspect(groceryrules[1:5])

@@ -5,6 +5,8 @@
 #' output: rmarkdown::github_document
 #' ---
 
+setwd("/home/insa/ADP_performance_test/")
+
 #+ setup, include= FALSE
 Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
               'ROCR', 'ranger', 'dummies', 'curl', 'gridExtra')
@@ -113,8 +115,6 @@ biplot(h.pca, cex=.7)
 #' 
 library(ykmeans)
 
-?ykmeans
-
 h <- data.frame(h.pca$x)
 
 head(h)
@@ -140,7 +140,6 @@ ggplot(km,
 k <- kmeans(h[, 1:2], 5)
 k$cluster %>% as.factor() -> k$cluster
 
-plot(h[, 1:2], col = k$cluster, pch = k$cluster, size = 2)
 ggplot(h, aes(PC1, PC2, col = k$cluster)) + geom_point(size = 2)
 
 #' PCA ==> SVM Classification ------------------------------
@@ -284,6 +283,7 @@ rect.hclust(h.fit_average, k=5)
 #' MDS ---------------------------------------------------------------------
 
 data("eurodist")
+
 eurodist
 
 loc <- cmdscale(eurodist)
@@ -337,3 +337,4 @@ svm.iris <- svm(Species ~ ., data = iris_train, kernel = 'linear')
 y_hat_svm <- predict(svm.iris, iris_test[, -5])
 
 confusionMatrix(y_hat_svm, iris_test$Species)
+

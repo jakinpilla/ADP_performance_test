@@ -1,16 +1,62 @@
 ADP ML\_3
 ================
 jakinpilla
-2019-04-25
+2019-05-02
 
 ``` r
 setwd("/home/insa/ADP_performance_test/")
-getwd()
 ```
 
-    ## [1] "/home/insa/ADP_performance_test"
+Data Loading ——————————
 
-score transform…
+``` r
+library(HSAUR)
+```
+
+    ## Loading required package: tools
+
+``` r
+data('heptathlon')
+
+head(heptathlon)
+```
+
+    ##                     hurdles highjump  shot run200m longjump javelin
+    ## Joyner-Kersee (USA)   12.69     1.86 15.80   22.56     7.27   45.66
+    ## John (GDR)            12.85     1.80 16.23   23.65     6.71   42.56
+    ## Behmer (GDR)          13.20     1.83 14.20   23.10     6.68   44.54
+    ## Sablovskaite (URS)    13.61     1.80 15.23   23.92     6.25   42.78
+    ## Choubenkova (URS)     13.51     1.74 14.76   23.93     6.32   47.46
+    ## Schulz (GDR)          13.75     1.83 13.50   24.65     6.33   42.82
+    ##                     run800m score
+    ## Joyner-Kersee (USA)  128.51  7291
+    ## John (GDR)           126.12  6897
+    ## Behmer (GDR)         124.20  6858
+    ## Sablovskaite (URS)   132.24  6540
+    ## Choubenkova (URS)    127.90  6540
+    ## Schulz (GDR)         125.79  6411
+
+``` r
+dim(heptathlon)
+```
+
+    ## [1] 25  8
+
+``` r
+rownames(heptathlon)
+```
+
+    ##  [1] "Joyner-Kersee (USA)" "John (GDR)"          "Behmer (GDR)"       
+    ##  [4] "Sablovskaite (URS)"  "Choubenkova (URS)"   "Schulz (GDR)"       
+    ##  [7] "Fleming (AUS)"       "Greiner (USA)"       "Lajbnerova (CZE)"   
+    ## [10] "Bouraga (URS)"       "Wijnsma (HOL)"       "Dimitrova (BUL)"    
+    ## [13] "Scheider (SWI)"      "Braun (FRG)"         "Ruotsalainen (FIN)" 
+    ## [16] "Yuping (CHN)"        "Hagger (GB)"         "Brown (USA)"        
+    ## [19] "Mulliner (GB)"       "Hautenauve (BEL)"    "Kytola (FIN)"       
+    ## [22] "Geremias (BRA)"      "Hui-Ing (TAI)"       "Jeong-Mi (KOR)"     
+    ## [25] "Launa (PNG)"
+
+Score transform ——————————
 
 ``` r
 heptathlon %>%
@@ -18,7 +64,6 @@ heptathlon %>%
   mutate(hurdles = max(hurdles) - hurdles) %>%
   mutate(run200m = max(run200m) - run200m) %>%
   mutate(run800m = max(run800m) - run800m) -> heptathlon
-
 
 cor(heptathlon)
 ```
@@ -46,9 +91,10 @@ cor(heptathlon)
 ggpairs(heptathlon)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-scale()—-
+scale()
+    ——————————
 
 ``` r
 scale(heptathlon) %>% head()
@@ -75,51 +121,123 @@ iris %>%
   scale() %>%
   as_tibble() %>%
   cbind(., iris$Species) -> iris_scaled
+
+# ?scale()
+# require(stats)
+# x <- matrix(1:10, ncol = 2)
+# centered.x <- scale(x, scale = F)
+# scale(x) %>% cov()
 ```
 
-select vars—-
+If scale is TRUE then scaling is done by dividing the (centered) columns
+of x by their standard deviations if center is TRUE, and the root mean
+square otherwise. If scale is FALSE, no scaling is done. Select vars
+——————————
 
 ``` r
-library(mlbench)
-data("Soybean")
-dim(Soybean)
+library(mlbench); data("Soybean")
+
+summary(Soybean)
 ```
 
-    ## [1] 683  36
+    ##                  Class          date     plant.stand  precip      temp    
+    ##  brown-spot         : 92   5      :149   0   :354    0   : 74   0   : 80  
+    ##  alternarialeaf-spot: 91   4      :131   1   :293    1   :112   1   :374  
+    ##  frog-eye-leaf-spot : 91   3      :118   NA's: 36    2   :459   2   :199  
+    ##  phytophthora-rot   : 88   2      : 93               NA's: 38   NA's: 30  
+    ##  anthracnose        : 44   6      : 90                                    
+    ##  brown-stem-rot     : 44   (Other):101                                    
+    ##  (Other)            :233   NA's   :  1                                    
+    ##    hail     crop.hist  area.dam    sever     seed.tmt     germ    
+    ##  0   :435   0   : 65   0   :123   0   :195   0   :305   0   :165  
+    ##  1   :127   1   :165   1   :227   1   :322   1   :222   1   :213  
+    ##  NA's:121   2   :219   2   :145   2   : 45   2   : 35   2   :193  
+    ##             3   :218   3   :187   NA's:121   NA's:121   NA's:112  
+    ##             NA's: 16   NA's:  1                                   
+    ##                                                                   
+    ##                                                                   
+    ##  plant.growth leaves  leaf.halo  leaf.marg  leaf.size  leaf.shread
+    ##  0   :441     0: 77   0   :221   0   :357   0   : 51   0   :487   
+    ##  1   :226     1:606   1   : 36   1   : 21   1   :327   1   : 96   
+    ##  NA's: 16             2   :342   2   :221   2   :221   NA's:100   
+    ##                       NA's: 84   NA's: 84   NA's: 84              
+    ##                                                                   
+    ##                                                                   
+    ##                                                                   
+    ##  leaf.malf  leaf.mild    stem     lodging    stem.cankers canker.lesion
+    ##  0   :554   0   :535   0   :296   0   :520   0   :379     0   :320     
+    ##  1   : 45   1   : 20   1   :371   1   : 42   1   : 39     1   : 83     
+    ##  NA's: 84   2   : 20   NA's: 16   NA's:121   2   : 36     2   :177     
+    ##             NA's:108                         3   :191     3   : 65     
+    ##                                              NA's: 38     NA's: 38     
+    ##                                                                        
+    ##                                                                        
+    ##  fruiting.bodies ext.decay  mycelium   int.discolor sclerotia  fruit.pods
+    ##  0   :473        0   :497   0   :639   0   :581     0   :625   0   :407  
+    ##  1   :104        1   :135   1   :  6   1   : 44     1   : 20   1   :130  
+    ##  NA's:106        2   : 13   NA's: 38   2   : 20     NA's: 38   2   : 14  
+    ##                  NA's: 38              NA's: 38                3   : 48  
+    ##                                                                NA's: 84  
+    ##                                                                          
+    ##                                                                          
+    ##  fruit.spots   seed     mold.growth seed.discolor seed.size  shriveling
+    ##  0   :345    0   :476   0   :524    0   :513      0   :532   0   :539  
+    ##  1   : 75    1   :115   1   : 67    1   : 64      1   : 59   1   : 38  
+    ##  2   : 57    NA's: 92   NA's: 92    NA's:106      NA's: 92   NA's:106  
+    ##  4   :100                                                              
+    ##  NA's:106                                                              
+    ##                                                                        
+    ##                                                                        
+    ##   roots    
+    ##  0   :551  
+    ##  1   : 86  
+    ##  2   : 15  
+    ##  NA's: 31  
+    ##            
+    ##            
+    ## 
 
 ``` r
-Soybean %>% as_tibble()
+Soybean %>% as_tibble() -> Soybean
+Soybean %>% select(Class) %>% unique() # 19 Species...
 ```
 
-    ## # A tibble: 683 x 36
-    ##    Class date  plant.stand precip temp  hail  crop.hist area.dam sever
-    ##    <fct> <fct> <ord>       <ord>  <ord> <fct> <fct>     <fct>    <fct>
-    ##  1 diap… 6     0           2      1     0     1         1        1    
-    ##  2 diap… 4     0           2      1     0     2         0        2    
-    ##  3 diap… 3     0           2      1     0     1         0        2    
-    ##  4 diap… 3     0           2      1     0     1         0        2    
-    ##  5 diap… 6     0           2      1     0     2         0        1    
-    ##  6 diap… 5     0           2      1     0     3         0        1    
-    ##  7 diap… 5     0           2      1     0     2         0        1    
-    ##  8 diap… 4     0           2      1     1     1         0        1    
-    ##  9 diap… 6     0           2      1     0     3         0        1    
-    ## 10 diap… 4     0           2      1     0     2         0        2    
-    ## # … with 673 more rows, and 27 more variables: seed.tmt <fct>, germ <ord>,
-    ## #   plant.growth <fct>, leaves <fct>, leaf.halo <fct>, leaf.marg <fct>,
-    ## #   leaf.size <ord>, leaf.shread <fct>, leaf.malf <fct>, leaf.mild <fct>,
-    ## #   stem <fct>, lodging <fct>, stem.cankers <fct>, canker.lesion <fct>,
-    ## #   fruiting.bodies <fct>, ext.decay <fct>, mycelium <fct>,
-    ## #   int.discolor <fct>, sclerotia <fct>, fruit.pods <fct>,
-    ## #   fruit.spots <fct>, seed <fct>, mold.growth <fct>, seed.discolor <fct>,
-    ## #   seed.size <fct>, shriveling <fct>, roots <fct>
+    ## # A tibble: 19 x 1
+    ##    Class                      
+    ##    <fct>                      
+    ##  1 diaporthe-stem-canker      
+    ##  2 charcoal-rot               
+    ##  3 rhizoctonia-root-rot       
+    ##  4 phytophthora-rot           
+    ##  5 brown-stem-rot             
+    ##  6 powdery-mildew             
+    ##  7 downy-mildew               
+    ##  8 brown-spot                 
+    ##  9 bacterial-blight           
+    ## 10 bacterial-pustule          
+    ## 11 purple-seed-stain          
+    ## 12 anthracnose                
+    ## 13 phyllosticta-leaf-spot     
+    ## 14 alternarialeaf-spot        
+    ## 15 frog-eye-leaf-spot         
+    ## 16 diaporthe-pod-&-stem-blight
+    ## 17 cyst-nematode              
+    ## 18 2-4-d-injury               
+    ## 19 herbicide-injury
 
-caret::nearZeroVar()—-
+caret::nearZeroVar() ——————————
+
+nearZeroVar diagnoses predictors that have one unique value (i.e. are
+zero variance predictors) or predictors that are have both of the
+following characteristics: they have very few unique values relative to
+the number of samples and the ratio of the frequency of the most common
+value to the frequency of the second most common value is large.
 
 ``` r
-nearZeroVar(Soybean)
+colnames(Soybean)[nearZeroVar(Soybean)]
 ```
 
-    ## [1] 19 26 28
+    ## [1] "leaf.mild" "mycelium"  "sclerotia"
 
 ``` r
 Soybean %>%
@@ -148,7 +266,11 @@ Soybean %>%
     ## #   fruit.pods <fct>, fruit.spots <fct>, seed <fct>, mold.growth <fct>,
     ## #   seed.discolor <fct>, seed.size <fct>, shriveling <fct>, roots <fct>
 
-caret::findCorrelation()—-
+caret::findCorrelation() ——————————
+
+This function searches through a correlation matrix and returns a vector
+of integers corresponding to columns to remove to reduce pair-wise
+correlations.
 
 ``` r
 data('Vehicle')
@@ -174,6 +296,8 @@ Vehicle %>% as_tibble() -> vehicle; vehicle
     ## #   Kurt.Maxis <dbl>, Holl.Ra <dbl>, Class <fct>
 
 ``` r
+# vehicle %>% View()
+
 vehicle %>%
   select(-Class) %>%
   cor() %>%
@@ -212,7 +336,7 @@ vehicle %>%
     ## # … with 836 more rows, and 2 more variables: Kurt.maxis <dbl>,
     ## #   Class <fct>
 
-PCA ==\> K-means Clustering—-
+PCA ==\> K-means Clustering ——————————
 
 ``` r
 heptathlon %>%
@@ -259,37 +383,13 @@ summary(h.pca)
 screeplot(h.pca, type ='lines')
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-first and second components…
-
-``` r
-h.pca
-```
-
-    ## Standard deviations (1, .., p=7):
-    ## [1] 2.1119364 1.0928497 0.7218131 0.6761411 0.4952441 0.2701029 0.2213617
-    ## 
-    ## Rotation (n x k) = (7 x 7):
-    ##                 PC1         PC2         PC3         PC4         PC5
-    ## hurdles  -0.4528710  0.15792058 -0.04514996  0.02653873 -0.09494792
-    ## highjump -0.3771992  0.24807386 -0.36777902  0.67999172  0.01879888
-    ## shot     -0.3630725 -0.28940743  0.67618919  0.12431725  0.51165201
-    ## run200m  -0.4078950 -0.26038545  0.08359211 -0.36106580 -0.64983404
-    ## longjump -0.4562318  0.05587394  0.13931653  0.11129249 -0.18429810
-    ## javelin  -0.0754090 -0.84169212 -0.47156016  0.12079924  0.13510669
-    ## run800m  -0.3749594  0.22448984 -0.39585671 -0.60341130  0.50432116
-    ##                  PC6         PC7
-    ## hurdles  -0.78334101  0.38024707
-    ## highjump  0.09939981 -0.43393114
-    ## shot     -0.05085983 -0.21762491
-    ## run200m   0.02495639 -0.45338483
-    ## longjump  0.59020972  0.61206388
-    ## javelin  -0.02724076  0.17294667
-    ## run800m   0.15555520 -0.09830963
+First and Second Components
+——————————
 
 ``` r
-h.pca$rotation[, 1:2] # What is principal components...
+h.pca$rotation[, 1:2] # What is principal components(data features to PC)...
 ```
 
     ##                 PC1         PC2
@@ -302,7 +402,7 @@ h.pca$rotation[, 1:2] # What is principal components...
     ## run800m  -0.3749594  0.22448984
 
 ``` r
-h.pca$x %>% head() # principal components per persons...
+h.pca$x %>% head() # principal components per persons(per data objects)...
 ```
 
     ##            PC1         PC2        PC3         PC4        PC5         PC6
@@ -324,9 +424,9 @@ h.pca$x %>% head() # principal components per persons...
 biplot(h.pca, cex=.7)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-ykmeans()—–
+ykmeans() ——————————
 
 ``` r
 library(ykmeans)
@@ -396,63 +496,25 @@ ggplot(km,
   geom_point(size = 2)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-``` r
-head(h)
-```
-
-    ##         PC1         PC2        PC3         PC4        PC5         PC6
-    ## 1 -4.121448 -1.24240435  0.3699131  0.02300174 -0.4260062  0.33932922
-    ## 2 -2.882186 -0.52372600  0.8974147 -0.47545176  0.7030659 -0.23808730
-    ## 3 -2.649634 -0.67876243 -0.4591767 -0.67962860 -0.1055252  0.23919071
-    ## 4 -1.343351 -0.69228324  0.5952704 -0.14067052  0.4539282 -0.09180564
-    ## 5 -1.359026 -1.75316563 -0.1507013 -0.83595001  0.6871948 -0.12630397
-    ## 6 -1.043847  0.07940725 -0.6745305 -0.20557253  0.7379335  0.35578939
-    ##          PC7
-    ## 1  0.3479213
-    ## 2  0.1440158
-    ## 3 -0.1296478
-    ## 4 -0.4865780
-    ## 5  0.2394820
-    ## 6 -0.1034143
+kmeans() ——————————
 
 ``` r
 k <- kmeans(h[, 1:2], 5)
-
-plot(h[, 1:2], col = k$cluster, pch = k$cluster, size = 2)
-```
-
-    ## Warning in plot.window(...): "size" is not a graphical parameter
-
-    ## Warning in plot.xy(xy, type, ...): "size" is not a graphical parameter
-
-    ## Warning in axis(side = side, at = at, labels = labels, ...): "size" is not
-    ## a graphical parameter
-    
-    ## Warning in axis(side = side, at = at, labels = labels, ...): "size" is not
-    ## a graphical parameter
-
-    ## Warning in box(...): "size" is not a graphical parameter
-
-    ## Warning in title(...): "size" is not a graphical parameter
-
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
-
-``` r
 k$cluster %>% as.factor() -> k$cluster
 
 ggplot(h, aes(PC1, PC2, col = k$cluster)) + geom_point(size = 2)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-PCA ==\> SVM Classification—- Data Loading…
+PCA ==\> SVM Classification —————————— Data Loading ——————————
 
 ``` r
 library(e1071)
 
-iris %>%
+iris %>% 
   select(-Species) %>%
   prcomp(scale = T) -> ir.pca; ir.pca
 ```
@@ -509,8 +571,8 @@ iris_pca
     ## 10 -2.18  0.467   0.253  -0.0398  setosa 
     ## # … with 140 more rows
 
-Data
-Spliting…
+Data Spliting
+——————————
 
 ``` r
 idx <- caret::createDataPartition(iris_pca$species, p = c(.8, .2), list = F)
@@ -527,7 +589,7 @@ dim(iris_pca_test)
 
     ## [1] 30  5
 
-Modeling…
+Modeling ——————————
 
 ``` r
 m_svm <- svm(species ~ ., data = iris_pca_train)
@@ -547,7 +609,7 @@ m_svm
     ## 
     ## Number of Support Vectors:  68
 
-Predicting…
+Predicting ——————————
 
 ``` r
 y_hat_svm <- predict(m_svm, newdata = iris_pca_test[, 1:4])
@@ -559,7 +621,7 @@ table(y_hat_svm)
     ##     setosa versicolor  virginica 
     ##         10         12          8
 
-Evaluating…
+Evaluating ——————————
 
 ``` r
 confusionMatrix(y_hat_svm, iris_pca_test$species)
@@ -596,7 +658,7 @@ confusionMatrix(y_hat_svm, iris_pca_test$species)
     ## Detection Prevalence        0.3333            0.4000           0.2667
     ## Balanced Accuracy           1.0000            0.9500           0.9000
 
-Visualization….
+Visualization ——————————
 
 ``` r
 y_hat_df <- data.frame(iris_pca_test[, 1:4], y_hat = y_hat_svm)
@@ -621,14 +683,14 @@ y_hat_df %>% as_tibble()
 
 ``` r
 ggplot(y_hat_df,
-       aes(x = PC1, y = PC2, col = y_hat)) + geom_point(size = 3)
+       aes(x = PC1, y = PC2, col = y_hat)) + geom_point(size = 2)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
-With caret style…
+With caret style ——————————
 
-setting fitControl…
+setting fitControl ——————————
 
 ``` r
 fitControl = trainControl(method = 'repeatedcv', 
@@ -770,7 +832,7 @@ cbind(iris_pca_test[, 1:4],
 ggplot(iris_hat_data, aes(PC1, PC2, col = species)) + geom_point(size = 2)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 Hclust—-
 
@@ -924,7 +986,7 @@ h <- hclust(d, method = 'ward.D')
 plot(h, labels= protein$Country)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 Flexclust—-
 
@@ -977,7 +1039,7 @@ plot(h.fit_average, hang = 1, cex = .8,
      main = "Average Linkage Clustering")
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 How many Clusters—-
 
@@ -996,7 +1058,7 @@ nc <-NbClust(nutrient.scaled, distance = 'euclidean',
     
     ## Warning in pf(beale, pp, df2): NaNs produced
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
     ## *** : The Hubert index is a graphical method of determining the number of clusters.
     ##                 In the plot of Hubert index, we seek a significant knee that corresponds to a 
@@ -1004,7 +1066,7 @@ nc <-NbClust(nutrient.scaled, distance = 'euclidean',
     ##                 index second differences plot. 
     ## 
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-23-2.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
 
     ## *** : The D index is a graphical method of determining the number of clusters. 
     ##                 In the plot of D index, we seek a significant knee (the significant peak in Dindex
@@ -1038,7 +1100,7 @@ barplot(table(nc$Best.nc[1, ]),
         main = 'Number of Clusters Chosen by 26 criteria')
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-23-3.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-25-3.png)<!-- -->
 
 Results—-
 
@@ -1063,12 +1125,13 @@ plot(h.fit_average,
 rect.hclust(h.fit_average, k=5)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 MDS ———————————————————————
 
 ``` r
 data("eurodist")
+
 eurodist
 ```
 
@@ -1145,7 +1208,7 @@ text(x, y, rownames(loc), cex = .8)
 abline(v = 0, h = 0)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 -----
 
@@ -1162,7 +1225,7 @@ text(x, y, rownames(loc), cex = .8)
 abline(v = 0, h = 0)
 ```
 
-![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 NN ———————————————————————-
 
