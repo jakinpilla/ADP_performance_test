@@ -49,16 +49,13 @@ basket.transaction[1:5] # list class...
 tr_obj <- as(basket.transaction, 'transactions')
 tr_obj # transaction class...
 
-#' Comparing tr_obj_1 and tr_obj_2 S4 objects ----------------------------------
 summary(tr_obj)
 
 #' 1~5 baskets -----------------------------------------------------------------
 inspect(tr_obj[1:10])
 
-
 #' Item Frequency :: itemFrequency()--------------------------------------------
 itemFrequency(tr_obj[, 1:5])
-
 
 #' Item Frequency Plot :: itemFrequencyPlot() ----------------------------------
 itemFrequencyPlot(tr_obj, topN = 20)

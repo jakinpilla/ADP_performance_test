@@ -6,8 +6,8 @@
 #' ---
 
 #+setup, include = FALSE
-# setwd("C:/Users/Daniel/ADP_performance_test")
-setwd("/home/insa/ADP_performance_test")
+setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("/home/insa/ADP_performance_test")
 getwd()
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR', 
               'randomForest', 'dummies', 'curl', 'gridExtra')
@@ -58,7 +58,7 @@ mean(student3$키)
 mean(student3$키, na.rm=T)
 
 #' EDA basic (glimpse, plot(numeric_var ~ factor_var, data))
-summary(boston)
+# summary(boston)
 plot(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 ggpairs(boston[, c('crim', 'zn', 'indus', 'chas', 'black', 'lstat', 'medv')])
 plot(boston$crim) # if one numeric var, index on axis-x
@@ -91,55 +91,81 @@ round(cor(iris[, 1:4]), 1)
 #' 
 #' Convert whitespace("") value into NA ---------------------------------------------------------------------------
 tbl_df(fread('./data/titanic3.csv', data.table = F)) -> titanic
-summary(titanic)
-titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin); titanic$cabin ## 빈칸을 NA로 만들기
+# summary(titanic)
+titanic$cabin <- ifelse(titanic$cabin == "", NA, titanic$cabin)
+titanic$cabin[1:10] 
 
+#' Replace all "" into NA notation ---------------------------------------------
 titanic %>%
   mutate_all(funs(ifelse(. == "", NA, .)))
 
-#' How to replace all NA values into 0 --------------------------------------------------------------------------
-#' 
-#' large data set reading
+#' Replace all NA values into 0 -----------------------------------------
+titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; titanic_na_zero_replaced
 
-titanic %>% replace(is.na(.), 0) -> titanic_na_zero_replaced; 
-
-#' Instead... --------------------------------------------------------------------------
+#' Replace all "" values into "NA in character columns --------------------------------------------------
 titanic %>%
-  mutate_if(is.character, funs(ifelse(. == "", "NA", .)))
+  mutate_if(is.character, funs(ifelse(. == "", "NA", .))) -> titanic_1
 
-titanic %>% 
-  mutate_if(is.numeric, funs(ifelse(is.na(.), 0, .))) -> titanic_na_zero_replaced
+titanic_1
 
-summary(titanic_na_zero_replaced)
+#' Replace all NA values into "NA" in character columns --------------------------------------------------
+titanic_1 %>% 
+  mutate_if(is.character, funs(ifelse(is.na(.), "NA", .))) -> titanic_2
 
+titanic_2
+
+#' Replace all NA values into 0 in numeric columns --------------------------------------------------
+titanic_2 %>% 
+  mutate_if(is.numeric, funs(ifelse(is.na(.), 0, .))) -> titanic_3
+
+titanic_3
+
+#' At once ---------------------------------------------------------------------
 titanic %>%
-  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) %>%
-  mutate_if(is.character, funs(imp=ifelse(is.na(.), "NA", .)))-> t_tmp; summary(t_tmp)
+  mutate_if(is.character, funs(ifelse(. == "", "NA", .))) %>%
+  mutate_if(is.character, funs(ifelse(is.na(.), "NA", .))) %>%
+  mutate_if(is.numeric, funs(ifelse(is.na(.), 0, .))) -> titanic_replaced
+
+titanic_replaced
+
+#' Imputating 0 with mean or median value in body columns -----------------------------
+titanic_replaced %>%
+  mutate_if(is.numeric, funs(ifelse(.==0, mean(.), .)))
+
+mean(titanic_replaced$body)
+median(titanic_replaced$body)
+
+median_value <- median(titanic$body, na.rm = T) 
+
+titanic_replaced %>%
+  mutate(body = ifelse(body==0, median_value, body))
+
+titanic_replaced %>%
+  mutate(body = ifelse(body==0, median_value, body)) -> titanic_imputed
+
+titanic_imputed
 
 #' Convert NA values into median values --------------------------------------------------------------------------
 titanic %>%
-  mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp)
+  mutate_if(is.numeric, funs(ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; # summary(t_tmp)
 
 head(t_tmp)
 
 # '_imp' suffix imputation --------------------------------------------------------------------------
 titanic %>%
-  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; summary(t_tmp) # notice the "imp="
+  mutate_if(is.numeric, funs(imp=ifelse(is.na(.), median(., na.rm=T), .))) -> t_tmp; # summary(t_tmp) # notice the "imp="
 
-head(t_tmp) %>% View()
+head(t_tmp)
+# str(t_tmp)
 
 #' Eliminate all data which has at least a NA --------------------------------------------------------------------------
 na.omit(titanic) 
 
 #' Convert data classes --------------------------------------------------------------------------
-titanic$pclass <- as.factor(titanic$pclass)
-titanic$ticket <- as.character(titanic$ticket)
-titanic$survived <- factor(titanic$survived, levels=c(0,1), labels=c('dead', 'survived'))
-glimpse(titanic)
-
-titanic %>%
-  mutate(pclass = as.factor(pclass),
-         ticket = as.character(ticket))
+titanic_imputed$pclass <- as.factor(titanic_imputed$pclass)
+# titanic$ticket <- as.character(titanic$ticket)
+titanic_imputed$survived <- factor(titanic_imputed$survived, levels=c(0,1), labels=c('dead', 'survived'))
+glimpse(titanic_imputed)
 
 #' Check the data class --------------------------------------------------------------------------
 class(titanic$embarked) # characeter
@@ -171,19 +197,20 @@ df.cabin %>%
 #' 
 #' NA and outlier --------------------------------------------------------------------------
 df_imdb <- read_csv('./data/imdb-5000-movie-dataset.zip')
-summary(df_imdb)
+# summary(df_imdb)
 
 #' dplyr::drop_na() --------------------------------------------------------------------------
 sum(is.na(df_imdb$gross)) # how many NAs in a certain column...
 df_imdb$gross[df_imdb$gross < 0] <- NA # replace data which is below 0 to NA...
-summary(df_imdb$budget) # budget 변수의 NA 제거 필요 확인
+
+# summary(df_imdb$budget) 
 
 df_imdb %>% nrow()
 
 df_imdb %>%
-  drop_na(budget) -> df_imdb_budget_na_drop ; summary(df_imdb_budget_na_drop); nrow(df_imdb_budget_na_drop)
+  drop_na(budget) -> df_imdb_budget_na_drop ; # summary(df_imdb_budget_na_drop); nrow(df_imdb_budget_na_drop)
 
-boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # 이상치 제거 필요성 확인
+boxplot(df_imdb_budget_na_drop$budget, horizontal = T) # need to remove outliers of budget columns...
 boxplot(df_imdb_budget_na_drop$budget)$stat 
 # [1,] 2.18e+02
 # [2,] 6.00e+06
@@ -191,7 +218,7 @@ boxplot(df_imdb_budget_na_drop$budget)$stat
 # [4,] 4.40e+07
 # [5,] 1.00e+08
 
-# 2.18e+02 ~ 1.00e+08를 벗어나면 이상치로 간주
+#' Budget < 2.18e+02 or budget > 1.00e+08 : outliers...
 df_imdb_budget_na_drop %>%
   filter(budget >= 2.18e+02 & budget <= 1.00e+08) -> df_imdb_budget_na_oulier_drop
 
@@ -212,80 +239,82 @@ df_imdb_budget_na_oulier_drop %>%
 nrow(df_imdb)
 nrow(df_imdb_budget_na_oulier_drop)
 
-# boxplot whisker의 의미
+#' Boxplot Whisker And Oulier Fence Mean ------------------------------------------------------
 boxplot(df_imdb_budget_na_drop$budget)
 IQR(df_imdb_budget_na_drop$budget)
 1.5*IQR(df_imdb_budget_na_drop$budget)
 
 fivenum(df_imdb_budget_na_drop$budget)
 
-## Q3
+#' Q3
 fivenum(df_imdb_budget_na_drop$budget)[4]
 
-## Q3 + 1.5*IQR
-fivenum(df_imdb_budget_na_drop$budget)[4] + 1.5*IQR(df_imdb_budget_na_drop$budget) # 1.01e+08
-boxplot(df_imdb_budget_na_drop$budget)$stat[5] # stat[1] and stat[5] are outlier fence
+#' Q3 + 1.5*IQR :: Outlier Upper Fence...
+fivenum(df_imdb_budget_na_drop$budget)[4] + 1.5*IQR(df_imdb_budget_na_drop$budget) # 103500000
+boxplot(df_imdb_budget_na_drop$budget)$stat[5] # stat[5] are outlier is upper fence
 
-max(df_imdb_budget_na_drop$budget)
-min(df_imdb_budget_na_drop$budget)
+#' Upper Whisker...
+df_imdb_budget_na_drop %>%
+  filter(budget > fivenum(df_imdb_budget_na_drop$budget)[4]) %>%
+  filter(budget < fivenum(df_imdb_budget_na_drop$budget)[4] + 1.5*IQR(df_imdb_budget_na_drop$budget)) %>%
+  select(budget) %>% pull() %>% max()
 
-# 데이터 sampling(sample_n(), sample_n(data, replace=T), sample_frac())
-df_imdb %>% sample_n(10) # 비복원추출
-df_imdb %>% sample_n(100, replace=T) # 복원추출
-df_imdb %>% sample_frac(0.01, replace=T) # 복원추출
+df_imdb_budget_na_drop %>%
+  filter(budget == 1.03e+08) # %>% View() # three movies...
 
-# 컬럼 선택
+df_imdb_budget_na_drop %>%
+  filter(budget > 1.03e+08) %>% select(budget) %>% pull() %>% range()
+  
+#' Data Sampling :: sample_n(), sample_n(data, replace=T), sample_frac()...
+df_imdb %>% sample_n(10) # sampling without replacement...
+df_imdb %>% sample_n(100, replace=T) # sampling with replacement...
+df_imdb %>% sample_frac(0.01, replace=T) # sampling with replacement and fraction...
+
+#' Selecting columns...
 glimpse(df_imdb)
 colnames(df_imdb)
-## 'color'에서 'movie_imdb_link' 까지 연속으로 선택하기
+
+#' 'color'~'movie_imdb_link' selecting...
 df_imdb %>%
   select(color:movie_imdb_link)
 
-## 특정 컬럼 이름을 이용해 선택하기
-df_imdb %>% 
-  select(director_name, director_facebook_likes)
+#' Selecting columns whose name starts with certain characters...
+df_imdb %>% select(starts_with('direc'))
 
-## 특정 문자열로 시작하는 컬럼들을 선택하기
-df_imdb %>% select(starts_with('direc')) ## 'direc'으로 시작하는 컬럼 모두 선택
+#' Selecting columns whose name ends with certain characters....
+df_imdb %>% select(ends_with('likes')) 
 
-## 특정 문자열로 끝나는 컬럼들을 선택하기
-df_imdb %>% select(ends_with('likes')) ## 'direc'으로 시작하는 컬럼 모두 선택
-
-### 'actor'로 시작하고 'likes'로 끝나는 컬럼 선택하기
+#' Start with 'actor' character and ends with 'likes' character...
 df_imdb %>%
   select(starts_with('actor')) %>%
-  select
+  select(ends_with('likes'))
 
-## 'facebook' 문자열을 포함한 컬럼 선택하기
+#' Selecting columns whose name contains 'facebook' character...
 df_imdb %>%
   select(contains('facebook'))
 
-## 특정 컬럼 제외하기(-)
+#' Eleminating certain columns with "-" sign...
 df_imdb %>% 
   select(-director_name, -director_facebook_likes)
 
-## 'facebook' 문자열을 포함하지 않는 컬럼 선택하기
+#' Selecting columns whhose name don't contain facebook' characters...
 df_imdb %>%
   select(-contains('facebook'))
 
-## 특정 변수 중 고유한 값들만 추려내기
+#' Extracting unique values in a certain variable...
 nrow(df_imdb)
 
 df_imdb %>%
   select(director_name) %>%
   distinct() 
 
-## 고유한 값들의 개수를 파악하기(nrow())
+#' How many unique values in a certain varible...
 df_imdb %>%
   select(director_name) %>%
   distinct()  %>%
   nrow()
 
-df_imdb %>%
-  select(num_critic_for_reviews) %>%
-  distinct()
-
-## n(), n_distinct(), first(), last(), nth(x, n)
+#' n(), n_distinct(), first(), last(), nth(x, n)
 df_imdb %>% 
   select(director_name) %>%
   summarise(dict_count=n_distinct(director_name))
@@ -313,21 +342,26 @@ df_imdb %>%
   select(director_name, last_duration) %>% 
   head(10)
 
-## 특정 컬럼명 바꾸기(director_name --> direc_nm)
-df_imdb %>% rename(direc_nm = director_name) # 변경될 변수명(direc_nm) = 기본 변수명(director_name)
+#' rename() --------------------------------------------------------------------
+df_imdb %>% rename(direc_nm = director_name) # to be named(direc_nm) = variable name(director_name)
 
-## colname 들을 모두 소문자, 특정 문자를 또 다른 분자로 치환하여 정리하기
-## "_" 문자를 "."로 바꾸어 보기
+#' Make names() ----------------------------------------------------------------
+#' 
+#' Replace "_" with "."----
+colnames(df_imdb)
 make.names(names(df_imdb), unique=T)
 names(df_imdb) <- tolower(gsub('_', '\\.', make.names(names(df_imdb), unique = T)))
 colnames(df_imdb)
 
 # melt / cast
 data("airquality"); head(airquality)
-names(airquality) <- tolower(names(airquality)); head(airquality) # 변수명 대문자를 소문자로 변환
+names(airquality) <- tolower(names(airquality)); # head(airquality) 
 
-aql <- melt(airquality, id.vars = c('month', 'day')) ; head(aql)
-aqw <- dcast(aql, month + day ~ variable); head(aqw)
+aql <- melt(airquality, id.vars = c('month', 'day')) # head(aql)
+aqw <- dcast(aql, month + day ~ variable) # head(aqw)
+
+aql %>% as_tibble()
+aqw %>% as_tibble()
 
 airquality %>% 
   tbl_df() %>%
@@ -335,32 +369,33 @@ airquality %>%
 
 aql %>%
   spread(variable, value) -> aqw; aqw
-  
-# 고객별&제품별 총 구매비용 및 구매비율 및 구매변동계수 구하기(with melt/cast)-----
+
+#' g_paid per cust...
 tran <- read_csv('./data/transaction.csv')
 tran %>% 
   group_by(custid, prod) %>%
   summarise(sum.amt = sum(amt)) -> cust_prod_amt_sum; head(cust_prod_amt_sum)
 
-# pivotting :: (목적) 고객별 구매 상품종류에 대한 지출비용을 알아보기위해 실시
+# pivotting...
 names(cust_prod_amt_sum)
 melted <- melt(cust_prod_amt_sum, id.vars=c('custid', 'prod'), measure.vars = c('sum.amt')); head(melted)
-dcasted <- dcast(melted, custid ~ prod, value.var = 'value'); head(dcasted)
-sample_dcasted <- dcasted[1:2, ]; sample_dcasted
+dcasted <- dcast(melted, custid ~ prod, value.var = 'value'); # head(dcasted)
+sample_dcasted <- dcasted[1:2, ] 
+sample_dcasted %>% as_tibble()
 
-# instead...
+#' Define `id_spread_sum()` function ---------------------------------------------------
 id_spread_sum <- function(df.grouped) {
   df.grouped %>%
     rowid_to_column(var = "id") %>%
     spread(eval(colnames(df.grouped[, 2])), eval(colnames(df.grouped[, 3])), fill = 0) %>%
     select(-id) %>%
     group_by(custid) %>%
-    summarise_at(vars(-custid), sum) -> df.result
+    summarise_if(is.numeric, sum) -> df.result
   
   return(df.result)
 }
 
-# rowsum_ratio_df function definition----
+#' Define `rowsum_ratio_df()` function -----------------------------------------
 rowsum_ratio_df <- function(grouped_df, prefix) {
   grouped_df %>%
     id_spread_sum() %>%
@@ -372,34 +407,16 @@ rowsum_ratio_df <- function(grouped_df, prefix) {
 }
 
 cust_prod_amt_sum %>%
-  id_spread_sum()
+  id_spread_sum() 
 
 cust_prod_amt_sum %>%
   rowsum_ratio_df(., "p.ratio_") # %>% View()
 
-# NA를 0으로 채우기----
+#' Replace all NA with 0 -------------------------------------------------------
 dcasted %>% mutate_all(funs(ifelse(is.na(.), 0, .))) -> cust_prod_amt_sum
 
-# 고객별 총구매액(total.amt)에 대한 컬럼 만들기
+#' Make total sum column -------------------------------------------------------
 cust_prod_amt_sum %>% mutate(total.amt = rowSums(.[-1])) -> cust_prod_amt_total_sum; 
-head(cust_prod_amt_total_sum)
+cust_prod_amt_total_sum %>% as_tibble()
 
-# instead...
-tbl_df(cust_prod_amt_sum) %>% 
-  mutate(total.amt = rowSums(select_if(.,is_numeric))) -> cust_prod_amt_total_sum; cust_prod_amt_total_sum
-
-# 고객들의 상품 종류별 구매비율 구하기
-cust_prod_amt_total_sum %>%
-  select(-custid, -total.amt) -> cust_prod_amt_total_sum_tmp
-cust_prod_amt_ratio <- cust_prod_amt_total_sum_tmp / cust_prod_amt_total_sum$total.amt
-cust_prod_amt_ratio %>% mutate(total.sum = rowSums(.)) -> cust_prod_amt_ratio # total.sum =1 이 되는지 확인
-head(cust_prod_amt_ratio)
-
-cust_prod_amt_total_sum %>%
-  mutate_at(vars(-custid), funs(round(./total.amt, 2))) -> cust_prod_amt_ratio; cust_prod_amt_ratio
-
-# 소수점 3째자리에서 반올림하여 수들을 정리
-cust_prod_amt_ratio[] <- lapply(cust_prod_amt_ratio, function(x) if(is.numeric(x)) round(x, 2) else x)
-names(cust_prod_amt_ratio) <- paste('ratio', names(cust_prod_amt_ratio), sep='_')
-glimpse(cust_prod_amt_ratio)
-
+# head(cust_prod_amt_total_sum)

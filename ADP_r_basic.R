@@ -66,7 +66,7 @@ id_spread_sum <- function(df.grouped) {
     spread(eval(colnames(df.grouped[, 2])), eval(colnames(df.grouped[, 3])), fill = 0) %>%
     select(-id) %>%
     group_by(custid) %>%
-    summarise_at(vars(-custid), sum) -> df.result
+    summarise_if(is.numeric, sum) -> df.result
   
   return(df.result)
 }
