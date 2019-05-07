@@ -6,10 +6,9 @@
 #' ---
 
 #+setup, include = FALSE
-# setwd("C:/Users/Daniel/ADP_performance_test")
-
+setwd("C:/Users/Daniel/ADP_performance_test")
 rm(list=ls()); gc()
-setwd("/home/insa/ADP_performance_test")
+# setwd("/home/insa/ADP_performance_test")
 getwd()
 
 Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally', 'ROCR',
@@ -17,63 +16,19 @@ Packages <- c('tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
               'viridisLite')
 lapply(Packages, library, character.only=T)
 
+
+#' Make tr_obj : S4 object -----------------------------------------------------
+#'
 #' Data loading----
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
-head(tran); dim(tran) ## 27,993건의 거래내역
+head(tran); dim(tran) ## 27,993 rows
 
-tran %>% 
-  arrange(ymd, time, custid) %>%
-  group_by(ymd, time, custid) %>%
-  summarise(basket_prods = paste(prod, collapse = ", "))
+tran %>% head()
 
-tran %>% 
-  arrange(ymd, time, custid) %>%
-  group_by(ymd, time, custid) %>%
-  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
-  rowid_to_column() %>%
-  rename(invoice_no = rowid)
+tran %>%
+  select(prod) %>% unique() %>% pull() 
 
-tran %>% 
-  arrange(ymd, time, custid) %>%
-  group_by(ymd, time, custid) %>%
-  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
-  rowid_to_column() %>%
-  rename(invoice_no = rowid) %>%
-  ungroup() %>%
-  select(invoice_no, basket_prods) 
-
-tran %>% 
-  arrange(ymd, time, custid) %>%
-  group_by(ymd, time, custid) %>%
-  summarise(basket_prods = paste(prod, collapse = ", ")) %>%
-  rowid_to_column() %>%
-  rename(invoice_no = rowid) %>%
-  ungroup() %>%
-  select(invoice_no, basket_prods) %>%
-  rename(items = basket_prods) %>%
-  write_csv("./data/market_basket_transactions.csv")
-  
-basket.transaction_1 <- read.transactions("./data/market_basket_transactions.csv",
-                                        format = "single",
-                                        cols = c(1, 2),
-                                        header = T, # if not, there would be column name in transaction data
-                                        sep = ",")
-
-basket.transaction_1 # sparse matrix...
-summary(basket.transaction_1)
-
-# ?read.transactions()
-  
-#' 1~5 baskets -------------------------------------------------------------
-inspect(basket.transaction_1[1:5])
-inspect(basket.transaction_1[10]) 
-
-
-#' Data loading----
-tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
-head(tran); dim(tran) ## 27,993건의 거래내역
-
-#' Invoice numbering----
+#' Basket ID numbering----
 i=0
 group_number = (function(){i = 0; function() i <<- i+1 })()
 # df %>% group_by(u,v) %>% mutate(label = group_number())
@@ -83,51 +38,48 @@ tran %>%
   group_by(ymd, time, custid) %>%
   mutate(basket_id = group_number()) %>%
   as.data.frame() %>% # to avoid adding grouped var...
-  select(basket_id, prod) -> tran_basket; head(tran_basket)
+  select(basket_id, prod) -> tran_basket
+
+head(tran_basket)
 
 #' Make basket.transaction and basket.transaction sparse format----
 basket.transaction <- split(tran_basket$prod, tran_basket$basket_id)
 basket.transaction[1:5] # list class...
 
-basket.transaction_2 <- as(basket.transaction, 'transactions')
-basket.transaction_2 # transaction class...
+tr_obj <- as(basket.transaction, 'transactions')
+tr_obj # transaction class...
+
+#' Comparing tr_obj_1 and tr_obj_2 S4 objects ----------------------------------
+summary(tr_obj)
+
+#' 1~5 baskets -----------------------------------------------------------------
+inspect(tr_obj[1:10])
 
 
-#' 1~5 baskets -------------------------------------------------------------
-
-inspect(basket.transaction_2[1:5])
-
-
-#' Item Frequency :: itemFrequency()----------------------------------------------------------
-
-itemFrequency(basket.transaction_2[, 1:5])
+#' Item Frequency :: itemFrequency()--------------------------------------------
+itemFrequency(tr_obj[, 1:5])
 
 
-#' Item Frequency Plot :: itemFrequencyPlot() ------------------------------
-
-itemFrequencyPlot(basket.transaction_2, topN = 20)
+#' Item Frequency Plot :: itemFrequencyPlot() ----------------------------------
+itemFrequencyPlot(tr_obj, topN = 20)
 
 library(RColorBrewer)
-itemFrequencyPlot(basket.transaction_2, topN = 20,
+itemFrequencyPlot(tr_obj, topN = 20,
                   type = "absolute", 
                   col = brewer.pal(8, 'Pastel2'),
                   main = "Absolute Item Frequency Plot")
 
-itemFrequencyPlot(basket.transaction, support = .01, 
-                  main = 'item frequency plot above support 1%')
-
-#' Visualize Sparse Marix ------------------------------
+#' Visualize Sparse Marix ------------------------------------------------------
 # windows()
-image(basket.transaction_2[1:100]) # 100 transaction, 100 items...
+image(tr_obj[1:100]) # 100 transaction, 100 items...
 
 #' 200 transaction, 100 items....
-image(sample(basket.transaction_2, 200))
+image(sample(tr_obj, 200))
 
- 
 #' How to set support and confidence? ------------------------------
-groceryrules <- apriori(basket.transaction) # default...
+groceryrules <- apriori(tr_obj) # default... No rule is made...
 
-groceryrules <- apriori(basket.transaction, 
+groceryrules <- apriori(tr_obj, 
                         parameter = list(support = 0.0001, 
                                          confidence = 0.000001, 
                                          minlen = 2,
@@ -179,7 +131,7 @@ harddrinks_rules_df[1:10, ] # %>% View()
 #' Visualization arules :: arulesViz  ------------------------------
 #' 
 #' Plotting rules ------------------------------
-groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
+groceryrules <- apriori(tr_obj, parameter = list(support =0.0001, 
                                                              confidence = 0.0001,
                                                              minlen = 3))
 plot(groceryrules)
@@ -217,7 +169,7 @@ plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
 #' Before item ------------------------------
 #' 
 #' Before buying milk, what items would be purchased? ------------------------------
-milk_before <- apriori(basket.transaction, 
+milk_before <- apriori(tr_obj, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
                                         minlen = 2), # eliminate white space...
@@ -230,7 +182,7 @@ inspect(sort(milk_before, by='confidence', decreasing = T)[1:5, ])
 #' After item ------------------------------
 #' 
 #' After byying milk, what items would be purchased? ------------------------------
-milk_after <- apriori(basket.transaction, 
+milk_after <- apriori(tr_obj, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
                                         minlen = 2), # eliminate white space...
@@ -251,20 +203,23 @@ dim(df)
 length(unique(df$names))
 
 rioter.list <- split(df$names, df$id)
-rioter.transaction <- as(rioter.list, 'transactions')
-rioter.transaction
+
+tr_obj_rioter <- as(rioter.list, 'transactions')
+tr_obj_rioter
 
 #' Generate Rules ------------------------------
-rules <- apriori(rioter.transaction)
+rules <- apriori(tr_obj_rioter)
 summary(rules)
 
 rule.list <- as.data.frame(inspect(rules)); head(rule.list)
+
 data.frame(lhs = rule.list$lhs, 
            rhs = rule.list$rhs,
            support = rule.list$support,
            confidence = rule.list$confidence, 
            lift = rule.list$lift,
            count = rule.list$count) -> rule_df
+
 colnames(rule_df)
 glimpse(rule_df)
 
@@ -272,10 +227,17 @@ rule_df %>%
   arrange(-lift)
 
 #' itemFrequencyPlot() ------------------------------
-itemFrequencyPlot(rioter.transaction, topN=10)
+itemFrequencyPlot(tr_obj_rioter, topN=10)
+
+library(RColorBrewer)
+itemFrequencyPlot(tr_obj_rioter, topN = 20,
+                  type = "absolute", 
+                  col = brewer.pal(8, 'Pastel2'),
+                  main = "Absolute Item Frequency Plot")
+
 
 #' image() ------------------------------
-image(rioter.transaction[1:10])
+image(tr_obj_rioter)
 
 #' Inspect rules ------------------------------
 inspect(rules[1:5])
@@ -288,7 +250,7 @@ zaira_rules <- subset(rules, items %in% "자이라")
 inspect(zaira_rules)
 
 #' Generate rules with condition list ------------------------------
-rules <- apriori(rioter.transaction, parameter = list(supp=.06,
+rules <- apriori(tr_obj_rioter, parameter = list(supp=.06,
                                                       conf=.8))
 summary(rules)
 

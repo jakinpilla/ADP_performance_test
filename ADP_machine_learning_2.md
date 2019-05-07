@@ -1,13 +1,15 @@
 ADP ML\_2\_apriori
 ================
 jakinpilla
-2019-05-02
+2019-05-07
+
+Make tr\_obj : S4 object —————————————————–
 
 Data loading—-
 
 ``` r
 tran <- read.csv('./data/transaction.csv', stringsAsFactors = F)
-head(tran); dim(tran) ## 27,993건의 거래내역
+head(tran); dim(tran) ## 27,993 rows
 ```
 
     ##          ymd  time custid             prod  amt
@@ -20,18 +22,123 @@ head(tran); dim(tran) ## 27,993건의 거래내역
 
     ## [1] 27993     5
 
-Invoice numbering—-
+``` r
+tran %>% head()
+```
+
+    ##          ymd  time custid             prod  amt
+    ## 1 2012-04-01 10:00  C2048       softdrinks  700
+    ## 2 2012-04-01 10:00  C2069    fermentedmilk 2990
+    ## 3 2012-04-01 10:00  C2069 chilledlivestock 5980
+    ## 4 2012-04-01 10:00  C2069      cooky/cakes 3200
+    ## 5 2012-04-01 10:00  C2069        mushrooms 1000
+    ## 6 2012-04-01 10:00  C0211            bread 5200
+
+``` r
+tran %>%
+  select(prod) %>% unique() %>% pull() 
+```
+
+    ##  [1] "softdrinks"                             
+    ##  [2] "fermentedmilk"                          
+    ##  [3] "chilledlivestock"                       
+    ##  [4] "cooky/cakes"                            
+    ##  [5] "mushrooms"                              
+    ##  [6] "bread"                                  
+    ##  [7] "laundrydetergent"                       
+    ##  [8] "beans"                                  
+    ##  [9] "otherreadymadefoods"                    
+    ## [10] "chilledagriculturalproducts"            
+    ## [11] "eidbleherbs"                            
+    ## [12] "bottledfoods"                           
+    ## [13] "koreanpork"                             
+    ## [14] "milk"                                   
+    ## [15] "chilledseafood"                         
+    ## [16] "cereals"                                
+    ## [17] "apple/sweetmelon"                       
+    ## [18] "othervegetables"                        
+    ## [19] "processedlivefish"                      
+    ## [20] "harddrinks"                             
+    ## [21] "candy-gum"                              
+    ## [22] "fruitvegetables"                        
+    ## [23] "rootvegetables"                         
+    ## [24] "artificialpowders"                      
+    ## [25] "banana/importedfruits"                  
+    ## [26] "ramen"                                  
+    ## [27] "tea"                                    
+    ## [28] "chilleddairymilks"                      
+    ## [29] "sweeteners"                             
+    ## [30] "driedfish"                              
+    ## [31] "koreanbeef"                             
+    ## [32] "chinesecabbages"                        
+    ## [33] "strawberry/peach/"                      
+    ## [34] "cheese/butter"                          
+    ## [35] "eggs"                                   
+    ## [36] "kitchen/housedetergents"                
+    ## [37] "tomato/plum/melon"                      
+    ## [38] "pear/kiwi/grape"                        
+    ## [39] "snacks"                                 
+    ## [40] "lattuce"                                
+    ## [41] "processeddryfoods"                      
+    ## [42] "otherlivefish"                          
+    ## [43] "livefish"                               
+    ## [44] "wildvegetables"                         
+    ## [45] "otherbeverages"                         
+    ## [46] "wastepapers"                            
+    ## [47] "noodles"                                
+    ## [48] "koreanchicken"                          
+    ## [49] "dryfruits"                              
+    ## [50] "minorcereals"                           
+    ## [51] "ketchupandmayoneise"                    
+    ## [52] "instantfoods"                           
+    ## [53] "bakery"                                 
+    ## [54] "hairproducts"                           
+    ## [55] "chocolete"                              
+    ## [56] "importedbeef"                           
+    ## [57] "otherseafoods"                          
+    ## [58] "cosmetics"                              
+    ## [59] "koreanconfectionary"                    
+    ## [60] "ready-mademeals"                        
+    ## [61] "icecream"                               
+    ## [62] "coffee"                                 
+    ## [63] "chillednoodles"                         
+    ## [64] "sanitaryproducts"                       
+    ## [65] "soysaucesandpastes"                     
+    ## [66] "maincereals"                            
+    ## [67] "dentalproducts"                         
+    ## [68] "cookingoil"                             
+    ## [69] "pre-processedmeals"                     
+    ## [70] "seasonings"                             
+    ## [71] "otherlivestockmeats"                    
+    ## [72] "frozendumpling"                         
+    ## [73] "processeddriedfish"                     
+    ## [74] "pre-processedsnacks"                    
+    ## [75] "ready-madesnacks"                       
+    ## [76] "ready-madesidedishes"                   
+    ## [77] "mandarinorange/watermelonandotherfruits"
+    ## [78] "fastfoods"                              
+    ## [79] "seasonedmeat"                           
+    ## [80] "babyproducts"                           
+    ## [81] "frozenmeat"                             
+    ## [82] "importedpork"                           
+    ## [83] "powderedmilk"                           
+    ## [84] "pre-processedsidedishes"
+
+Basket ID numbering—-
 
 ``` r
 i=0
 group_number = (function(){i = 0; function() i <<- i+1 })()
 # df %>% group_by(u,v) %>% mutate(label = group_number())
-tran %>% 
+
+tran %>%
   arrange(ymd, time, custid) %>%
   group_by(ymd, time, custid) %>%
   mutate(basket_id = group_number()) %>%
   as.data.frame() %>% # to avoid adding grouped var...
-  select(basket_id, prod) -> tran_basket; head(tran_basket)
+  select(basket_id, prod) -> tran_basket
+
+head(tran_basket)
 ```
 
     ##   basket_id             prod
@@ -46,7 +153,7 @@ Make basket.transaction and basket.transaction sparse format—-
 
 ``` r
 basket.transaction <- split(tran_basket$prod, tran_basket$basket_id)
-basket.transaction[1:5] # list class... 
+basket.transaction[1:5] # list class...
 ```
 
     ## $`1`
@@ -66,40 +173,90 @@ basket.transaction[1:5] # list class...
     ## [1] "beans"     "mushrooms"
 
 ``` r
-basket.transaction <- as(basket.transaction, 'transactions')
+tr_obj <- as(basket.transaction, 'transactions')
 ```
 
     ## Warning in asMethod(object): removing duplicated items in transactions
 
 ``` r
-basket.transaction # transaction class...
+tr_obj # transaction class...
 ```
 
     ## transactions in sparse format with
     ##  16175 transactions (rows) and
     ##  84 items (columns)
 
-1\~5 baskets ————————————————————-
+Comparing tr\_obj\_1 and tr\_obj\_2 S4 objects ———————————-
 
 ``` r
-inspect(basket.transaction[1:5])
+summary(tr_obj)
 ```
 
-    ##     items              transactionID
-    ## [1] {bread}                        1
-    ## [2] {laundrydetergent}             2
-    ## [3] {softdrinks}                   3
-    ## [4] {chilledlivestock,              
-    ##      cooky/cakes,                   
-    ##      fermentedmilk,                 
-    ##      mushrooms}                    4
-    ## [5] {beans,                         
-    ##      mushrooms}                    5
+    ## transactions as itemMatrix in sparse format with
+    ##  16175 rows (elements/itemsets/transactions) and
+    ##  84 columns (items) and a density of 0.02050195 
+    ## 
+    ## most frequent items:
+    ##            milk      softdrinks   fermentedmilk fruitvegetables 
+    ##            1410            1408            1067            1064 
+    ##           beans         (Other) 
+    ##            1056           21851 
+    ## 
+    ## element (itemset/transaction) length distribution:
+    ## sizes
+    ##    1    2    3    4    5    6    7    8    9   10   11   14 
+    ## 9410 3945 1598  723  299  103   56   19   13    6    2    1 
+    ## 
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   1.000   1.000   1.000   1.722   2.000  14.000 
+    ## 
+    ## includes extended item information - examples:
+    ##              labels
+    ## 1  apple/sweetmelon
+    ## 2 artificialpowders
+    ## 3      babyproducts
+    ## 
+    ## includes extended transaction information - examples:
+    ##   transactionID
+    ## 1             1
+    ## 2             2
+    ## 3             3
 
-Item Frequency :: itemFrequency()———————————————————-
+1\~5 baskets —————————————————————–
 
 ``` r
-itemFrequency(basket.transaction[, 1:5])
+inspect(tr_obj[1:10])
+```
+
+    ##      items                         transactionID
+    ## [1]  {bread}                                  1 
+    ## [2]  {laundrydetergent}                       2 
+    ## [3]  {softdrinks}                             3 
+    ## [4]  {chilledlivestock,                         
+    ##       cooky/cakes,                              
+    ##       fermentedmilk,                            
+    ##       mushrooms}                              4 
+    ## [5]  {beans,                                    
+    ##       mushrooms}                              5 
+    ## [6]  {otherreadymadefoods}                    6 
+    ## [7]  {bottledfoods,                             
+    ##       koreanpork}                             7 
+    ## [8]  {chilledagriculturalproducts,              
+    ##       eidbleherbs}                            8 
+    ## [9]  {artificialpowders,                        
+    ##       banana/importedfruits,                    
+    ##       beans,                                    
+    ##       eidbleherbs,                              
+    ##       fruitvegetables,                          
+    ##       mushrooms,                                
+    ##       rootvegetables}                         9 
+    ## [10] {candy-gum,                                
+    ##       cooky/cakes}                            10
+
+Item Frequency :: itemFrequency()——————————————–
+
+``` r
+itemFrequency(tr_obj[, 1:5])
 ```
 
     ##      apple/sweetmelon     artificialpowders          babyproducts 
@@ -107,42 +264,45 @@ itemFrequency(basket.transaction[, 1:5])
     ##                bakery banana/importedfruits 
     ##           0.014528594           0.044698609
 
-Item Frequency Plot :: itemFrequencyPlot() ——————————
+Item Frequency Plot :: itemFrequencyPlot() ———————————-
 
 ``` r
-itemFrequencyPlot(basket.transaction, topN = 20)
-```
-
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-``` r
-itemFrequencyPlot(basket.transaction, support = .05, 
-                  main = 'item frequency plot above support 1%')
-```
-
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
-
-Visualize Sparse Marix ——————————
-
-``` r
-# windows()
-image(basket.transaction[1:100]) # 100 transaction, 100 items...
+itemFrequencyPlot(tr_obj, topN = 20)
 ```
 
 ![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-200 transaction, 100 items….
+``` r
+library(RColorBrewer)
+itemFrequencyPlot(tr_obj, topN = 20,
+                  type = "absolute", 
+                  col = brewer.pal(8, 'Pastel2'),
+                  main = "Absolute Item Frequency Plot")
+```
+
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+
+Visualize Sparse Marix ——————————————————
 
 ``` r
-image(sample(basket.transaction, 200))
+# windows()
+image(tr_obj[1:100]) # 100 transaction, 100 items...
 ```
 
 ![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+200 transaction, 100 items….
+
+``` r
+image(sample(tr_obj, 200))
+```
+
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
 How to set support and confidence? ——————————
 
 ``` r
-groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
+groceryrules <- apriori(tr_obj) # default... No rule is made...
 ```
 
     ## Apriori
@@ -160,7 +320,7 @@ groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
     ## Absolute minimum support count: 1617 
     ## 
     ## set item appearances ...[0 item(s)] done [0.00s].
-    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.01s].
+    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.00s].
     ## sorting and recoding items ... [0 item(s)] done [0.00s].
     ## creating transaction tree ... done [0.00s].
     ## checking subsets of size 1 done [0.00s].
@@ -168,16 +328,18 @@ groceryrules <- apriori(basket.transaction) # rule :: 0ro6>?
     ## creating S4 object  ... done [0.00s].
 
 ``` r
-groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
-                                                    confidence = 0.0001,
-                                                    minlen = 2))
+groceryrules <- apriori(tr_obj, 
+                        parameter = list(support = 0.0001, 
+                                         confidence = 0.000001, 
+                                         minlen = 2,
+                                         maxlen = 10))
 ```
 
     ## Apriori
     ## 
     ## Parameter specification:
     ##  confidence minval smax arem  aval originalSupport maxtime support minlen
-    ##       1e-04    0.1    1 none FALSE            TRUE       5   1e-04      2
+    ##       1e-06    0.1    1 none FALSE            TRUE       5   1e-04      2
     ##  maxlen target   ext
     ##      10  rules FALSE
     ## 
@@ -188,9 +350,9 @@ groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001,
     ## Absolute minimum support count: 1 
     ## 
     ## set item appearances ...[0 item(s)] done [0.00s].
-    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.01s].
+    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.00s].
     ## sorting and recoding items ... [84 item(s)] done [0.00s].
-    ## creating transaction tree ... done [0.01s].
+    ## creating transaction tree ... done [0.00s].
     ## checking subsets of size 1 2 3 4 5 6 7 8 done [0.00s].
     ## writing ... [14487 rule(s)] done [0.00s].
     ## creating S4 object  ... done [0.00s].
@@ -225,8 +387,8 @@ summary(groceryrules)
     ##  Max.   :117.000  
     ## 
     ## mining info:
-    ##                data ntransactions support confidence
-    ##  basket.transaction         16175   1e-04      1e-04
+    ##    data ntransactions support confidence
+    ##  tr_obj         16175   1e-04      1e-06
 
 ``` r
 inspect(groceryrules[1:5])
@@ -459,7 +621,7 @@ Visualization arules :: arulesViz ——————————
 Plotting rules ——————————
 
 ``` r
-groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001, 
+groceryrules <- apriori(tr_obj, parameter = list(support =0.0001, 
                                                              confidence = 0.0001,
                                                              minlen = 3))
 ```
@@ -484,7 +646,7 @@ groceryrules <- apriori(basket.transaction, parameter = list(support =0.0001,
     ## creating transaction tree ... done [0.00s].
     ## checking subsets of size 1 2 3 4 5 6 7 8 done [0.00s].
     ## writing ... [10283 rule(s)] done [0.00s].
-    ## creating S4 object  ... done [0.01s].
+    ## creating S4 object  ... done [0.00s].
 
 ``` r
 plot(groceryrules)
@@ -492,13 +654,13 @@ plot(groceryrules)
 
     ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 plot(sort(groceryrules, by='support')[1:20], method='grouped')
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 ``` r
 # windows()
@@ -534,7 +696,7 @@ plot(groceryrules, method='graph', control=list(type='items'),
     ## Warning: plot: Too many rules supplied. Only plotting the best 100 rules
     ## using 'support' (change control parameter max if needed)
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-3.png)<!-- -->
 
 ``` r
 plot(groceryrules[1:20], method='graph', control=list(type='items'))
@@ -562,7 +724,7 @@ plot(groceryrules[1:20], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-4.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-4.png)<!-- -->
 
 ``` r
 plot(groceryrules[21:40], method='graph', control=list(type='items'))
@@ -590,7 +752,7 @@ plot(groceryrules[21:40], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-5.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-5.png)<!-- -->
 
 ``` r
 plot(groceryrules[41:60], method='graph', control=list(type='items'))
@@ -618,7 +780,7 @@ plot(groceryrules[41:60], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-6.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-6.png)<!-- -->
 
 ``` r
 sort(groceryrules, by = "lift") -> groceryrules_by_lift
@@ -655,7 +817,7 @@ plot(groceryrules_by_lift, method='graph', control=list(type='items'),
     ## Warning: plot: Too many rules supplied. Only plotting the best 100 rules
     ## using 'support' (change control parameter max if needed)
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-7.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-7.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[1:20], method='graph', 
@@ -691,7 +853,7 @@ plot(groceryrules_by_lift[1:20], method='graph',
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-8.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-8.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
@@ -719,7 +881,7 @@ plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-9.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-9.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
@@ -747,14 +909,14 @@ plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-10.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-10.png)<!-- -->
 
 Before item ——————————
 
 Before buying milk, what items would be purchased? ——————————
 
 ``` r
-milk_before <- apriori(basket.transaction, 
+milk_before <- apriori(tr_obj, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
                                         minlen = 2), # eliminate white space...
@@ -790,7 +952,7 @@ After item ——————————
 After byying milk, what items would be purchased? ——————————
 
 ``` r
-milk_after <- apriori(basket.transaction, 
+milk_after <- apriori(tr_obj, 
                        parameter = list(support =0.0005, 
                                         confidence = 0.0001,
                                         minlen = 2), # eliminate white space...
@@ -874,8 +1036,9 @@ length(unique(df$names))
 
 ``` r
 rioter.list <- split(df$names, df$id)
-rioter.transaction <- as(rioter.list, 'transactions')
-rioter.transaction
+
+tr_obj_rioter <- as(rioter.list, 'transactions')
+tr_obj_rioter
 ```
 
     ## transactions in sparse format with
@@ -885,7 +1048,7 @@ rioter.transaction
 Generate Rules ——————————
 
 ``` r
-rules <- apriori(rioter.transaction)
+rules <- apriori(tr_obj_rioter)
 ```
 
     ## Apriori
@@ -933,8 +1096,8 @@ summary(rules)
     ##  Max.   :0.1111   Max.   :1    Max.   :9.000   Max.   :2  
     ## 
     ## mining info:
-    ##                data ntransactions support confidence
-    ##  rioter.transaction            18     0.1        0.8
+    ##           data ntransactions support confidence
+    ##  tr_obj_rioter            18     0.1        0.8
 
 ``` r
 rule.list <- as.data.frame(inspect(rules)); head(rule.list)
@@ -1024,6 +1187,7 @@ data.frame(lhs = rule.list$lhs,
            confidence = rule.list$confidence, 
            lift = rule.list$lift,
            count = rule.list$count) -> rule_df
+
 colnames(rule_df)
 ```
 
@@ -1036,7 +1200,7 @@ glimpse(rule_df)
 
     ## Observations: 33
     ## Variables: 6
-    ## $ lhs        <fct> {나미}, {알리스타}, {마스터이}, {마스터이}, {람머스}, {소나}, {세주아니}, ...
+    ## $ lhs        <fct> "{나미}", "{알리스타}", "{마스터이}", "{마스터이}", "{람머스}", "{소나...
     ## $ rhs        <fct> {알리스타}, {나미}, {케이틀린}, {아무무}, {말파이트}, {케이틀린}, {말파이트}...
     ## $ support    <dbl> 0.1111111, 0.1111111, 0.1111111, 0.1111111, 0.11111...
     ## $ confidence <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
@@ -1086,18 +1250,28 @@ rule_df %>%
 itemFrequencyPlot() ——————————
 
 ``` r
-itemFrequencyPlot(rioter.transaction, topN=10)
+itemFrequencyPlot(tr_obj_rioter, topN=10)
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+``` r
+library(RColorBrewer)
+itemFrequencyPlot(tr_obj_rioter, topN = 20,
+                  type = "absolute", 
+                  col = brewer.pal(8, 'Pastel2'),
+                  main = "Absolute Item Frequency Plot")
+```
+
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-2.png)<!-- -->
 
 image() ——————————
 
 ``` r
-image(rioter.transaction[1:10])
+image(tr_obj_rioter)
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 Inspect rules ——————————
 
@@ -1141,7 +1315,7 @@ inspect(zaira_rules)
 Generate rules with condition list ——————————
 
 ``` r
-rules <- apriori(rioter.transaction, parameter = list(supp=.06,
+rules <- apriori(tr_obj_rioter, parameter = list(supp=.06,
                                                       conf=.8))
 ```
 
@@ -1190,14 +1364,14 @@ summary(rules)
     ##  Max.   :0.1111   Max.   :1    Max.   :9.000   Max.   :2  
     ## 
     ## mining info:
-    ##                data ntransactions support confidence
-    ##  rioter.transaction            18    0.06        0.8
+    ##           data ntransactions support confidence
+    ##  tr_obj_rioter            18    0.06        0.8
 
 ``` r
 plot(sort(rules, by='support')[1:20], method='grouped')
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 # windows()
@@ -1230,7 +1404,7 @@ plot(rules, method='graph', control=list(type='items'),
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-28-2.png)<!-- -->
 
 ``` r
 # 상품 방문 코너 예측...
