@@ -1,15 +1,15 @@
 ADP ML with transaction dataset
 ================
 jakinpilla
-2019-04-26
+2019-05-10
 
 ``` r
 rm(list=ls()); gc()
 ```
 
     ##          used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells 510096 27.3    1152842 61.6   609148 32.6
-    ## Vcells 990176  7.6    8388608 64.0  1598968 12.2
+    ## Ncells 511006 27.3    1155442 61.8   609148 32.6
+    ## Vcells 991381  7.6    8388608 64.0  1598913 12.2
 
 ``` r
 getwd()
@@ -184,6 +184,13 @@ library(janitor)
 
     ## Warning: package 'janitor' was built under R version 3.5.3
 
+    ## 
+    ## Attaching package: 'janitor'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     chisq.test, fisher.test
+
 ``` r
 df <- clean_names(df)
 
@@ -236,7 +243,7 @@ idx <- caret::createDataPartition(df$gender, p=c(.6, .4), list=F);
 idx[1:10]; length(idx)
 ```
 
-    ##  [1]  1  2  3  4  5  6  8  9 10 12
+    ##  [1]  1  2  3  5  9 10 11 13 14 15
 
     ## [1] 1255
 
@@ -270,12 +277,12 @@ head(df.train)
     ## # A tibble: 6 x 30
     ##   gender ct_dairy ct_drink ct_fastfood ct_fruite ct_house_prod ct_makeup
     ##   <fct>     <dbl>    <dbl>       <dbl>     <dbl>         <dbl>     <dbl>
-    ## 1 1         1.18    2.25       -0.550    -0.585         -0.502    -0.103
-    ## 2 0        -0.544  -0.498       0.0104    0.545         -0.251    -0.103
-    ## 3 1        -0.590  -0.0467     -0.550    -0.585         -0.502    -0.103
-    ## 4 0        -0.271   0.359       0.214    -0.0200        -0.452    -0.103
-    ## 5 0        -0.453  -0.408       0.112    -0.397          1.30     -0.103
-    ## 6 1        -0.590  -0.498       4.54     -0.585         -0.502    -0.103
+    ## 1 1         1.18    2.25       -0.550     -0.585        -0.502    -0.103
+    ## 2 0        -0.544  -0.498       0.0104     0.545        -0.251    -0.103
+    ## 3 1        -0.590  -0.0467     -0.550     -0.585        -0.502    -0.103
+    ## 4 0        -0.453  -0.408       0.112     -0.397         1.30     -0.103
+    ## 5 0        -0.271  -0.137       0.672     -0.585        -0.502    -0.103
+    ## 6 0         2.78   -0.498      -0.550     -0.161        -0.502    -0.103
     ## # ... with 23 more variables: ct_meat <dbl>, ct_sauce <dbl>,
     ## #   ct_seafood <dbl>, ct_snack <dbl>, ct_vegetable <dbl>, coverage <dbl>,
     ## #   g_paid <dbl>, buyed_prod_num <dbl>, hf_6_11 <dbl>, hf_12_17 <dbl>,
@@ -293,12 +300,12 @@ head(df.valid.test)
     ## # A tibble: 6 x 30
     ##   gender ct_dairy ct_drink ct_fastfood ct_fruite ct_house_prod ct_makeup
     ##   <fct>     <dbl>    <dbl>       <dbl>     <dbl>         <dbl>     <dbl>
-    ## 1 1         1.14    -0.498      0.0614    -0.491        -0.502    -0.103
-    ## 2 1        -0.590   -0.498      1.59      -0.585         0.751    -0.103
-    ## 3 1        -0.590   -0.498     -0.550     -0.585        -0.502    -0.103
-    ## 4 0        -0.590   -0.498     -0.550      2.52          0.701    -0.103
-    ## 5 0         0.275    0.495      0.774     -0.585        -0.301    -0.103
-    ## 6 1        -0.590   -0.498      4.54      -0.585        -0.502    -0.103
+    ## 1 0        -0.271    0.359      0.214    -0.0200        -0.452    -0.103
+    ## 2 1        -0.590   -0.498      4.54     -0.585         -0.502    -0.103
+    ## 3 1         1.14    -0.498      0.0614   -0.491         -0.502    -0.103
+    ## 4 1         2.19     1.26      -0.550    -0.585         -0.502    -0.103
+    ## 5 0        -0.271   -0.272     -0.550    -0.444         -0.402    -0.103
+    ## 6 0        -0.590   -0.227      0.214     0.498          0.300    -0.103
     ## # ... with 23 more variables: ct_meat <dbl>, ct_sauce <dbl>,
     ## #   ct_seafood <dbl>, ct_snack <dbl>, ct_vegetable <dbl>, coverage <dbl>,
     ## #   g_paid <dbl>, buyed_prod_num <dbl>, hf_6_11 <dbl>, hf_12_17 <dbl>,
@@ -312,7 +319,7 @@ idx <- createDataPartition(df.valid.test$gender, p=c(.5, .5), list=F)
 idx[1:5]; length(idx)
 ```
 
-    ## [1] 1 2 3 4 5
+    ## [1] 1 2 3 5 6
 
     ## [1] 417
 
@@ -328,12 +335,12 @@ dim(df.valid); head(df.valid)
     ## # A tibble: 6 x 30
     ##   gender ct_dairy ct_drink ct_fastfood ct_fruite ct_house_prod ct_makeup
     ##   <fct>     <dbl>    <dbl>       <dbl>     <dbl>         <dbl>     <dbl>
-    ## 1 1         1.14   -0.498       0.0614    -0.491        -0.502    -0.103
-    ## 2 1        -0.590  -0.498       1.59      -0.585         0.751    -0.103
-    ## 3 1        -0.590  -0.498      -0.550     -0.585        -0.502    -0.103
-    ## 4 0        -0.590  -0.498      -0.550      2.52          0.701    -0.103
-    ## 5 0         0.275   0.495       0.774     -0.585        -0.301    -0.103
-    ## 6 1        -0.590  -0.0467     -0.550     -0.585        -0.502    -0.103
+    ## 1 0        -0.271    0.359      0.214    -0.0200        -0.452    -0.103
+    ## 2 1        -0.590   -0.498      4.54     -0.585         -0.502    -0.103
+    ## 3 1         1.14    -0.498      0.0614   -0.491         -0.502    -0.103
+    ## 4 0        -0.271   -0.272     -0.550    -0.444         -0.402    -0.103
+    ## 5 0        -0.590   -0.227      0.214     0.498          0.300    -0.103
+    ## 6 0         0.229   -0.362      0.163    -0.161          0.350    -0.103
     ## # ... with 23 more variables: ct_meat <dbl>, ct_sauce <dbl>,
     ## #   ct_seafood <dbl>, ct_snack <dbl>, ct_vegetable <dbl>, coverage <dbl>,
     ## #   g_paid <dbl>, buyed_prod_num <dbl>, hf_6_11 <dbl>, hf_12_17 <dbl>,
@@ -351,12 +358,12 @@ dim(df.test); head(df.test)
     ## # A tibble: 6 x 30
     ##   gender ct_dairy ct_drink ct_fastfood ct_fruite ct_house_prod ct_makeup
     ##   <fct>     <dbl>    <dbl>       <dbl>     <dbl>         <dbl>     <dbl>
-    ## 1 1        -0.590   -0.498       4.54     -0.585        -0.502    -0.103
-    ## 2 1        -0.590   -0.498      -0.550     2.33         -0.502    -0.103
-    ## 3 0        -0.453   -0.408       0.876    -0.585         1.45     -0.103
-    ## 4 1        -0.590   -0.498      -0.550    -0.585         1.50     -0.103
-    ## 5 0        -0.180   -0.498      -0.550    -0.585        -0.502    -0.103
-    ## 6 1        -0.590   -0.498      -0.550     1.77         -0.502    -0.103
+    ## 1 1         2.19     1.26       -0.550    -0.585        -0.502    -0.103
+    ## 2 0        -0.590   -0.498      -0.448     2.38         -0.502    -0.103
+    ## 3 0         0.275    0.495       0.774    -0.585        -0.301    -0.103
+    ## 4 1        -0.590    1.04       -0.550    -0.585        -0.502    -0.103
+    ## 5 1        -0.590    4.01       -0.550    -0.585        -0.502    -0.103
+    ## 6 1        -0.590   -0.498      -0.550    -0.585        -0.502    -0.103
     ## # ... with 23 more variables: ct_meat <dbl>, ct_sauce <dbl>,
     ## #   ct_seafood <dbl>, ct_snack <dbl>, ct_vegetable <dbl>, coverage <dbl>,
     ## #   g_paid <dbl>, buyed_prod_num <dbl>, hf_6_11 <dbl>, hf_12_17 <dbl>,
@@ -407,11 +414,11 @@ glm_m
     ## 
     ## No pre-processing
     ## Resampling: Cross-Validated (10 fold, repeated 3 times) 
-    ## Summary of sample sizes: 1129, 1130, 1130, 1130, 1129, 1130, ... 
+    ## Summary of sample sizes: 1129, 1129, 1129, 1130, 1130, 1129, ... 
     ## Resampling results:
     ## 
     ##   Accuracy   Kappa    
-    ##   0.8943005  0.7370877
+    ##   0.8990768  0.7501918
 
 CART ————————————————
 
@@ -431,16 +438,16 @@ cart_m
     ## 
     ## No pre-processing
     ## Resampling: Cross-Validated (10 fold, repeated 3 times) 
-    ## Summary of sample sizes: 1130, 1129, 1129, 1130, 1129, 1129, ... 
+    ## Summary of sample sizes: 1130, 1131, 1129, 1129, 1129, 1130, ... 
     ## Resampling results across tuning parameters:
     ## 
-    ##   cp           Accuracy   Kappa    
-    ##   0.008356546  0.9038640  0.7555820
-    ##   0.020891365  0.9028164  0.7486942
-    ##   0.643454039  0.8219317  0.4340738
+    ##   cp          Accuracy   Kappa    
+    ##   0.01114206  0.9197816  0.7991351
+    ##   0.03899721  0.8993139  0.7351691
+    ##   0.66016713  0.7683819  0.2213555
     ## 
     ## Accuracy was used to select the optimal model using the largest value.
-    ## The final value used for the model was cp = 0.008356546.
+    ## The final value used for the model was cp = 0.01114206.
 
 `The final value used for the model was cp = 0.006963788` mean?
 
@@ -460,13 +467,13 @@ rf_m
     ## 
     ## No pre-processing
     ## Resampling: Cross-Validated (10 fold, repeated 3 times) 
-    ## Summary of sample sizes: 1130, 1130, 1129, 1129, 1129, 1130, ... 
+    ## Summary of sample sizes: 1129, 1129, 1130, 1130, 1130, 1129, ... 
     ## Resampling results across tuning parameters:
     ## 
     ##   mtry  Accuracy   Kappa    
-    ##    2    0.9038490  0.7506659
-    ##   15    0.9046446  0.7560568
-    ##   29    0.8987970  0.7417269
+    ##    2    0.9187217  0.7898097
+    ##   15    0.9205735  0.7976426
+    ##   29    0.9149989  0.7839042
     ## 
     ## Accuracy was used to select the optimal model using the largest value.
     ## The final value used for the model was mtry = 15.
@@ -486,21 +493,23 @@ model_arch %>%
     ## # A tibble: 417 x 4
     ##    gender GLM   CART  RF   
     ##    <fct>  <fct> <fct> <fct>
-    ##  1 1      0     0     0    
-    ##  2 1      0     0     0    
-    ##  3 1      1     1     1    
+    ##  1 0      0     0     0    
+    ##  2 1      1     1     1    
+    ##  3 1      0     0     0    
     ##  4 0      0     0     0    
     ##  5 0      0     0     0    
-    ##  6 1      0     0     0    
-    ##  7 1      1     1     1    
+    ##  6 0      0     0     0    
+    ##  7 1      0     0     0    
     ##  8 1      1     1     1    
-    ##  9 1      1     1     1    
+    ##  9 0      0     0     0    
     ## 10 1      1     1     1    
     ## # ... with 407 more rows
 
 ``` r
 library(yardstick)
 ```
+
+    ## Warning: package 'yardstick' was built under R version 3.5.3
 
     ## For binary classification, the first factor level is assumed to be the event.
     ## Set the global option `yardstick.event_first` to `FALSE` to change this.
@@ -523,8 +532,8 @@ metrics(model_arch, truth=gender, estimate = GLM)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.909
-    ## 2 kap      binary         0.768
+    ## 1 accuracy binary         0.882
+    ## 2 kap      binary         0.705
 
 ``` r
 metrics(model_arch, truth=gender, estimate = CART)
@@ -533,8 +542,8 @@ metrics(model_arch, truth=gender, estimate = CART)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.906
-    ## 2 kap      binary         0.763
+    ## 1 accuracy binary         0.892
+    ## 2 kap      binary         0.725
 
 ``` r
 metrics(model_arch, truth=gender, estimate = RF)
@@ -543,8 +552,8 @@ metrics(model_arch, truth=gender, estimate = RF)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.911
-    ## 2 kap      binary         0.774
+    ## 1 accuracy binary         0.892
+    ## 2 kap      binary         0.724
 
 RF is winner…
 
@@ -558,28 +567,27 @@ varImp(rf_m)
     ## 
     ##                 Overall
     ## ct_cov          100.000
-    ## coverage         54.781
-    ## day_cov          21.575
-    ## n_distinct_prod  19.457
-    ## hf_12_17         13.944
-    ## g_paid            9.931
-    ## buyed_prod_num    9.725
-    ## hf_18_23          8.266
-    ## day_mean_amt      7.780
-    ## vdays             7.668
-    ## ct_fruite         4.811
-    ## ct_snack          4.506
-    ## ct_meat           4.440
-    ## wdf_tue           4.216
-    ## ct_vegetable      4.078
-    ## ct_dairy          3.254
-    ## ct_house_prod     3.046
-    ## wdf_wed           2.852
-    ## wdf_sat           2.745
-    ## ct_drink          2.708
+    ## coverage         38.946
+    ## day_cov          22.300
+    ## n_distinct_prod  14.742
+    ## hf_12_17         13.097
+    ## buyed_prod_num    8.293
+    ## day_mean_amt      6.308
+    ## g_paid            6.146
+    ## hf_18_23          6.107
+    ## vdays             5.979
+    ## ct_vegetable      4.178
+    ## wdf_tue           3.515
+    ## ct_snack          3.229
+    ## ct_fruite         3.132
+    ## ct_house_prod     3.097
+    ## wdf_wed           2.270
+    ## ct_dairy          2.235
+    ## wdf_sat           2.156
+    ## hf_6_11           2.146
+    ## ct_meat           1.888
 
-Predict with winner model and test datset
-————————————————
+Predict with winner model and test datset ————————————————
 
 ``` r
 predict(rf_m, df.test, type='prob') %>% write_csv("./data/predicted_data.csv")
@@ -588,8 +596,8 @@ y_hat_rf <- predict(cart_m, df.test, type='prob')$`1`
 y_hat_rf[1:10]
 ```
 
-    ##  [1] 0.9638554 0.3125000 0.0627907 0.0627907 0.0627907 0.0627907 0.0627907
-    ##  [8] 0.0627907 0.0627907 0.0627907
+    ##  [1] 0.67500000 0.05767013 0.05767013 0.05767013 0.96470588 0.96470588
+    ##  [7] 0.96470588 0.05767013 0.05767013 0.05767013
 
 ``` r
 y_obs <- df.test$gender
@@ -626,13 +634,18 @@ Instead ————————————————
 
 ``` r
 library(caTools)
+```
+
+    ## Warning: package 'caTools' was built under R version 3.5.3
+
+``` r
 colAUC(y_hat_rf, y_obs, plotROC = T)
 ```
 
 ![](ADP_machine_learning_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
     ##              [,1]
-    ## 0 vs. 1 0.8945491
+    ## 0 vs. 1 0.9166432
 
 AUC ————————————————
 
@@ -640,11 +653,11 @@ AUC ————————————————
 performance(pred_rf, 'auc')@y.values[[1]] # auc
 ```
 
-    ## [1] 0.8945491
+    ## [1] 0.9166432
 
-xgBoost—-
+xgBoost ————————————————
 
-Evaluation with validation data—-
+Evaluation with validation data ————————————————
 
 ``` r
 model_arch <- df.valid %>% # model_val
@@ -662,15 +675,15 @@ head(model_pred_result, 30)
     ## # A tibble: 30 x 4
     ##    gender GLM   CART  RF   
     ##    <fct>  <fct> <fct> <fct>
-    ##  1 1      0     0     0    
-    ##  2 1      0     0     0    
-    ##  3 1      1     1     1    
+    ##  1 0      0     0     0    
+    ##  2 1      1     1     1    
+    ##  3 1      0     0     0    
     ##  4 0      0     0     0    
     ##  5 0      0     0     0    
-    ##  6 1      0     0     0    
-    ##  7 1      1     1     1    
+    ##  6 0      0     0     0    
+    ##  7 1      0     0     0    
     ##  8 1      1     1     1    
-    ##  9 1      1     1     1    
+    ##  9 0      0     0     0    
     ## 10 1      1     1     1    
     ## # ... with 20 more rows
 
@@ -683,8 +696,8 @@ metrics(model_arch, truth=gender, estimate = GLM)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.909
-    ## 2 kap      binary         0.768
+    ## 1 accuracy binary         0.882
+    ## 2 kap      binary         0.705
 
 ``` r
 metrics(model_arch, truth=gender, estimate = CART)
@@ -693,8 +706,8 @@ metrics(model_arch, truth=gender, estimate = CART)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.906
-    ## 2 kap      binary         0.763
+    ## 1 accuracy binary         0.892
+    ## 2 kap      binary         0.725
 
 ``` r
 metrics(model_arch, truth=gender, estimate = RF)
@@ -703,8 +716,8 @@ metrics(model_arch, truth=gender, estimate = RF)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.911
-    ## 2 kap      binary         0.774
+    ## 1 accuracy binary         0.892
+    ## 2 kap      binary         0.724
 
 ``` r
 # metrics(model_arch, truth=gender, estimate = XGB)
@@ -713,12 +726,12 @@ predict(rf_m, df.valid, type='prob') %>% head()
 ```
 
     ##       0     1
-    ## 1 0.992 0.008
-    ## 2 0.754 0.246
-    ## 3 0.024 0.976
-    ## 4 0.808 0.192
+    ## 1 0.994 0.006
+    ## 2 0.000 1.000
+    ## 3 0.998 0.002
+    ## 4 0.974 0.026
     ## 5 0.998 0.002
-    ## 6 0.942 0.058
+    ## 6 1.000 0.000
 
 Model performance
 
@@ -735,8 +748,8 @@ metrics(df.test_perf, truth=gender, estimate = GLM)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.894
-    ## 2 kap      binary         0.736
+    ## 1 accuracy binary         0.906
+    ## 2 kap      binary         0.767
 
 ``` r
 metrics(df.test_perf, truth=gender, estimate = CART)
@@ -745,8 +758,8 @@ metrics(df.test_perf, truth=gender, estimate = CART)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.902
-    ## 2 kap      binary         0.748
+    ## 1 accuracy binary         0.923
+    ## 2 kap      binary         0.811
 
 ``` r
 metrics(df.test_perf, truth=gender, estimate = RF)
@@ -755,8 +768,8 @@ metrics(df.test_perf, truth=gender, estimate = RF)
     ## # A tibble: 2 x 3
     ##   .metric  .estimator .estimate
     ##   <chr>    <chr>          <dbl>
-    ## 1 accuracy binary         0.914
-    ## 2 kap      binary         0.782
+    ## 1 accuracy binary         0.899
+    ## 2 kap      binary         0.747
 
 ``` r
 # metrics(df.test_perf, truth=gender, estimate = XGB)
