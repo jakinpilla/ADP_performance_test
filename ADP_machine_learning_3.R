@@ -5,8 +5,8 @@
 #' output: rmarkdown::github_document
 #' ---
 
-setwd("/home/insa/ADP_performance_test/")
-
+# setwd("/home/insa/ADP_performance_test/")
+setwd("C:/Users/Daniel/ADP_performance_test")
 #+ setup, include= FALSE
 Packages <- c('plyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 'rpart', 'GGally',
               'ROCR', 'ranger', 'dummies', 'curl', 'gridExtra')

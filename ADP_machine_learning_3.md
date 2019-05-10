@@ -1,10 +1,11 @@
 ADP ML\_3
 ================
 jakinpilla
-2019-05-02
+2019-05-10
 
 ``` r
-setwd("/home/insa/ADP_performance_test/")
+# setwd("/home/insa/ADP_performance_test/")
+setwd("C:/Users/Daniel/ADP_performance_test")
 ```
 
 Data Loading ——————————
@@ -93,8 +94,7 @@ ggpairs(heptathlon)
 
 ![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-scale()
-    ——————————
+scale() ——————————
 
 ``` r
 scale(heptathlon) %>% head()
@@ -136,7 +136,11 @@ square otherwise. If scale is FALSE, no scaling is done. Select vars
 
 ``` r
 library(mlbench); data("Soybean")
+```
 
+    ## Warning: package 'mlbench' was built under R version 3.5.3
+
+``` r
 summary(Soybean)
 ```
 
@@ -248,20 +252,20 @@ Soybean %>%
     ## # A tibble: 683 x 33
     ##    Class date  plant.stand precip temp  hail  crop.hist area.dam sever
     ##    <fct> <fct> <ord>       <ord>  <ord> <fct> <fct>     <fct>    <fct>
-    ##  1 diap… 6     0           2      1     0     1         1        1    
-    ##  2 diap… 4     0           2      1     0     2         0        2    
-    ##  3 diap… 3     0           2      1     0     1         0        2    
-    ##  4 diap… 3     0           2      1     0     1         0        2    
-    ##  5 diap… 6     0           2      1     0     2         0        1    
-    ##  6 diap… 5     0           2      1     0     3         0        1    
-    ##  7 diap… 5     0           2      1     0     2         0        1    
-    ##  8 diap… 4     0           2      1     1     1         0        1    
-    ##  9 diap… 6     0           2      1     0     3         0        1    
-    ## 10 diap… 4     0           2      1     0     2         0        2    
-    ## # … with 673 more rows, and 24 more variables: seed.tmt <fct>, germ <ord>,
-    ## #   plant.growth <fct>, leaves <fct>, leaf.halo <fct>, leaf.marg <fct>,
-    ## #   leaf.size <ord>, leaf.shread <fct>, leaf.malf <fct>, stem <fct>,
-    ## #   lodging <fct>, stem.cankers <fct>, canker.lesion <fct>,
+    ##  1 diap~ 6     0           2      1     0     1         1        1    
+    ##  2 diap~ 4     0           2      1     0     2         0        2    
+    ##  3 diap~ 3     0           2      1     0     1         0        2    
+    ##  4 diap~ 3     0           2      1     0     1         0        2    
+    ##  5 diap~ 6     0           2      1     0     2         0        1    
+    ##  6 diap~ 5     0           2      1     0     3         0        1    
+    ##  7 diap~ 5     0           2      1     0     2         0        1    
+    ##  8 diap~ 4     0           2      1     1     1         0        1    
+    ##  9 diap~ 6     0           2      1     0     3         0        1    
+    ## 10 diap~ 4     0           2      1     0     2         0        2    
+    ## # ... with 673 more rows, and 24 more variables: seed.tmt <fct>,
+    ## #   germ <ord>, plant.growth <fct>, leaves <fct>, leaf.halo <fct>,
+    ## #   leaf.marg <fct>, leaf.size <ord>, leaf.shread <fct>, leaf.malf <fct>,
+    ## #   stem <fct>, lodging <fct>, stem.cankers <fct>, canker.lesion <fct>,
     ## #   fruiting.bodies <fct>, ext.decay <fct>, int.discolor <fct>,
     ## #   fruit.pods <fct>, fruit.spots <fct>, seed <fct>, mold.growth <fct>,
     ## #   seed.discolor <fct>, seed.size <fct>, shriveling <fct>, roots <fct>
@@ -290,7 +294,7 @@ Vehicle %>% as_tibble() -> vehicle; vehicle
     ##  8    90    43     66    157         65        9     137    48           18
     ##  9    86    34     62    140         61        7     122    54           17
     ## 10    93    44     98    197         62       11     183    36           22
-    ## # … with 836 more rows, and 10 more variables: Max.L.Rect <dbl>,
+    ## # ... with 836 more rows, and 10 more variables: Max.L.Rect <dbl>,
     ## #   Sc.Var.Maxis <dbl>, Sc.Var.maxis <dbl>, Ra.Gyr <dbl>,
     ## #   Skew.Maxis <dbl>, Skew.maxis <dbl>, Kurt.maxis <dbl>,
     ## #   Kurt.Maxis <dbl>, Holl.Ra <dbl>, Class <fct>
@@ -333,7 +337,7 @@ vehicle %>%
     ##  8    90    157         65        9        146         67          3
     ##  9    86    140         61        7        127         64          2
     ## 10    93    197         62       11        146         64          4
-    ## # … with 836 more rows, and 2 more variables: Kurt.maxis <dbl>,
+    ## # ... with 836 more rows, and 2 more variables: Kurt.maxis <dbl>,
     ## #   Class <fct>
 
 PCA ==\> K-means Clustering ——————————
@@ -385,8 +389,7 @@ screeplot(h.pca, type ='lines')
 
 ![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-First and Second Components
-——————————
+First and Second Components ——————————
 
 ``` r
 h.pca$rotation[, 1:2] # What is principal components(data features to PC)...
@@ -513,7 +516,11 @@ PCA ==\> SVM Classification —————————— Data Loading ——�
 
 ``` r
 library(e1071)
+```
 
+    ## Warning: package 'e1071' was built under R version 3.5.3
+
+``` r
 iris %>% 
   select(-Species) %>%
   prcomp(scale = T) -> ir.pca; ir.pca
@@ -546,7 +553,7 @@ ir.pca$x %>% as_tibble() -> ir; ir
     ##  8 -2.23 -0.222   0.0884 -0.0245 
     ##  9 -2.33  1.11   -0.145  -0.0268 
     ## 10 -2.18  0.467   0.253  -0.0398 
-    ## # … with 140 more rows
+    ## # ... with 140 more rows
 
 ``` r
 ir %>%
@@ -569,10 +576,9 @@ iris_pca
     ##  8 -2.23 -0.222   0.0884 -0.0245  setosa 
     ##  9 -2.33  1.11   -0.145  -0.0268  setosa 
     ## 10 -2.18  0.467   0.253  -0.0398  setosa 
-    ## # … with 140 more rows
+    ## # ... with 140 more rows
 
-Data Spliting
-——————————
+Data Spliting ——————————
 
 ``` r
 idx <- caret::createDataPartition(iris_pca$species, p = c(.8, .2), list = F)
@@ -679,7 +685,7 @@ y_hat_df %>% as_tibble()
     ##  8 -2.42  0.901   -0.193   -0.00971 setosa
     ##  9 -2.22 -0.995    0.181   -0.0149  setosa
     ## 10 -2.20 -0.00919  0.153    0.0492  setosa
-    ## # … with 20 more rows
+    ## # ... with 20 more rows
 
 ``` r
 ggplot(y_hat_df,
@@ -862,16 +868,16 @@ glimpse(protein)
 
     ## Observations: 25
     ## Variables: 10
-    ## $ Country   <chr> "Albania", "Austria", "Belgium", "Bulgaria", "Czechosl…
-    ## $ RedMeat   <dbl> 10.1, 8.9, 13.5, 7.8, 9.7, 10.6, 8.4, 9.5, 18.0, 10.2,…
-    ## $ WhiteMeat <dbl> 1.4, 14.0, 9.3, 6.0, 11.4, 10.8, 11.6, 4.9, 9.9, 3.0, …
-    ## $ Eggs      <dbl> 0.5, 4.3, 4.1, 1.6, 2.8, 3.7, 3.7, 2.7, 3.3, 2.8, 2.9,…
-    ## $ Milk      <dbl> 8.9, 19.9, 17.5, 8.3, 12.5, 25.0, 11.1, 33.7, 19.5, 17…
-    ## $ Fish      <dbl> 0.2, 2.1, 4.5, 1.2, 2.0, 9.9, 5.4, 5.8, 5.7, 5.9, 0.3,…
-    ## $ Cereals   <dbl> 42.3, 28.0, 26.6, 56.7, 34.3, 21.9, 24.6, 26.3, 28.1, …
-    ## $ Starch    <dbl> 0.6, 3.6, 5.7, 1.1, 5.0, 4.8, 6.5, 5.1, 4.8, 2.2, 4.0,…
-    ## $ Nuts      <dbl> 5.5, 1.3, 2.1, 3.7, 1.1, 0.7, 0.8, 1.0, 2.4, 7.8, 5.4,…
-    ## $ `Fr&Veg`  <dbl> 1.7, 4.3, 4.0, 4.2, 4.0, 2.4, 3.6, 1.4, 6.5, 6.5, 4.2,…
+    ## $ Country   <chr> "Albania", "Austria", "Belgium", "Bulgaria", "Czecho...
+    ## $ RedMeat   <dbl> 10.1, 8.9, 13.5, 7.8, 9.7, 10.6, 8.4, 9.5, 18.0, 10....
+    ## $ WhiteMeat <dbl> 1.4, 14.0, 9.3, 6.0, 11.4, 10.8, 11.6, 4.9, 9.9, 3.0...
+    ## $ Eggs      <dbl> 0.5, 4.3, 4.1, 1.6, 2.8, 3.7, 3.7, 2.7, 3.3, 2.8, 2....
+    ## $ Milk      <dbl> 8.9, 19.9, 17.5, 8.3, 12.5, 25.0, 11.1, 33.7, 19.5, ...
+    ## $ Fish      <dbl> 0.2, 2.1, 4.5, 1.2, 2.0, 9.9, 5.4, 5.8, 5.7, 5.9, 0....
+    ## $ Cereals   <dbl> 42.3, 28.0, 26.6, 56.7, 34.3, 21.9, 24.6, 26.3, 28.1...
+    ## $ Starch    <dbl> 0.6, 3.6, 5.7, 1.1, 5.0, 4.8, 6.5, 5.1, 4.8, 2.2, 4....
+    ## $ Nuts      <dbl> 5.5, 1.3, 2.1, 3.7, 1.1, 0.7, 0.8, 1.0, 2.4, 7.8, 5....
+    ## $ `Fr&Veg`  <dbl> 1.7, 4.3, 4.0, 4.2, 4.0, 2.4, 3.6, 1.4, 6.5, 6.5, 4....
 
 ``` r
 protein %>%
@@ -1054,9 +1060,9 @@ nc <-NbClust(nutrient.scaled, distance = 'euclidean',
              method = 'average')
 ```
 
-    ## Warning in pf(beale, pp, df2): NaNs produced
+    ## Warning in pf(beale, pp, df2): NaN이 생성되었습니다
     
-    ## Warning in pf(beale, pp, df2): NaNs produced
+    ## Warning in pf(beale, pp, df2): NaN이 생성되었습니다
 
 ![](ADP_machine_learning_3_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
@@ -1255,7 +1261,7 @@ iris_train %>% as_tibble()
     ##  8          4.8         3.4          1.6         0.2 setosa 
     ##  9          4.3         3            1.1         0.1 setosa 
     ## 10          5.7         4.4          1.5         0.4 setosa 
-    ## # … with 95 more rows
+    ## # ... with 95 more rows
 
 ``` r
 iris_test <- iris[-idx, ]
@@ -1275,7 +1281,7 @@ iris_test %>% as_tibble()
     ##  8          4.8         3.4          1.9         0.2 setosa 
     ##  9          5.2         3.5          1.5         0.2 setosa 
     ## 10          4.7         3.2          1.6         0.2 setosa 
-    ## # … with 35 more rows
+    ## # ... with 35 more rows
 
 ``` r
 nn.iris <- nnet(Species ~., data = iris_train, size= 2, rang = 0, 

@@ -1,14 +1,15 @@
 ADP Statistics\_1
 ================
 jakinpilla
-2019-04-25
+2019-05-10
 
 ``` r
-setwd("/home/insa/ADP_performance_test/")
+setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("/home/insa/ADP_performance_test/")
 getwd()
 ```
 
-    ## [1] "/home/insa/ADP_performance_test"
+    ## [1] "C:/Users/Daniel/ADP_performance_test"
 
 Statistic Basic
 
@@ -114,10 +115,9 @@ as_tibble(iris)
     ##  8          5           3.4          1.5         0.2 setosa 
     ##  9          4.4         2.9          1.4         0.2 setosa 
     ## 10          4.9         3.1          1.5         0.1 setosa 
-    ## # … with 140 more rows
+    ## # ... with 140 more rows
 
-boxplot
-basic…
+boxplot basic…
 
 ``` r
 boxplot(iris$Sepal.Length)
@@ -192,8 +192,7 @@ boxplot(Sepal.Length ~ Species, data = iris,
 
 ![](ADP_statistical_analysis_1_files/figure-gfm/unnamed-chunk-5-5.png)<!-- -->
 
-box plot with
-ggplot…
+box plot with ggplot…
 
 ``` r
 ggplot(iris, aes(x= Species, y = Sepal.Length)) +geom_boxplot()
@@ -364,11 +363,6 @@ levels(iris$Species)
 
 ``` r
 library(dummies)
-```
-
-    ## dummies-1.5.6 provided by Decision Patterns
-
-``` r
 str(iris)
 ```
 
@@ -422,7 +416,7 @@ iris_dummy
     ##  8     8          5           3.4          1.5         0.2      1
     ##  9     9          4.4         2.9          1.4         0.2      1
     ## 10    10          4.9         3.1          1.5         0.1      1
-    ## # … with 140 more rows, and 2 more variables: versicolor <dbl>,
+    ## # ... with 140 more rows, and 2 more variables: versicolor <dbl>,
     ## #   virginica <dbl>
 
 ``` r
@@ -485,68 +479,68 @@ glimpse(GermanCredit)
 
     ## Observations: 1,000
     ## Variables: 62
-    ## $ Duration                               <int> 6, 48, 12, 42, 24, 36, 24…
-    ## $ Amount                                 <int> 1169, 5951, 2096, 7882, 4…
-    ## $ InstallmentRatePercentage              <int> 4, 2, 2, 2, 3, 2, 3, 2, 2…
-    ## $ ResidenceDuration                      <int> 4, 2, 3, 4, 4, 4, 4, 2, 4…
-    ## $ Age                                    <int> 67, 22, 49, 45, 53, 35, 5…
-    ## $ NumberExistingCredits                  <int> 2, 1, 1, 1, 2, 1, 1, 1, 1…
-    ## $ NumberPeopleMaintenance                <int> 1, 1, 2, 2, 2, 2, 1, 1, 1…
-    ## $ Telephone                              <dbl> 0, 1, 1, 1, 1, 0, 1, 0, 1…
-    ## $ ForeignWorker                          <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1…
-    ## $ Class                                  <fct> Good, Bad, Good, Good, Ba…
-    ## $ CheckingAccountStatus.lt.0             <dbl> 1, 0, 0, 1, 1, 0, 0, 0, 0…
-    ## $ CheckingAccountStatus.0.to.200         <dbl> 0, 1, 0, 0, 0, 0, 0, 1, 0…
-    ## $ CheckingAccountStatus.gt.200           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ CheckingAccountStatus.none             <dbl> 0, 0, 1, 0, 0, 1, 1, 0, 1…
-    ## $ CreditHistory.NoCredit.AllPaid         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ CreditHistory.ThisBank.AllPaid         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ CreditHistory.PaidDuly                 <dbl> 0, 1, 0, 1, 0, 1, 1, 1, 1…
-    ## $ CreditHistory.Delay                    <dbl> 0, 0, 0, 0, 1, 0, 0, 0, 0…
-    ## $ CreditHistory.Critical                 <dbl> 1, 0, 1, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.NewCar                         <dbl> 0, 0, 0, 0, 1, 0, 0, 0, 0…
-    ## $ Purpose.UsedCar                        <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0…
-    ## $ Purpose.Furniture.Equipment            <dbl> 0, 0, 0, 1, 0, 0, 1, 0, 0…
-    ## $ Purpose.Radio.Television               <dbl> 1, 1, 0, 0, 0, 0, 0, 0, 1…
-    ## $ Purpose.DomesticAppliance              <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.Repairs                        <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.Education                      <dbl> 0, 0, 1, 0, 0, 1, 0, 0, 0…
-    ## $ Purpose.Vacation                       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.Retraining                     <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.Business                       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Purpose.Other                          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ SavingsAccountBonds.lt.100             <dbl> 0, 1, 1, 1, 1, 0, 0, 1, 0…
-    ## $ SavingsAccountBonds.100.to.500         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ SavingsAccountBonds.500.to.1000        <dbl> 0, 0, 0, 0, 0, 0, 1, 0, 0…
-    ## $ SavingsAccountBonds.gt.1000            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 1…
-    ## $ SavingsAccountBonds.Unknown            <dbl> 1, 0, 0, 0, 0, 1, 0, 0, 0…
-    ## $ EmploymentDuration.lt.1                <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ EmploymentDuration.1.to.4              <dbl> 0, 1, 0, 0, 1, 1, 0, 1, 0…
-    ## $ EmploymentDuration.4.to.7              <dbl> 0, 0, 1, 1, 0, 0, 0, 0, 1…
-    ## $ EmploymentDuration.gt.7                <dbl> 1, 0, 0, 0, 0, 0, 1, 0, 0…
-    ## $ EmploymentDuration.Unemployed          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Personal.Male.Divorced.Seperated       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 1…
-    ## $ Personal.Female.NotSingle              <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Personal.Male.Single                   <dbl> 1, 0, 1, 1, 1, 1, 1, 1, 0…
-    ## $ Personal.Male.Married.Widowed          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Personal.Female.Single                 <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ OtherDebtorsGuarantors.None            <dbl> 1, 1, 1, 0, 1, 1, 1, 1, 1…
-    ## $ OtherDebtorsGuarantors.CoApplicant     <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ OtherDebtorsGuarantors.Guarantor       <dbl> 0, 0, 0, 1, 0, 0, 0, 0, 0…
-    ## $ Property.RealEstate                    <dbl> 1, 1, 1, 0, 0, 0, 0, 0, 1…
-    ## $ Property.Insurance                     <dbl> 0, 0, 0, 1, 0, 0, 1, 0, 0…
-    ## $ Property.CarOther                      <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0…
-    ## $ Property.Unknown                       <dbl> 0, 0, 0, 0, 1, 1, 0, 0, 0…
-    ## $ OtherInstallmentPlans.Bank             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ OtherInstallmentPlans.Stores           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ OtherInstallmentPlans.None             <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1…
-    ## $ Housing.Rent                           <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0…
-    ## $ Housing.Own                            <dbl> 1, 1, 1, 0, 0, 0, 1, 0, 1…
-    ## $ Housing.ForFree                        <dbl> 0, 0, 0, 1, 1, 1, 0, 0, 0…
-    ## $ Job.UnemployedUnskilled                <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0…
-    ## $ Job.UnskilledResident                  <dbl> 0, 0, 1, 0, 0, 1, 0, 0, 1…
-    ## $ Job.SkilledEmployee                    <dbl> 1, 1, 0, 1, 1, 0, 1, 0, 0…
-    ## $ Job.Management.SelfEmp.HighlyQualified <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0…
+    ## $ Duration                               <int> 6, 48, 12, 42, 24, 36, ...
+    ## $ Amount                                 <int> 1169, 5951, 2096, 7882,...
+    ## $ InstallmentRatePercentage              <int> 4, 2, 2, 2, 3, 2, 3, 2,...
+    ## $ ResidenceDuration                      <int> 4, 2, 3, 4, 4, 4, 4, 2,...
+    ## $ Age                                    <int> 67, 22, 49, 45, 53, 35,...
+    ## $ NumberExistingCredits                  <int> 2, 1, 1, 1, 2, 1, 1, 1,...
+    ## $ NumberPeopleMaintenance                <int> 1, 1, 2, 2, 2, 2, 1, 1,...
+    ## $ Telephone                              <dbl> 0, 1, 1, 1, 1, 0, 1, 0,...
+    ## $ ForeignWorker                          <dbl> 1, 1, 1, 1, 1, 1, 1, 1,...
+    ## $ Class                                  <fct> Good, Bad, Good, Good, ...
+    ## $ CheckingAccountStatus.lt.0             <dbl> 1, 0, 0, 1, 1, 0, 0, 0,...
+    ## $ CheckingAccountStatus.0.to.200         <dbl> 0, 1, 0, 0, 0, 0, 0, 1,...
+    ## $ CheckingAccountStatus.gt.200           <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ CheckingAccountStatus.none             <dbl> 0, 0, 1, 0, 0, 1, 1, 0,...
+    ## $ CreditHistory.NoCredit.AllPaid         <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ CreditHistory.ThisBank.AllPaid         <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ CreditHistory.PaidDuly                 <dbl> 0, 1, 0, 1, 0, 1, 1, 1,...
+    ## $ CreditHistory.Delay                    <dbl> 0, 0, 0, 0, 1, 0, 0, 0,...
+    ## $ CreditHistory.Critical                 <dbl> 1, 0, 1, 0, 0, 0, 0, 0,...
+    ## $ Purpose.NewCar                         <dbl> 0, 0, 0, 0, 1, 0, 0, 0,...
+    ## $ Purpose.UsedCar                        <dbl> 0, 0, 0, 0, 0, 0, 0, 1,...
+    ## $ Purpose.Furniture.Equipment            <dbl> 0, 0, 0, 1, 0, 0, 1, 0,...
+    ## $ Purpose.Radio.Television               <dbl> 1, 1, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.DomesticAppliance              <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.Repairs                        <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.Education                      <dbl> 0, 0, 1, 0, 0, 1, 0, 0,...
+    ## $ Purpose.Vacation                       <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.Retraining                     <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.Business                       <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Purpose.Other                          <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ SavingsAccountBonds.lt.100             <dbl> 0, 1, 1, 1, 1, 0, 0, 1,...
+    ## $ SavingsAccountBonds.100.to.500         <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ SavingsAccountBonds.500.to.1000        <dbl> 0, 0, 0, 0, 0, 0, 1, 0,...
+    ## $ SavingsAccountBonds.gt.1000            <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ SavingsAccountBonds.Unknown            <dbl> 1, 0, 0, 0, 0, 1, 0, 0,...
+    ## $ EmploymentDuration.lt.1                <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ EmploymentDuration.1.to.4              <dbl> 0, 1, 0, 0, 1, 1, 0, 1,...
+    ## $ EmploymentDuration.4.to.7              <dbl> 0, 0, 1, 1, 0, 0, 0, 0,...
+    ## $ EmploymentDuration.gt.7                <dbl> 1, 0, 0, 0, 0, 0, 1, 0,...
+    ## $ EmploymentDuration.Unemployed          <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Personal.Male.Divorced.Seperated       <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Personal.Female.NotSingle              <dbl> 0, 1, 0, 0, 0, 0, 0, 0,...
+    ## $ Personal.Male.Single                   <dbl> 1, 0, 1, 1, 1, 1, 1, 1,...
+    ## $ Personal.Male.Married.Widowed          <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Personal.Female.Single                 <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ OtherDebtorsGuarantors.None            <dbl> 1, 1, 1, 0, 1, 1, 1, 1,...
+    ## $ OtherDebtorsGuarantors.CoApplicant     <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ OtherDebtorsGuarantors.Guarantor       <dbl> 0, 0, 0, 1, 0, 0, 0, 0,...
+    ## $ Property.RealEstate                    <dbl> 1, 1, 1, 0, 0, 0, 0, 0,...
+    ## $ Property.Insurance                     <dbl> 0, 0, 0, 1, 0, 0, 1, 0,...
+    ## $ Property.CarOther                      <dbl> 0, 0, 0, 0, 0, 0, 0, 1,...
+    ## $ Property.Unknown                       <dbl> 0, 0, 0, 0, 1, 1, 0, 0,...
+    ## $ OtherInstallmentPlans.Bank             <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ OtherInstallmentPlans.Stores           <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ OtherInstallmentPlans.None             <dbl> 1, 1, 1, 1, 1, 1, 1, 1,...
+    ## $ Housing.Rent                           <dbl> 0, 0, 0, 0, 0, 0, 0, 1,...
+    ## $ Housing.Own                            <dbl> 1, 1, 1, 0, 0, 0, 1, 0,...
+    ## $ Housing.ForFree                        <dbl> 0, 0, 0, 1, 1, 1, 0, 0,...
+    ## $ Job.UnemployedUnskilled                <dbl> 0, 0, 0, 0, 0, 0, 0, 0,...
+    ## $ Job.UnskilledResident                  <dbl> 0, 0, 1, 0, 0, 1, 0, 0,...
+    ## $ Job.SkilledEmployee                    <dbl> 1, 1, 0, 1, 1, 0, 1, 0,...
+    ## $ Job.Management.SelfEmp.HighlyQualified <dbl> 0, 0, 0, 0, 0, 0, 0, 1,...
 
 ``` r
 class(GermanCredit$Class)
@@ -565,8 +559,7 @@ str(x); glimpse(x)
 
 Convert ‘Bad’, ‘Good’ factor var into 0, 1 numeric data…
 
-factor() ==\>
-as.numeric()…
+factor() ==\> as.numeric()…
 
 ``` r
 x <- as.numeric(factor(x, levels = c('Bad', 'Good'), labels = c(0, 1))) - 1
@@ -597,7 +590,7 @@ x[1:10]
 
     ##  [1] 1 0 1 1 0 1 1 1 1 0
 
-Response var(y) ~ Explainary var(x)
+Response var(y) \~ Explainary var(x)
 
 continuous var x, continuous var y: lm model
 
@@ -610,12 +603,12 @@ head(mpg)
     ## # A tibble: 6 x 11
     ##   manufacturer model displ  year   cyl trans  drv     cty   hwy fl    class
     ##   <chr>        <chr> <dbl> <int> <int> <chr>  <chr> <int> <int> <chr> <chr>
-    ## 1 audi         a4      1.8  1999     4 auto(… f        18    29 p     comp…
-    ## 2 audi         a4      1.8  1999     4 manua… f        21    29 p     comp…
-    ## 3 audi         a4      2    2008     4 manua… f        20    31 p     comp…
-    ## 4 audi         a4      2    2008     4 auto(… f        21    30 p     comp…
-    ## 5 audi         a4      2.8  1999     6 auto(… f        16    26 p     comp…
-    ## 6 audi         a4      2.8  1999     6 manua… f        18    26 p     comp…
+    ## 1 audi         a4      1.8  1999     4 auto(~ f        18    29 p     comp~
+    ## 2 audi         a4      1.8  1999     4 manua~ f        21    29 p     comp~
+    ## 3 audi         a4      2    2008     4 manua~ f        20    31 p     comp~
+    ## 4 audi         a4      2    2008     4 auto(~ f        21    30 p     comp~
+    ## 5 audi         a4      2.8  1999     6 auto(~ f        16    26 p     comp~
+    ## 6 audi         a4      2.8  1999     6 manua~ f        18    26 p     comp~
 
 ``` r
 plot(hwy ~ cty, data=mpg)
@@ -670,8 +663,7 @@ plot(model) # 4가지 그래프 해석
 par(mfrow=c(1,1))
 ```
 
-가정 진단 :: 선형, 잔차의 분포 독립, 잔차의 분포 동일, 잔차의 정규분포 등
-확인
+가정 진단 :: 선형, 잔차의 분포 독립, 잔차의 분포 동일, 잔차의 정규분포 등 확인
 
 ``` r
 plot(model, which = 1)
@@ -681,8 +673,7 @@ plot(model, which = 1)
 
 Residuals vs Fitted는 X 축에 선형 회귀로 예측된 Y 값, Y 축에는 잔차를 보여준다. 선형 회귀에서 오차는
 평균이 0이고 분산이 일정한 정규 분포를 가정하였으므로, 예측된 Y 값과 무관하게 잔차의 평균은 0이고 분산은 일정해야
-한다. 따라서 이 그래프에서는 기울기 0인 직선이 관측되는 것이
-이상적이다.
+한다. 따라서 이 그래프에서는 기울기 0인 직선이 관측되는 것이 이상적이다.
 
 ``` r
 plot(model, which = 2)
@@ -714,14 +705,13 @@ plot(model, which = 5)
 ![](ADP_statistical_analysis_1_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 Residuals vs Leverage는 X 축에 레버리지Leverage, Y 축에 표준화 잔차를 보여준다. 레버리지는 설명
-변수가 얼마나 극단에 치우쳐 있는지를 뜻한다. 예를 들어, 다른 데이터의 X 값은 모두 1 ~ 10 사이의 값인데 특정
-데이터만 99999 값이라면 해당 데이터의 레버리지는 큰 값이 된다. 이런 데이터는 입력이 잘못되었거나, 해당 범위의 설명
-변숫값을 가지는 데이터를 보충해야 하는 작업 등이 필요하므로 유심히 살펴봐야 한다.
+변수가 얼마나 극단에 치우쳐 있는지를 뜻한다. 예를 들어, 다른 데이터의 X 값은 모두 1 \~ 10 사이의 값인데
+특정 데이터만 99999 값이라면 해당 데이터의 레버리지는 큰 값이 된다. 이런 데이터는 입력이 잘못되었거나, 해당 범위의
+설명 변숫값을 가지는 데이터를 보충해야 하는 작업 등이 필요하므로 유심히 살펴봐야 한다.
 
 네 번째 차트의 우측 상단과 우측 하단에는 선으로 쿡의 거리Cook’s Distance가 표시되어 있다. 쿡의 거리는 회귀 직선의
 모양(기울기나 절편 등)에 크게 영향을 끼치는 점들을 찾는 방법이다. 쿡의 거리는 레버리지와 잔차에 비례하므로 두 값이 큰 우측
-상단과 우측 하단에 쿡의 거리가 큰 값들이 위치하게
-된다.
+상단과 우측 하단에 쿡의 거리가 큰 값들이 위치하게 된다.
 
 ``` r
 plot(model, which = 6)
@@ -811,8 +801,7 @@ Factor var : x, Continuous var y: ANOVA…
 
 수면제 종류에 따른 수면량 증가, 차종에 따라 연비 차이, 혈압약과 혈압 감소량
 
-boxplot() -\> lm(y(연속형 변수) ~ x(범주형 변수)) -\> plot.lm()
-잔차분포
+boxplot() -\> lm(y(연속형 변수) \~ x(범주형 변수)) -\> plot.lm() 잔차분포
 
 ``` r
 mpg %>% ggplot(aes(class, hwy)) + geom_boxplot()
@@ -849,8 +838,7 @@ summary(m) # 다른 집단과 유의하게 다른 평균 연비
     ## Multiple R-squared:  0.6879, Adjusted R-squared:  0.6797 
     ## F-statistic: 83.39 on 6 and 227 DF,  p-value: < 2.2e-16
 
-연비의 총 변동량 중 차종으로 설명되는 비율, 모형의
-    적합도
+연비의 총 변동량 중 차종으로 설명되는 비율, 모형의 적합도
 
 ``` r
 yhat_m <- predict(m, newdata=data.frame(class='pickup')); yhat_m[1:10]
@@ -863,8 +851,7 @@ yhat_m <- predict(m, newdata=data.frame(class='pickup')); yhat_m[1:10]
 
 가정진단 : 잔차의 분포 독립, 잔차의 분포 동일 (잔차는 정규분포) 분포 독립성과 이상치 유무 연속형 변수 x, 범주형 변수
 y(예 : 성공, 실패) :: 온도와 O링의 실패 여부 등—- 산점도, 병렬상자 -\> glm() 로지스틱 & binomial
--\> plot() 잔차분포, 모형 가정
-확인
+-\> plot() 잔차분포, 모형 가정 확인
 
 ``` r
 chall <- read_table("data/o-ring-erosion-only.data.txt", col_names = FALSE)
@@ -900,11 +887,11 @@ glimpse(chall); head(chall)
 
     ## Observations: 23
     ## Variables: 5
-    ## $ o_ring_ct    <dbl> 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, …
-    ## $ distress_ct  <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 2, 0, 0, 0, …
-    ## $ temperature  <dbl> 66, 70, 69, 68, 67, 72, 73, 70, 57, 63, 70, 78, 67,…
-    ## $ pressure     <dbl> 50, 50, 50, 50, 50, 50, 100, 100, 200, 200, 200, 20…
-    ## $ flight_order <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, …
+    ## $ o_ring_ct    <dbl> 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6...
+    ## $ distress_ct  <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 2, 0, 0, 0...
+    ## $ temperature  <dbl> 66, 70, 69, 68, 67, 72, 73, 70, 57, 63, 70, 78, 6...
+    ## $ pressure     <dbl> 50, 50, 50, 50, 50, 50, 100, 100, 200, 200, 200, ...
+    ## $ flight_order <dbl> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15...
 
     ## # A tibble: 6 x 5
     ##   o_ring_ct distress_ct temperature pressure flight_order
@@ -962,8 +949,7 @@ summary(model) # temperature의 효과 :: 온도 1도 상승할 때 로그 오�
 
 모형의 적합도 :: degree F가 1 줄었을때 deviance 충분히 감소 :: 적합
 
-예측 ::
-확률값
+예측 :: 확률값
 
 ``` r
 pred <- predict(model, data.frame(temperature=30), type='response'); pred[1:10]
@@ -999,20 +985,20 @@ glimpse(boston)
 
     ## Observations: 506
     ## Variables: 14
-    ## $ crim    <dbl> 0.00632, 0.02731, 0.02729, 0.03237, 0.06905, 0.02985, 0.…
-    ## $ zn      <dbl> 18.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.5, 12.5, 12.5, 12.5, 1…
-    ## $ indus   <dbl> 2.31, 7.07, 7.07, 2.18, 2.18, 2.18, 7.87, 7.87, 7.87, 7.…
-    ## $ chas    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-    ## $ nox     <dbl> 0.538, 0.469, 0.469, 0.458, 0.458, 0.458, 0.524, 0.524, …
-    ## $ rm      <dbl> 6.575, 6.421, 7.185, 6.998, 7.147, 6.430, 6.012, 6.172, …
-    ## $ age     <dbl> 65.2, 78.9, 61.1, 45.8, 54.2, 58.7, 66.6, 96.1, 100.0, 8…
-    ## $ dis     <dbl> 4.0900, 4.9671, 4.9671, 6.0622, 6.0622, 6.0622, 5.5605, …
-    ## $ rad     <int> 1, 2, 2, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4,…
-    ## $ tax     <dbl> 296, 242, 242, 222, 222, 222, 311, 311, 311, 311, 311, 3…
-    ## $ ptratio <dbl> 15.3, 17.8, 17.8, 18.7, 18.7, 18.7, 15.2, 15.2, 15.2, 15…
-    ## $ black   <dbl> 396.90, 396.90, 392.83, 394.63, 396.90, 394.12, 395.60, …
-    ## $ lstat   <dbl> 4.98, 9.14, 4.03, 2.94, 5.33, 5.21, 12.43, 19.15, 29.93,…
-    ## $ medv    <dbl> 24.0, 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, 18…
+    ## $ crim    <dbl> 0.00632, 0.02731, 0.02729, 0.03237, 0.06905, 0.02985, ...
+    ## $ zn      <dbl> 18.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.5, 12.5, 12.5, 12.5,...
+    ## $ indus   <dbl> 2.31, 7.07, 7.07, 2.18, 2.18, 2.18, 7.87, 7.87, 7.87, ...
+    ## $ chas    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
+    ## $ nox     <dbl> 0.538, 0.469, 0.469, 0.458, 0.458, 0.458, 0.524, 0.524...
+    ## $ rm      <dbl> 6.575, 6.421, 7.185, 6.998, 7.147, 6.430, 6.012, 6.172...
+    ## $ age     <dbl> 65.2, 78.9, 61.1, 45.8, 54.2, 58.7, 66.6, 96.1, 100.0,...
+    ## $ dis     <dbl> 4.0900, 4.9671, 4.9671, 6.0622, 6.0622, 6.0622, 5.5605...
+    ## $ rad     <int> 1, 2, 2, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, ...
+    ## $ tax     <dbl> 296, 242, 242, 222, 222, 222, 311, 311, 311, 311, 311,...
+    ## $ ptratio <dbl> 15.3, 17.8, 17.8, 18.7, 18.7, 18.7, 15.2, 15.2, 15.2, ...
+    ## $ black   <dbl> 396.90, 396.90, 392.83, 394.63, 396.90, 394.12, 395.60...
+    ## $ lstat   <dbl> 4.98, 9.14, 4.03, 2.94, 5.33, 5.21, 12.43, 19.15, 29.9...
+    ## $ medv    <dbl> 24.0, 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, ...
 
 ``` r
 set.seed(2018)
@@ -1054,8 +1040,7 @@ summary(model) # 연관성이 높은 변수 :: lstat, rm
 
 lstat :: % lower status of the population
 
-rm :: average number of rooms per
-    dwelling
+rm :: average number of rooms per dwelling
 
 ``` r
 coef(model)
@@ -1353,14 +1338,14 @@ glimpse(bio)
 
     ## Observations: 25
     ## Variables: 8
-    ## $ age    <int> 7, 7, 8, 8, 8, 9, 11, 12, 12, 13, 13, 14, 14, 15, 16, 17,…
-    ## $ weight <dbl> 13.1, 12.9, 14.1, 16.2, 21.5, 17.5, 30.7, 28.4, 25.1, 31.…
-    ## $ bmp    <int> 68, 65, 64, 67, 93, 68, 89, 69, 67, 68, 89, 90, 93, 93, 6…
-    ## $ fev    <int> 32, 19, 22, 41, 52, 44, 28, 18, 24, 23, 39, 26, 45, 45, 3…
-    ## $ rv     <int> 258, 449, 441, 234, 202, 308, 305, 369, 312, 413, 206, 25…
-    ## $ frc    <int> 183, 245, 268, 146, 131, 155, 179, 198, 194, 225, 142, 19…
-    ## $ tlc    <int> 137, 134, 147, 124, 104, 118, 119, 103, 128, 136, 95, 121…
-    ## $ pemax  <int> 95, 85, 100, 85, 95, 80, 65, 110, 70, 95, 110, 90, 100, 8…
+    ## $ age    <int> 7, 7, 8, 8, 8, 9, 11, 12, 12, 13, 13, 14, 14, 15, 16, 1...
+    ## $ weight <dbl> 13.1, 12.9, 14.1, 16.2, 21.5, 17.5, 30.7, 28.4, 25.1, 3...
+    ## $ bmp    <int> 68, 65, 64, 67, 93, 68, 89, 69, 67, 68, 89, 90, 93, 93,...
+    ## $ fev    <int> 32, 19, 22, 41, 52, 44, 28, 18, 24, 23, 39, 26, 45, 45,...
+    ## $ rv     <int> 258, 449, 441, 234, 202, 308, 305, 369, 312, 413, 206, ...
+    ## $ frc    <int> 183, 245, 268, 146, 131, 155, 179, 198, 194, 225, 142, ...
+    ## $ tlc    <int> 137, 134, 147, 124, 104, 118, 119, 103, 128, 136, 95, 1...
+    ## $ pemax  <int> 95, 85, 100, 85, 95, 80, 65, 110, 70, 95, 110, 90, 100,...
 
 ``` r
 str(bio)
@@ -1490,8 +1475,7 @@ step(lm(pemax~age+weight+bmp+rv+frc+tlc, bio),
     ## (Intercept)       weight          bmp  
     ##     124.830        1.640       -1.005
 
-단계별
-소거법
+단계별 소거법
 
 ``` r
 step(lm(pemax~1, bio), scope=list(lower=~1, upper=~age+weight+bmp+rv+frc+tlc), direction = 'both')
@@ -1999,15 +1983,15 @@ head(df_imdb_l00_more); dim(df_imdb_l00_more)
 ```
 
     ## # A tibble: 6 x 28
-    ##   color director_name num_critic_for_… duration director_facebo…
+    ##   color director_name num_critic_for_~ duration director_facebo~
     ##   <chr> <chr>                    <dbl>    <dbl>            <dbl>
-    ## 1 Color Christopher …              813      164            22000
-    ## 2 Color Andrew Stant…              462      132              475
+    ## 1 Color Christopher ~              813      164            22000
+    ## 2 Color Andrew Stant~              462      132              475
     ## 3 Color Joss Whedon                635      141                0
     ## 4 Color Zack Snyder                673      183                0
-    ## 5 Color Gore Verbins…              450      150              563
+    ## 5 Color Gore Verbins~              450      150              563
     ## 6 Color Zack Snyder                733      143                0
-    ## # … with 23 more variables: actor_3_facebook_likes <dbl>,
+    ## # ... with 23 more variables: actor_3_facebook_likes <dbl>,
     ## #   actor_2_name <chr>, actor_1_facebook_likes <dbl>, gross <dbl>,
     ## #   genres <chr>, actor_1_name <chr>, movie_title <chr>,
     ## #   num_voted_users <dbl>, cast_total_facebook_likes <dbl>,
@@ -2051,8 +2035,7 @@ summary(m)
     ## Multiple R-squared:  0.2193, Adjusted R-squared:  0.2181 
     ## F-statistic: 186.8 on 1 and 665 DF,  p-value: < 2.2e-16
 
-다중공선성 :
-(다변량)
+다중공선성 : (다변량)
 
 ``` r
 ggpairs(mtcars[, c('mpg', 'disp', 'hp', 'wt', 'drat')]) # 독립변수간 높은 상관계수(.7 이상) 확인!
@@ -2111,14 +2094,14 @@ read.csv('./data/titanic_preprocessed.csv') -> titanic; glimpse(titanic)
 
     ## Observations: 1,307
     ## Variables: 8
-    ## $ pclass   <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-    ## $ sex      <int> 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0…
-    ## $ age      <dbl> 29.00, 0.92, 2.00, 30.00, 25.00, 48.00, 63.00, 39.00, 5…
-    ## $ sibsp    <int> 0, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0…
-    ## $ parch    <int> 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0…
-    ## $ fare     <dbl> 211.3375, 151.5500, 151.5500, 151.5500, 151.5500, 26.55…
-    ## $ embarked <int> 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1…
-    ## $ survived <fct> survived, survived, dead, dead, dead, survived, survive…
+    ## $ pclass   <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+    ## $ sex      <int> 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0,...
+    ## $ age      <dbl> 29.00, 0.92, 2.00, 30.00, 25.00, 48.00, 63.00, 39.00,...
+    ## $ sibsp    <int> 0, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0,...
+    ## $ parch    <int> 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,...
+    ## $ fare     <dbl> 211.3375, 151.5500, 151.5500, 151.5500, 151.5500, 26....
+    ## $ embarked <int> 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 1,...
+    ## $ survived <fct> survived, survived, dead, dead, dead, survived, survi...
 
 ``` r
 titanic$pclass <- as.factor(titanic$pclass)
@@ -2129,14 +2112,14 @@ glimpse(titanic)
 
     ## Observations: 1,307
     ## Variables: 8
-    ## $ pclass   <fct> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-    ## $ sex      <fct> 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0…
-    ## $ age      <dbl> 29.00, 0.92, 2.00, 30.00, 25.00, 48.00, 63.00, 39.00, 5…
-    ## $ sibsp    <int> 0, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0…
-    ## $ parch    <int> 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0…
-    ## $ fare     <dbl> 211.3375, 151.5500, 151.5500, 151.5500, 151.5500, 26.55…
-    ## $ embarked <fct> 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1…
-    ## $ survived <fct> survived, survived, dead, dead, dead, survived, survive…
+    ## $ pclass   <fct> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+    ## $ sex      <fct> 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0,...
+    ## $ age      <dbl> 29.00, 0.92, 2.00, 30.00, 25.00, 48.00, 63.00, 39.00,...
+    ## $ sibsp    <int> 0, 1, 1, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0,...
+    ## $ parch    <int> 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,...
+    ## $ fare     <dbl> 211.3375, 151.5500, 151.5500, 151.5500, 151.5500, 26....
+    ## $ embarked <fct> 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 1,...
+    ## $ survived <fct> survived, survived, dead, dead, dead, survived, survi...
 
 1)  학습/평가 데이터셋 분리
 
@@ -2205,7 +2188,11 @@ fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
 
 ``` r
 library(e1071)
+```
 
+    ## Warning: package 'e1071' was built under R version 3.5.3
+
+``` r
 titanic.train <- as.data.table(titanic.train)
 
 rf_fit <- train(survived ~ ., data=titanic.train,
@@ -2215,7 +2202,7 @@ rf_fit <- train(survived ~ ., data=titanic.train,
 
     ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
     ## mtry: reset to within valid range
-    
+
     ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
     ## mtry: reset to within valid range
     
@@ -2381,8 +2368,7 @@ library(ROCR)
 
 probs :: 분류 알고리즘이 예측한 점수(predicted probability)
 
-labels는 실제 분류true class가 저장된 벡터(actual
-vectors)
+labels는 실제 분류true class가 저장된 벡터(actual vectors)
 
 ``` r
 yhat_rf <- predict(rf_fit, newdata = titanic.test, type='prob')$survived ## the predicted prob of survived
@@ -2432,20 +2418,20 @@ glimpse(boston)
 
     ## Observations: 506
     ## Variables: 14
-    ## $ crim    <dbl> 0.00632, 0.02731, 0.02729, 0.03237, 0.06905, 0.02985, 0.…
-    ## $ zn      <dbl> 18.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.5, 12.5, 12.5, 12.5, 1…
-    ## $ indus   <dbl> 2.31, 7.07, 7.07, 2.18, 2.18, 2.18, 7.87, 7.87, 7.87, 7.…
-    ## $ chas    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-    ## $ nox     <dbl> 0.538, 0.469, 0.469, 0.458, 0.458, 0.458, 0.524, 0.524, …
-    ## $ rm      <dbl> 6.575, 6.421, 7.185, 6.998, 7.147, 6.430, 6.012, 6.172, …
-    ## $ age     <dbl> 65.2, 78.9, 61.1, 45.8, 54.2, 58.7, 66.6, 96.1, 100.0, 8…
-    ## $ dis     <dbl> 4.0900, 4.9671, 4.9671, 6.0622, 6.0622, 6.0622, 5.5605, …
-    ## $ rad     <int> 1, 2, 2, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4,…
-    ## $ tax     <dbl> 296, 242, 242, 222, 222, 222, 311, 311, 311, 311, 311, 3…
-    ## $ ptratio <dbl> 15.3, 17.8, 17.8, 18.7, 18.7, 18.7, 15.2, 15.2, 15.2, 15…
-    ## $ black   <dbl> 396.90, 396.90, 392.83, 394.63, 396.90, 394.12, 395.60, …
-    ## $ lstat   <dbl> 4.98, 9.14, 4.03, 2.94, 5.33, 5.21, 12.43, 19.15, 29.93,…
-    ## $ medv    <dbl> 24.0, 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, 18…
+    ## $ crim    <dbl> 0.00632, 0.02731, 0.02729, 0.03237, 0.06905, 0.02985, ...
+    ## $ zn      <dbl> 18.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.5, 12.5, 12.5, 12.5,...
+    ## $ indus   <dbl> 2.31, 7.07, 7.07, 2.18, 2.18, 2.18, 7.87, 7.87, 7.87, ...
+    ## $ chas    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
+    ## $ nox     <dbl> 0.538, 0.469, 0.469, 0.458, 0.458, 0.458, 0.524, 0.524...
+    ## $ rm      <dbl> 6.575, 6.421, 7.185, 6.998, 7.147, 6.430, 6.012, 6.172...
+    ## $ age     <dbl> 65.2, 78.9, 61.1, 45.8, 54.2, 58.7, 66.6, 96.1, 100.0,...
+    ## $ dis     <dbl> 4.0900, 4.9671, 4.9671, 6.0622, 6.0622, 6.0622, 5.5605...
+    ## $ rad     <int> 1, 2, 2, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, ...
+    ## $ tax     <dbl> 296, 242, 242, 222, 222, 222, 311, 311, 311, 311, 311,...
+    ## $ ptratio <dbl> 15.3, 17.8, 17.8, 18.7, 18.7, 18.7, 15.2, 15.2, 15.2, ...
+    ## $ black   <dbl> 396.90, 396.90, 392.83, 394.63, 396.90, 394.12, 395.60...
+    ## $ lstat   <dbl> 4.98, 9.14, 4.03, 2.94, 5.33, 5.21, 12.43, 19.15, 29.9...
+    ## $ medv    <dbl> 24.0, 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, ...
 
 splitting total dataset into training and validation dataset
 
@@ -2462,8 +2448,7 @@ boston.validation_test <- boston[-idx, ]; dim(boston.validation_test)
 
     ## [1] 200  14
 
-splitting validation\_test dataset into validation and test
-dataset
+splitting validation\_test dataset into validation and test dataset
 
 ``` r
 idx <- createDataPartition(boston.validation_test$medv, p=c(.5, .5), list=F)
@@ -2529,8 +2514,7 @@ rmse(y_obs, yhat_m) # 작을 수록 정확한 모델
 
     ## [1] 0.04504305
 
-로지스틱 회귀 :: income이 \<=50K“,”\>50K인지 여부 예측 with adult
-data
+로지스틱 회귀 :: income이 \<=50K“,”\>50K인지 여부 예측 with adult data
 
 ``` r
 # adult <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
@@ -2571,21 +2555,21 @@ glimpse(adult)
 
     ## Observations: 32,561
     ## Variables: 15
-    ## $ age           <dbl> 39, 50, 38, 53, 28, 37, 49, 52, 31, 42, 37, 30, 23…
-    ## $ type_employer <chr> "State-gov", "Self-emp-not-inc", "Private", "Priva…
-    ## $ fnlwgt        <dbl> 77516, 83311, 215646, 234721, 338409, 284582, 1601…
-    ## $ education     <chr> "Bachelors", "Bachelors", "HS-grad", "11th", "Bach…
-    ## $ education_num <dbl> 13, 13, 9, 7, 13, 14, 5, 9, 14, 13, 10, 13, 13, 12…
-    ## $ marital       <chr> "Never-married", "Married-civ-spouse", "Divorced",…
-    ## $ occupation    <chr> "Adm-clerical", "Exec-managerial", "Handlers-clean…
-    ## $ relationship  <chr> "Not-in-family", "Husband", "Not-in-family", "Husb…
-    ## $ race          <chr> "White", "White", "White", "Black", "Black", "Whit…
-    ## $ sex           <chr> "Male", "Male", "Male", "Male", "Female", "Female"…
-    ## $ capital_gain  <dbl> 2174, 0, 0, 0, 0, 0, 0, 0, 14084, 5178, 0, 0, 0, 0…
-    ## $ capital_loss  <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-    ## $ hr_per_week   <dbl> 40, 13, 40, 40, 40, 40, 16, 45, 50, 40, 80, 40, 30…
-    ## $ country       <chr> "United-States", "United-States", "United-States",…
-    ## $ income        <chr> "<=50K", "<=50K", "<=50K", "<=50K", "<=50K", "<=50…
+    ## $ age           <dbl> 39, 50, 38, 53, 28, 37, 49, 52, 31, 42, 37, 30, ...
+    ## $ type_employer <chr> "State-gov", "Self-emp-not-inc", "Private", "Pri...
+    ## $ fnlwgt        <dbl> 77516, 83311, 215646, 234721, 338409, 284582, 16...
+    ## $ education     <chr> "Bachelors", "Bachelors", "HS-grad", "11th", "Ba...
+    ## $ education_num <dbl> 13, 13, 9, 7, 13, 14, 5, 9, 14, 13, 10, 13, 13, ...
+    ## $ marital       <chr> "Never-married", "Married-civ-spouse", "Divorced...
+    ## $ occupation    <chr> "Adm-clerical", "Exec-managerial", "Handlers-cle...
+    ## $ relationship  <chr> "Not-in-family", "Husband", "Not-in-family", "Hu...
+    ## $ race          <chr> "White", "White", "White", "Black", "Black", "Wh...
+    ## $ sex           <chr> "Male", "Male", "Male", "Male", "Female", "Femal...
+    ## $ capital_gain  <dbl> 2174, 0, 0, 0, 0, 0, 0, 0, 14084, 5178, 0, 0, 0,...
+    ## $ capital_loss  <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
+    ## $ hr_per_week   <dbl> 40, 13, 40, 40, 40, 40, 16, 45, 50, 40, 80, 40, ...
+    ## $ country       <chr> "United-States", "United-States", "United-States...
+    ## $ income        <chr> "<=50K", "<=50K", "<=50K", "<=50K", "<=50K", "<=...
 
 ``` r
 levels(adult$income)
@@ -2610,8 +2594,7 @@ adult.train <- adult[idx, ]
 adult.test <- adult[-idx, ]
 ```
 
-modeling with training
-    dateset
+modeling with training dateset
 
 ``` r
 m <- glm(income ~., data=adult.train, family=binomial)
@@ -2863,8 +2846,7 @@ ifelse(fitted(m) >= .5, 1,0)[c(1:5, 51:55)] # 모델에 적합된 값 with 1(">5
     ##  1  2  3  4  5 51 52 53 54 55 
     ##  0  0  0  1  1  0  0  0  1  0
 
-predicting with test
-dataset
+predicting with test dataset
 
 ``` r
 pred <- ifelse(predict(m, newdata = adult.test, type='response') >= .5, 1, 0)
@@ -3018,7 +3000,7 @@ colnames(hr) <- tolower(colnames(hr)); head(hr)
 ```
 
     ## # A tibble: 6 x 10
-    ##   satisfaction_le… last_evaluation number_project average_montly_…
+    ##   satisfaction_le~ last_evaluation number_project average_montly_~
     ##              <dbl>           <dbl>          <dbl>            <dbl>
     ## 1             0.38            0.53              2              157
     ## 2             0.8             0.86              5              262
@@ -3026,8 +3008,9 @@ colnames(hr) <- tolower(colnames(hr)); head(hr)
     ## 4             0.72            0.87              5              223
     ## 5             0.37            0.52              2              159
     ## 6             0.41            0.5               2              153
-    ## # … with 6 more variables: time_spend_company <dbl>, work_accident <dbl>,
-    ## #   left <dbl>, promotion_last_5years <dbl>, sales <chr>, salary <chr>
+    ## # ... with 6 more variables: time_spend_company <dbl>,
+    ## #   work_accident <dbl>, left <dbl>, promotion_last_5years <dbl>,
+    ## #   sales <chr>, salary <chr>
 
 ``` r
 table(hr$left)
@@ -3070,18 +3053,18 @@ glimpse(hr)
 
     ## Observations: 14,999
     ## Variables: 10
-    ## $ satisfaction_level    <dbl> 0.38, 0.80, 0.11, 0.72, 0.37, 0.41, 0.10, …
-    ## $ last_evaluation       <dbl> 0.53, 0.86, 0.88, 0.87, 0.52, 0.50, 0.77, …
-    ## $ number_project        <dbl> 2, 5, 7, 5, 2, 2, 6, 5, 5, 2, 2, 6, 4, 2, …
-    ## $ average_montly_hours  <dbl> 157, 262, 272, 223, 159, 153, 247, 259, 22…
-    ## $ time_spend_company    <dbl> 3, 6, 4, 5, 3, 3, 4, 5, 5, 3, 3, 4, 5, 3, …
-    ## $ work_accident         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ left                  <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-    ## $ promotion_last_5years <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ sales                 <chr> "sales", "sales", "sales", "sales", "sales…
-    ## $ salary                <chr> "low", "medium", "medium", "low", "low", "…
+    ## $ satisfaction_level    <dbl> 0.38, 0.80, 0.11, 0.72, 0.37, 0.41, 0.10...
+    ## $ last_evaluation       <dbl> 0.53, 0.86, 0.88, 0.87, 0.52, 0.50, 0.77...
+    ## $ number_project        <dbl> 2, 5, 7, 5, 2, 2, 6, 5, 5, 2, 2, 6, 4, 2...
+    ## $ average_montly_hours  <dbl> 157, 262, 272, 223, 159, 153, 247, 259, ...
+    ## $ time_spend_company    <dbl> 3, 6, 4, 5, 3, 3, 4, 5, 5, 3, 3, 4, 5, 3...
+    ## $ work_accident         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+    ## $ left                  <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+    ## $ promotion_last_5years <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+    ## $ sales                 <chr> "sales", "sales", "sales", "sales", "sal...
+    ## $ salary                <chr> "low", "medium", "medium", "low", "low",...
 
-x \<- model.matrix(~. -left, data=hr) \# 선형 모형 formualtion을 위한 문자열 문법
+x \<- model.matrix(\~. -left, data=hr) \# 선형 모형 formualtion을 위한 문자열 문법
 
 data splitting into training, validation, test dataset—-
 
@@ -3250,37 +3233,37 @@ glimpse(data)
 
     ## Observations: 569
     ## Variables: 31
-    ## $ class                <fct> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-    ## $ mean_radius          <dbl> 17.990, 20.570, 19.690, 11.420, 20.290, 12.…
-    ## $ mean_texture         <dbl> 10.38, 17.77, 21.25, 20.38, 14.34, 15.70, 1…
-    ## $ mean_perimeter       <dbl> 122.80, 132.90, 130.00, 77.58, 135.10, 82.5…
-    ## $ mean_area            <dbl> 1001.0, 1326.0, 1203.0, 386.1, 1297.0, 477.…
-    ## $ mean_smoothness      <dbl> 0.11840, 0.08474, 0.10960, 0.14250, 0.10030…
-    ## $ mean_compactness     <dbl> 0.27760, 0.07864, 0.15990, 0.28390, 0.13280…
-    ## $ mean_concavity       <dbl> 0.30010, 0.08690, 0.19740, 0.24140, 0.19800…
-    ## $ mean_concave_points  <dbl> 0.14710, 0.07017, 0.12790, 0.10520, 0.10430…
-    ## $ mean_symmetry        <dbl> 0.2419, 0.1812, 0.2069, 0.2597, 0.1809, 0.2…
-    ## $ mean_fractal_dim     <dbl> 0.07871, 0.05667, 0.05999, 0.09744, 0.05883…
-    ## $ se_radius            <dbl> 1.0950, 0.5435, 0.7456, 0.4956, 0.7572, 0.3…
-    ## $ se_texture           <dbl> 0.9053, 0.7339, 0.7869, 1.1560, 0.7813, 0.8…
-    ## $ se_perimeter         <dbl> 8.589, 3.398, 4.585, 3.445, 5.438, 2.217, 3…
-    ## $ se_area              <dbl> 153.40, 74.08, 94.03, 27.23, 94.44, 27.19, …
-    ## $ se_smoothness        <dbl> 0.006399, 0.005225, 0.006150, 0.009110, 0.0…
-    ## $ se_compactness       <dbl> 0.049040, 0.013080, 0.040060, 0.074580, 0.0…
-    ## $ se_concavity         <dbl> 0.05373, 0.01860, 0.03832, 0.05661, 0.05688…
-    ## $ se_concave_points    <dbl> 0.015870, 0.013400, 0.020580, 0.018670, 0.0…
-    ## $ se_symmetry          <dbl> 0.03003, 0.01389, 0.02250, 0.05963, 0.01756…
-    ## $ se_fractal_dim       <dbl> 0.006193, 0.003532, 0.004571, 0.009208, 0.0…
-    ## $ worst_radius         <dbl> 25.38, 24.99, 23.57, 14.91, 22.54, 15.47, 2…
-    ## $ worst_texture        <dbl> 17.33, 23.41, 25.53, 26.50, 16.67, 23.75, 2…
-    ## $ worst_perimeter      <dbl> 184.60, 158.80, 152.50, 98.87, 152.20, 103.…
-    ## $ worst_area           <dbl> 2019.0, 1956.0, 1709.0, 567.7, 1575.0, 741.…
-    ## $ worst_smoothness     <dbl> 0.1622, 0.1238, 0.1444, 0.2098, 0.1374, 0.1…
-    ## $ worst_compactness    <dbl> 0.6656, 0.1866, 0.4245, 0.8663, 0.2050, 0.5…
-    ## $ worst_concavity      <dbl> 0.71190, 0.24160, 0.45040, 0.68690, 0.40000…
-    ## $ worst_concave_points <dbl> 0.26540, 0.18600, 0.24300, 0.25750, 0.16250…
-    ## $ worst_symmetry       <dbl> 0.4601, 0.2750, 0.3613, 0.6638, 0.2364, 0.3…
-    ## $ worst_fractal_dim    <dbl> 0.11890, 0.08902, 0.08758, 0.17300, 0.07678…
+    ## $ class                <fct> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+    ## $ mean_radius          <dbl> 17.990, 20.570, 19.690, 11.420, 20.290, 1...
+    ## $ mean_texture         <dbl> 10.38, 17.77, 21.25, 20.38, 14.34, 15.70,...
+    ## $ mean_perimeter       <dbl> 122.80, 132.90, 130.00, 77.58, 135.10, 82...
+    ## $ mean_area            <dbl> 1001.0, 1326.0, 1203.0, 386.1, 1297.0, 47...
+    ## $ mean_smoothness      <dbl> 0.11840, 0.08474, 0.10960, 0.14250, 0.100...
+    ## $ mean_compactness     <dbl> 0.27760, 0.07864, 0.15990, 0.28390, 0.132...
+    ## $ mean_concavity       <dbl> 0.30010, 0.08690, 0.19740, 0.24140, 0.198...
+    ## $ mean_concave_points  <dbl> 0.14710, 0.07017, 0.12790, 0.10520, 0.104...
+    ## $ mean_symmetry        <dbl> 0.2419, 0.1812, 0.2069, 0.2597, 0.1809, 0...
+    ## $ mean_fractal_dim     <dbl> 0.07871, 0.05667, 0.05999, 0.09744, 0.058...
+    ## $ se_radius            <dbl> 1.0950, 0.5435, 0.7456, 0.4956, 0.7572, 0...
+    ## $ se_texture           <dbl> 0.9053, 0.7339, 0.7869, 1.1560, 0.7813, 0...
+    ## $ se_perimeter         <dbl> 8.589, 3.398, 4.585, 3.445, 5.438, 2.217,...
+    ## $ se_area              <dbl> 153.40, 74.08, 94.03, 27.23, 94.44, 27.19...
+    ## $ se_smoothness        <dbl> 0.006399, 0.005225, 0.006150, 0.009110, 0...
+    ## $ se_compactness       <dbl> 0.049040, 0.013080, 0.040060, 0.074580, 0...
+    ## $ se_concavity         <dbl> 0.05373, 0.01860, 0.03832, 0.05661, 0.056...
+    ## $ se_concave_points    <dbl> 0.015870, 0.013400, 0.020580, 0.018670, 0...
+    ## $ se_symmetry          <dbl> 0.03003, 0.01389, 0.02250, 0.05963, 0.017...
+    ## $ se_fractal_dim       <dbl> 0.006193, 0.003532, 0.004571, 0.009208, 0...
+    ## $ worst_radius         <dbl> 25.38, 24.99, 23.57, 14.91, 22.54, 15.47,...
+    ## $ worst_texture        <dbl> 17.33, 23.41, 25.53, 26.50, 16.67, 23.75,...
+    ## $ worst_perimeter      <dbl> 184.60, 158.80, 152.50, 98.87, 152.20, 10...
+    ## $ worst_area           <dbl> 2019.0, 1956.0, 1709.0, 567.7, 1575.0, 74...
+    ## $ worst_smoothness     <dbl> 0.1622, 0.1238, 0.1444, 0.2098, 0.1374, 0...
+    ## $ worst_compactness    <dbl> 0.6656, 0.1866, 0.4245, 0.8663, 0.2050, 0...
+    ## $ worst_concavity      <dbl> 0.71190, 0.24160, 0.45040, 0.68690, 0.400...
+    ## $ worst_concave_points <dbl> 0.26540, 0.18600, 0.24300, 0.25750, 0.162...
+    ## $ worst_symmetry       <dbl> 0.4601, 0.2750, 0.3613, 0.6638, 0.2364, 0...
+    ## $ worst_fractal_dim    <dbl> 0.11890, 0.08902, 0.08758, 0.17300, 0.076...
 
 ``` r
 summary(data)
@@ -3347,20 +3330,6 @@ Data EDA—-
 
 ``` r
 library(gridExtra)
-```
-
-    ## 
-    ## Attaching package: 'gridExtra'
-
-    ## The following object is masked from 'package:randomForest':
-    ## 
-    ##     combine
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     combine
-
-``` r
 p1 <- data %>% ggplot(aes(class)) + geom_bar()
 
 p2 <- data %>% ggplot(aes(class, mean_concave_points)) +
@@ -3396,8 +3365,7 @@ validation <- data[validate_idx, ]
 test <- data[test_idx, ]
 ```
 
-Logistic regression
-    modeling—-
+Logistic regression modeling—-
 
 ``` r
 data_lm_full <- glm(class ~., data=training, family=binomial)

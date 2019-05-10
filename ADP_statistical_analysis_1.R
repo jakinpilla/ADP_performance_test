@@ -5,13 +5,14 @@
 #' output: rmarkdown::github_document
 #' ---
 
-setwd("/home/insa/ADP_performance_test/")
+setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("/home/insa/ADP_performance_test/")
 getwd()
 
 #+ setup, include = FALSE
-       'rpart', 'GGally', 'ROCR', 'randomForest', 'dummies', 'curl', 'gridExtra')
 Packages_tm <- c('tm', 'rJava', 'KoNLP', 'SnowballC', 'slam', 'wordcloud')
 Packages <- c('plyr', 'dplyr', 'tidyverse', 'data.table', 'reshape2', 'caret', 
+              'rpart', 'GGally', 'ROCR', 'randomForest', 'dummies', 'curl', 'gridExtra')
        
 lapply(Packages, library, character.only=T)
 lapply(Packages_tm, library, character.only=T); useSejongDic()

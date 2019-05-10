@@ -1,7 +1,7 @@
 ADP R\_BASIC\_1
 ================
 jakinpilla
-2019-05-07
+2019-05-10
 
 Loading housing data —————————————————————————–
 
@@ -1108,16 +1108,16 @@ df_imdb %>% sample_n(10) # sampling without replacement...
     ## # A tibble: 10 x 28
     ##    color director_name num_critic_for_~ duration director_facebo~
     ##    <chr> <chr>                    <dbl>    <dbl>            <dbl>
-    ##  1 Color Phillip Noyce              108       98              176
-    ##  2 Color Bo Welch                   109       82               34
-    ##  3 Color Matt Cimber                 15      108               32
-    ##  4 Color Allison Ande~               51      110               99
-    ##  5 Color Lana Wachows~              120      109                0
-    ##  6 Color Simon Wincer                71       92               23
-    ##  7 Blac~ George A. Ro~              284       96                0
-    ##  8 Color Blair Ericks~               78       87                0
-    ##  9 Blac~ Elia Kazan                  61      118              603
-    ## 10 Color Todd Haynes                181      107              162
+    ##  1 Color Ericson Core               163      114               19
+    ##  2 Color Pascal Arnold               14       95                0
+    ##  3 Color Adam Rifkin                  4       95               89
+    ##  4 Color Ben Wheatley               255       95              214
+    ##  5 Color Maggie Green~               39      109                9
+    ##  6 Color Ruggero Deod~               15       87              101
+    ##  7 Color Robert Iscove               96       95                7
+    ##  8 Color Gilles Paque~              136      111               15
+    ##  9 Color Ashish R. Mo~               23      141                2
+    ## 10 Color DJ Pooh                     22       82               69
     ## # ... with 23 more variables: actor_3_facebook_likes <dbl>,
     ## #   actor_2_name <chr>, actor_1_facebook_likes <dbl>, gross <dbl>,
     ## #   genres <chr>, actor_1_name <chr>, movie_title <chr>,
@@ -1135,16 +1135,16 @@ df_imdb %>% sample_n(100, replace=T) # sampling with replacement...
     ## # A tibble: 100 x 28
     ##    color director_name num_critic_for_~ duration director_facebo~
     ##    <chr> <chr>                    <dbl>    <dbl>            <dbl>
-    ##  1 Color Ethan Coen                 488      122             1000
-    ##  2 Color Carl Rinsch                218      128               47
-    ##  3 Color Mike Judge                 121       84              406
-    ##  4 Color Youssef Dela~               16       80                8
-    ##  5 Color Wayne Beach                 40       93                7
-    ##  6 Color David Twohy                302      127              123
-    ##  7 Color Kenneth Bran~              313      105                0
-    ##  8 Color Karey Kirkpa~               93      107               11
-    ##  9 Color Bart Freundl~              100      103               38
-    ## 10 Color Luc Besson                 173      126                0
+    ##  1 Color Jonas Elmer                121       97                3
+    ##  2 Color Judd Apatow                251      133                0
+    ##  3 Color Walter Murch                56      109              181
+    ##  4 Color Lasse Hallst~               80      118              529
+    ##  5 Color Vincente Min~               41      102              136
+    ##  6 Color George Gallo                23       89              269
+    ##  7 Color Luc Besson                 173      126                0
+    ##  8 Color Russell Holt                 6      118                0
+    ##  9 Color Steven Spiel~              298      163            14000
+    ## 10 Color James Cox                   12       91               10
     ## # ... with 90 more rows, and 23 more variables:
     ## #   actor_3_facebook_likes <dbl>, actor_2_name <chr>,
     ## #   actor_1_facebook_likes <dbl>, gross <dbl>, genres <chr>,
@@ -1163,16 +1163,16 @@ df_imdb %>% sample_frac(0.01, replace=T) # sampling with replacement and fractio
     ## # A tibble: 50 x 28
     ##    color director_name num_critic_for_~ duration director_facebo~
     ##    <chr> <chr>                    <dbl>    <dbl>            <dbl>
-    ##  1 Color Paul Thomas ~              224      188                0
-    ##  2 Color Daston Kalili               NA      127                2
-    ##  3 Color Jeff Burr                   57       92              155
-    ##  4 Color Gurinder Cha~              161      112               98
-    ##  5 Color Ang Lee                    357      134                0
-    ##  6 Color Stephan Elli~              135       97               11
-    ##  7 Color <NA>                        29       60               NA
-    ##  8 Color Oleg Stepche~               25      107                0
-    ##  9 Color David S. Goy~              185      122              687
-    ## 10 Color Bibo Bergeron               63       90               10
+    ##  1 Color Peter Howitt               123      109               29
+    ##  2 Color Rob Letterman              218      103               11
+    ##  3 Color David Fincher              377      162            21000
+    ##  4 Color Lee Daniels                323      109              304
+    ##  5 Color U. Roberto R~                3       80                6
+    ##  6 Color Guy Ritchie                362      116                0
+    ##  7 Color Victor Salva               167      104              108
+    ##  8 Color Clark Johnson              144      117               69
+    ##  9 Color Spike Lee                   53      115                0
+    ## 10 Color Claude Miller               38      103               27
     ## # ... with 40 more rows, and 23 more variables:
     ## #   actor_3_facebook_likes <dbl>, actor_2_name <chr>,
     ## #   actor_1_facebook_likes <dbl>, gross <dbl>, genres <chr>,

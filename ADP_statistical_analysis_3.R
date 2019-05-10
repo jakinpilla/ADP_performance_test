@@ -9,15 +9,17 @@
 setwd("C:/Users/Daniel/ADP_performance_test")
 # setwd("/home/insa/ADP_performance_test")
 getwd()
-
-library(tidyverse)
-library(nycflights13)
-
+Packages <- c('plyr', 'corrplot', 'leaps', 'glmnet', 'QuantPsyc', 
+              'MASS', 'car', 'tidyverse', 'data.table', 'reshape2', 'caret', 
+              'rpart', 'GGally', 'ROCR', 'randomForest', 'dummies', 'curl', 
+              'gridExtra')
+lapply(Packages, library, character.only=T)
 
 #' Data Wranggling -------------------------------------------------------------
 #' 
 #' dplyr basic -----------------------------------------------------------------
-flights
+
+library(nycflights13); flights
 
 filter(flights, month == 1, day == 1)
 flights[flights$month == 1 & flights$day == 1, ]
@@ -45,7 +47,7 @@ mutate(flights,
 transform(flights,
           gain = arr_delay - dep_delay,
           speed = distance / air_time * 60
-) # %>% View()
+) %>% as_tibble()
 
 mutate(flights,
        gain = arr_delay - dep_delay,
@@ -224,35 +226,30 @@ qplot(interaction(supp, dose), len, data=ToothGrowth, geom="boxplot") # interact
 ggplot(ToothGrowth, aes(x=interaction(supp, dose), y=len)) + geom_boxplot() # interaction...
 
 #' Plotting a Function Curve ---------------------------------------------------
+#' 
+#' curve(x^3-5*x, from=-4, to=4)
+#' 
+#' #' Plot a user-defined function
+#' myfun<-function(xvar) {
+#'   1/(1+exp(-xvar+10))
+#' }
+#' 
+#' curve(myfun(x), from=0, to=20)
+#' 
+#' #' Add a line:
+#' curve(1-myfun(x), add=TRUE, col="red")
+#' 
+#' library(ggplot2)
+#' # This is equivalent to:
+#' ggplot(data.frame(x=c(0, 20)), aes(x=x)) +
+#'   stat_function(fun=myfun, geom="line")
 
-curve(x^3-5*x, from=-4, to=4)
-
-#' Plot a user-defined function
-myfun<-function(xvar) {
-  1/(1+exp(-xvar+10))
-}
-
-curve(myfun(x), from=0, to=20)
-
-#' Add a line:
-curve(1-myfun(x), add=TRUE, col="red")
-
-library(ggplot2)
-# This is equivalent to:
-ggplot(data.frame(x=c(0, 20)), aes(x=x)) +
-  stat_function(fun=myfun, geom="line")
-
-# ==============================
-# Correlation Analysis
-# ==============================
+#' Correlation Analysis --------------------------------------------------------
 
 cov(trees$Height, trees$Volume)
 cov(trees)
-
 cov(trees, use="pairwise")
 # cov(trees, use="complete")
-
-##
 
 cor(trees$Height, trees$Volume)
 # same as cor(trees$Height, trees$Volume, method="pearson")
@@ -261,46 +258,37 @@ cor(trees) # same as cor(trees, method="pearson")
 cor(trees, use="pairwise")
 # cor(trees, use="complete")
 
-##
-
 cor(trees$Height, trees$Volume, method="spearman")
 cor(trees, method="spearman")
 
 cor(trees, method="spearman", use="pairwise")
 # cor(trees, method="spearman", use="complete")
 
-##
-
 cor.test(trees$Girth, trees$Volume)
 # cor.test(trees$Girth, trees$Volume, method="pearson")
-
-##
-
-# install.packages("corrplot")
-library(corrplot)
 
 M <- cor(mtcars)
 # head(round(M, 2))
 
+par(mfrow = c(2, 2))
 # method = "circle""
-corrplot(M, method = "circle")
+corrplot(M, method = "circle")  
 
 # method = "color"
-corrplot(M, method = "color")
+corrplot(M, method = "color") 
 
 # method = "number"
 corrplot(M, method = "number")
 
-##
-
 # correlogram with hclust reordering
 corrplot(M, order = "hclust")
 
-# ==============================
-# Analyss of Variance
-# ==============================
+par(mfrow = c(1, 1))
 
-# One-way ANOVA...
+#' Analyss of Variance ---------------------------------------------------------
+#' 
+#' One-way ANOVA...
+
 boxplot(weight ~ group, PlantGrowth,
         xlab = "group",
         ylab = "weight")
@@ -314,7 +302,9 @@ plant.ph <- TukeyHSD(plant.aov)
 plant.ph
 plot(plant.ph)
 
+
 # Two-way ANOVA with tw.csv dataset...
+
 tw <- read_csv("./data/tw.csv")
 
 boxplot(Satisfaction ~ Format*Subject, tw,
@@ -328,6 +318,7 @@ tw.aov <- aov(Satisfaction~ Format*Subject, tw)
 summary(tw.aov)
 model.tables(tw.aov, type = "means")
 
+
 tw.format.ph <- TukeyHSD(tw.aov, which = "Format")
 tw.format.ph
 plot(tw.format.ph)
@@ -336,7 +327,9 @@ tw.subject.ph <- TukeyHSD(tw.aov, which = "Subject")
 tw.subject.ph
 plot(tw.subject.ph)
 
+
 # Two-way ANOVA with pw.csv dataset...
+
 pw <- read_csv("./data/pw.csv"); pw
 
 boxplot(height ~ plant*water, pw,
@@ -355,20 +348,19 @@ pw.ph
 
 op <- par(mar = c(5, 8, 4, 2))
 plot(pw.ph, cex.axis = .7, las = 1)
-par(op)
 
-# Regression Analysis...
+
+#' Regression Analysis... ------------------------------------------------------
 ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
   geom_point(aes(shape = Species), size = 1.5) +
   geom_smooth(method = "lm") +
   xlab("Sepal Length") + ylab("Sepal Width")
 
-# ANCOVA model...
+#' ANCOVA model... -------------------------------------------------------------
 sepals.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris)
 anova(sepals.lm)
 summary(sepals.lm)
 
-# ANCOVA model...
 iris2 = subset(iris, Species != "setosa", drop = T)
 sepal2.lm <- lm(Sepal.Width ~ Sepal.Length*Species, data = iris2)
 anova(sepal2.lm)
@@ -400,6 +392,7 @@ anova(sepals.full, sepal.rest)
 powerplant <- read_csv("./data/powerplant.csv")
 lm(Output ~ Pressure + Temp, powerplant)
 lm(Output ~ Pressure*Temp, powerplant)
+
 
 lm.fit <- lm(Volume ~ Girth, trees)
 lm.fit
@@ -470,7 +463,7 @@ predict(stackloss.rlm, newdata, interval = "confidence")
 predict(stackloss.rlm, newdata, interval = "prediction")
 
 
-# Model Diagnostics -------------------------------------------------------
+#' Model Diagnostics -------------------------------------------------------
 
 lm.fit <- lm(Volume ~ Girth, trees)
 resids <- rstandard(lm.fit)
@@ -478,9 +471,10 @@ resid(lm.fit)
 rstudent(lm.fit)
 
 shapiro.test(resids)
-plot(lm.fit, which = 2)
+
 
 plot(lm.fit, which = 1)
+plot(lm.fit, which = 2)
 plot(lm.fit, which = 3)
 
 plot(lm.fit, which = 4)
@@ -491,8 +485,7 @@ abline(v=2*(1+1)/31, col = "blue")
 
 plot(lm.fit, which = 6)
 
-
-# Multicollinearity -------------------------------------------------------
+#' Multicollinearity -------------------------------------------------------
 
 mtcars %>%
   select(mpg, disp, hp, wt, drat) %>%
@@ -504,52 +497,45 @@ summary(fit)
 
 anova(fit)
 
-# install.packages("car")
-library(car)
-
 vif(fit)
 
 
-# The "Best" Regression Model with state.x77 dataset -------------------------------------------------------
+#' The "Best" Regression Model with state.x77 dataset -------------------------------------------------------
 
 state.x77 %>% 
   as_tibble() %>%
   select(Population, Income, Illiteracy, Frost, Murder) %>% GGally::ggpairs()
 
-fit <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
-
+state.x77 %>% as_tibble() -> tbl.state.x77
+fit <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = tbl.state.x77)
 summary(fit)
 
-fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
+fit1 <- lm(Murder ~ Population + Illiteracy, data = tbl.state.x77)
 
-fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = tbl.state.x77)
 
 anova(fit1, fit2)
 
 AIC(fit1, fit2)
 
-fit1 <- lm(Murder ~ 1, data = state.x77)
-fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77)
+fit1 <- lm(Murder ~ 1, data = tbl.state.x77)
+fit2 <- lm(Murder ~ Population + Illiteracy + Income + Frost, data = tbl.state.x77)
 
-library(MASS)
 stepAIC(fit2, direction = "backward")
 stepAIC(fit1, direction = "forward", 
         scope = list(lower = fit1, upper = fit2))
 stepAIC(fit1, direction = "both")
 
-# install.packages("leaps")
-library(leaps)
-
-leaps <- regsubsets(Murder ~ Population + Illiteracy + Income + Frost, data = state.x77, nbest = 4)
+leaps <- regsubsets(Murder ~ Population + Illiteracy + Income + Frost, data = tbl.state.x77, nbest = 4)
 
 plot(leaps, scale = "adjr2")
 plot(leaps, scale = "bic")
 
 
-# Standardized Regression Coefficients -------------------------------------
+#' Standardized Regression Coefficients -------------------------------------
 
-fit1 <- lm(Murder ~ Population + Illiteracy, data = state.x77)
-fit2 <- lm(scale(Murder) ~ scale(Population) + scale(Illiteracy), data = state.x77)
+fit1 <- lm(Murder ~ Population + Illiteracy, data = tbl.state.x77)
+fit2 <- lm(scale(Murder) ~ scale(Population) + scale(Illiteracy), data = tbl.state.x77)
 
 summary(fit2)
 
@@ -558,7 +544,7 @@ library(QuantPsyc)
 lm.beta(fit1)
 
 
-# Ridge and Lasso Regression --------------------------------------------------------
+#' Ridge and Lasso Regression --------------------------------------------------------
 
 #' The glmnet() requires a vector input and matrix of predictors.
 #' 
@@ -566,19 +552,18 @@ lm.beta(fit1)
 #' 
 #' alpha = 1 for lasso regression. (L1 Regularization)
 #' 
-#' Ridge :: it shrink the value of coefficients but doesn't reached aero, which suggests no feature selection
+#' Ridge :: it shrink the value of coefficients but doesn't reached zero, which suggests no feature selection
 #' 
 #' Lasso :: it shrink coefficients to zero (exactly zero), which certainly helps ni feature selection
 #' 
 #' 
-library(glmnet)
 
-# Ridge -------------------------------------------------------------------
+#' Ridge -------------------------------------------------------------------
+
+mtcars %>% colnames()
 
 y <- mtcars$hp
-x <- mtcars %>%
-  select(mpg, wt, drat) %>%
-  data.matrix()
+x <- mtcars %>% select(mpg, wt, drat) %>% data.matrix()
 
 cv_ridge <- cv.glmnet(x, y, alpha=0) # ridge
 plot(cv_ridge)
@@ -588,8 +573,7 @@ lambda_ridge
 
 coef(cv_ridge)
 
-
-# Lasso -------------------------------------------------------------------
+#' Lasso -------------------------------------------------------------------
 
 cv_lasso <- cv.glmnet(x, y, alpha = 1)
 plot(cv_lasso)
@@ -600,7 +584,7 @@ lambda_lasso
 coef(cv_lasso)
 
 
-# PCA ---------------------------------------------------------------------
+#' PCA ---------------------------------------------------------------------
 
 iris %>%
   select(-Species) -> ir
@@ -628,15 +612,16 @@ predict(ir.pca, newdata = tail(ir, 2))
 scale(tail(ir, 2)) %*% ir.pca$rotation # not same...why?
 
 
-# biplot with ggfortify() ----------------------------------------------------------------
+#' biplot with ggfortify() ----------------------------------------------------------------
 
-install.packages("ggfortify")
+# install.packages("ggfortify")
 library(ggfortify)
-autoplot(ir.pca, data = iris, colour = "Species")
+
+autoplot(ir.pca, data = iris, colour = "Species") -> p1
 
 autoplot(ir.pca, data = iris, 
          colour = "Species",
-         label = T)
+         label = T) -> p2
 
 autoplot(ir.pca, data = iris, 
          colour = "Species",
@@ -644,7 +629,7 @@ autoplot(ir.pca, data = iris,
          loadings = T, 
          loadings.colour = "steelblue",
          loadings.label = T
-         )
+         ) -> p3
 
 autoplot(ir.pca, data = iris, 
          colour = "Species",
@@ -652,14 +637,14 @@ autoplot(ir.pca, data = iris,
          loadings = T, 
          loadings.colour = "steelblue",
          loadings.label = T,
-         scale = 0)
+         scale = 0) -> p4
 
+grid.arrange(p1, p2, p3, p4, ncol=2)
 
-# Discriminant Analysis ---------------------------------------------------
+#' Discriminant Analysis ---------------------------------------------------
+#'
+#' LDA : Linear Discriminant Analysis
 
-# LDA : Linear Discriminant Analysis
-
-library(MASS)
 set.seed(2019)
 
 iris %>%
@@ -675,8 +660,10 @@ dim(ir.train)
 dim(ir.test)
 
 ir.lda <- lda(Species ~., ir.train)
+
 plot(ir.lda, col = as.integer(ir.train$Species))
 plot(ir.lda, dimen = 1, type = "b")
+
 
 lda.train_pred <- predict(ir.lda)
 ir.train$lda <- lda.train_pred$class
@@ -687,9 +674,9 @@ ir.test$lda <- lda.test_pred$class
 
 table(ir.test$lda, ir.test$Species)
 
-# Local Fisher Discriminant Analysis --------------------------------------
+#' Local Fisher Discriminant Analysis --------------------------------------
 
-install.packages("lfda")
+# install.packages("lfda")
 library(lfda)
 
 m.lfda <- lfda(ir, ir.species, r = 3, metric = "plain")
@@ -701,9 +688,9 @@ autoplot(m.lfda,
          frame.colour = 'Species')
 
 
-# K-means -----------------------------------------------------------------
+#' K-means -----------------------------------------------------------------
 
-install.packages("rattle.data")
+# install.packages("rattle.data")
 library(rattle.data)
 
 data("wine")
@@ -748,32 +735,15 @@ clusplot(wine.scaled, wine.kmeans$cluster,
 
 table(wine[, 1], wine.kmeans$cluster)
 
-autoplot(wine.kmeans, data = wine)
-autoplot(clara(wine.numeric, 3), label = T)
-autoplot(fanny(wine.numeric, 3), frame = T)
-autoplot(pam(wine.numeric, 3), frame.type = 'norm')
+autoplot(wine.kmeans, data = wine) -> p1
+autoplot(clara(wine.numeric, 3), label = T) -> p2
+autoplot(fanny(wine.numeric, 3), frame = T) -> p3
+autoplot(pam(wine.numeric, 3), frame.type = 'norm') -> p4
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 
-# Plotting with Grid ------------------------------------------------------
-
-library(gridExtra)
-
-p1 <- autoplot(wine.kmeans, data = wine) +
-  theme(legend.position = "none")
-
-p2 <- autoplot(clara(wine.numeric, 3), label = T) +
-  theme(legend.position = "none")
-
-p3 <- autoplot(fanny(wine.numeric, 3), frame = T) +
-  theme(legend.position = "none")
-
-p4 <- autoplot(pam(wine.numeric, 3), frame.type = 'norm') + 
-  theme(legend.position = "none")
-
-grid.arrange(p1, p2, p3, p4, ncol=2)
-
-
-# Hierarchical Clustering -------------------------------------------------
+#' Hierarchical Clustering -------------------------------------------------
 
 wine.scaled %>% 
   dist(method = "euclidean") %>% 

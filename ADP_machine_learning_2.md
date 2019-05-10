@@ -1,7 +1,7 @@
 ADP ML\_2\_apriori
 ================
 jakinpilla
-2019-05-07
+2019-05-10
 
 Make tr\_obj : S4 object —————————————————–
 
@@ -186,8 +186,6 @@ tr_obj # transaction class...
     ##  16175 transactions (rows) and
     ##  84 items (columns)
 
-Comparing tr\_obj\_1 and tr\_obj\_2 S4 objects ———————————-
-
 ``` r
 summary(tr_obj)
 ```
@@ -270,7 +268,7 @@ Item Frequency Plot :: itemFrequencyPlot() ———————————-
 itemFrequencyPlot(tr_obj, topN = 20)
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
 library(RColorBrewer)
@@ -280,7 +278,7 @@ itemFrequencyPlot(tr_obj, topN = 20,
                   main = "Absolute Item Frequency Plot")
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 Visualize Sparse Marix ——————————————————
 
@@ -289,7 +287,7 @@ Visualize Sparse Marix ——————————————————
 image(tr_obj[1:100]) # 100 transaction, 100 items...
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 200 transaction, 100 items….
 
@@ -297,7 +295,7 @@ image(tr_obj[1:100]) # 100 transaction, 100 items...
 image(sample(tr_obj, 200))
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 How to set support and confidence? ——————————
 
@@ -641,9 +639,9 @@ groceryrules <- apriori(tr_obj, parameter = list(support =0.0001,
     ## Absolute minimum support count: 1 
     ## 
     ## set item appearances ...[0 item(s)] done [0.00s].
-    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.00s].
+    ## set transactions ...[84 item(s), 16175 transaction(s)] done [0.01s].
     ## sorting and recoding items ... [84 item(s)] done [0.00s].
-    ## creating transaction tree ... done [0.00s].
+    ## creating transaction tree ... done [0.01s].
     ## checking subsets of size 1 2 3 4 5 6 7 8 done [0.00s].
     ## writing ... [10283 rule(s)] done [0.00s].
     ## creating S4 object  ... done [0.00s].
@@ -654,13 +652,13 @@ plot(groceryrules)
 
     ## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 plot(sort(groceryrules, by='support')[1:20], method='grouped')
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
 
 ``` r
 # windows()
@@ -696,7 +694,7 @@ plot(groceryrules, method='graph', control=list(type='items'),
     ## Warning: plot: Too many rules supplied. Only plotting the best 100 rules
     ## using 'support' (change control parameter max if needed)
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-3.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->
 
 ``` r
 plot(groceryrules[1:20], method='graph', control=list(type='items'))
@@ -724,7 +722,7 @@ plot(groceryrules[1:20], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-4.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-4.png)<!-- -->
 
 ``` r
 plot(groceryrules[21:40], method='graph', control=list(type='items'))
@@ -752,7 +750,7 @@ plot(groceryrules[21:40], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-5.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-5.png)<!-- -->
 
 ``` r
 plot(groceryrules[41:60], method='graph', control=list(type='items'))
@@ -780,7 +778,7 @@ plot(groceryrules[41:60], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-6.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-6.png)<!-- -->
 
 ``` r
 sort(groceryrules, by = "lift") -> groceryrules_by_lift
@@ -817,7 +815,7 @@ plot(groceryrules_by_lift, method='graph', control=list(type='items'),
     ## Warning: plot: Too many rules supplied. Only plotting the best 100 rules
     ## using 'support' (change control parameter max if needed)
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-7.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-7.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[1:20], method='graph', 
@@ -853,7 +851,7 @@ plot(groceryrules_by_lift[1:20], method='graph',
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-8.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-8.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
@@ -881,7 +879,7 @@ plot(groceryrules_by_lift[21:40], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-9.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-9.png)<!-- -->
 
 ``` r
 plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
@@ -909,7 +907,7 @@ plot(groceryrules_by_lift[41:60], method='graph', control=list(type='items'))
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-18-10.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-17-10.png)<!-- -->
 
 Before item ——————————
 
@@ -1253,7 +1251,7 @@ itemFrequencyPlot() ——————————
 itemFrequencyPlot(tr_obj_rioter, topN=10)
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
 library(RColorBrewer)
@@ -1263,7 +1261,7 @@ itemFrequencyPlot(tr_obj_rioter, topN = 20,
                   main = "Absolute Item Frequency Plot")
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-22-2.png)<!-- -->
 
 image() ——————————
 
@@ -1271,7 +1269,7 @@ image() ——————————
 image(tr_obj_rioter)
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 Inspect rules ——————————
 
@@ -1371,7 +1369,7 @@ summary(rules)
 plot(sort(rules, by='support')[1:20], method='grouped')
 ```
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ``` r
 # windows()
@@ -1404,7 +1402,7 @@ plot(rules, method='graph', control=list(type='items'),
     ## max   =  100
     ## verbose   =  FALSE
 
-![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-28-2.png)<!-- -->
+![](ADP_machine_learning_2_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
 
 ``` r
 # 상품 방문 코너 예측...
