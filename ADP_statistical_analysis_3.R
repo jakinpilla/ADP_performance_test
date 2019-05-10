@@ -1,24 +1,29 @@
+#' ---
+#' title: "ADP STAT_3"
+#' author: "jakinpilla"
+#' date: "`r Sys.Date()`"
+#' output: rmarkdown::github_document
+#' ---
 
+#+setup, include = FALSE
+setwd("C:/Users/Daniel/ADP_performance_test")
+# setwd("/home/insa/ADP_performance_test")
+getwd()
 
-# install.packages("tidyverse")
 library(tidyverse)
-
-# install.packages("nycflights13")
 library(nycflights13)
 
-flights
 
-##
+#' Data Wranggling -------------------------------------------------------------
+#' 
+#' dplyr basic -----------------------------------------------------------------
+flights
 
 filter(flights, month == 1, day == 1)
 flights[flights$month == 1 & flights$day == 1, ]
 
-##
-
 arrange(flights, year, month, day)
 arrange(flights, desc(arr_delay))
-
-##
 
 select(flights, year, month, day)
 select(flights, year:day)
@@ -27,12 +32,10 @@ select(flights, -(year:day))
 select(flights, starts_with("dep"))
 select(flights, ends_with("delay"))
 select(flights, contains("time"))
-# select(flights, matches("^dep"))
+select(flights, matches("^dep"))
 
 select(flights, tail_num = tailnum)
 rename(flights, tail_num = tailnum)
-
-##
 
 mutate(flights,
        gain = arr_delay - dep_delay,
@@ -49,24 +52,21 @@ mutate(flights,
        gain_per_hour = gain / (air_time / 60)
 )
 
+#' transmute() -----------------------------------------------------------------
 transmute(flights,
           gain = arr_delay - dep_delay,
           gain_per_hour = gain / (air_time / 60)
 )
 
-##
-
 summarise(flights,
           delay = mean(dep_delay, na.rm = TRUE)
 )
 
-##
-
+#' sample_n(), sample_frac() ---------------------------------------------------
 sample_n(flights, 10)
 sample_frac(flights, 0.01)
 
-##
-
+#' group_by() ------------------------------------------------------------------
 by_tailnum <- group_by(flights, tailnum)
 delay <- summarise(by_tailnum,
                    count = n(),
@@ -86,8 +86,8 @@ daily <- group_by(flights, year, month, day)
 (per_month <- summarise(per_day, flights = sum(flights)))
 (per_year <- summarise(per_month, flights = sum(flights)))
 
-##
 
+#' Chaining --------------------------------------------------------------------
 a1 <- group_by(flights, year, month, day)
 a2 <- select(a1, arr_delay, dep_delay)
 a3 <- summarise(a2,
@@ -116,11 +116,9 @@ flights %>%
   ) %>%
   filter(arr > 30 | dep > 30)
 
-# ==============================
-# Creating a Scatter Plot
-# ==============================
+#' Scatter Plot ----------------------------------------------------------------
 
-help(mtcars)
+# help(mtcars)
 str(mtcars)
 
 plot(mtcars$wt, mtcars$mpg)
@@ -129,20 +127,15 @@ plot(mtcars$wt, mtcars$mpg,
      main="Scatter plot with base graphics",
      xlab="wt", ylab="mpg")
 
-###
-
+#' qplot()
 library(ggplot2)
 qplot(mtcars$wt, mtcars$mpg) # qplot: quick plot
-
 qplot(wt, mpg, data=mtcars)
-# This is equivalent to:
+
+#' This is equivalent to:
 ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() # aes: aesthetics
 
-# ==============================
-# Creating a Line Graph
-# ==============================
-
-help(pressure)
+#' Creating a Line Graph -------------------------------------------------------
 str(pressure)
 
 plot(pressure$temperature, pressure$pressure, type="l")
@@ -157,8 +150,6 @@ points(pressure$temperature, pressure$pressure)
 lines(pressure$temperature, pressure$pressure/2, col="red")
 points(pressure$temperature, pressure$pressure/2, col="red")
 
-###
-
 library(ggplot2)
 qplot(pressure$temperature, pressure$pressure, geom="line")
 
@@ -171,11 +162,7 @@ qplot(temperature, pressure, data=pressure, geom=c("line", "point"))
 # This is equivalent to:
 ggplot(pressure, aes(x=temperature, y=pressure)) + geom_line() + geom_point()
 
-# ==============================
-# Creating a Bar Graph
-# ==============================
-
-help(BOD)
+#' Creating a Bar Graph --------------------------------------------------------
 str(BOD)
 
 barplot(BOD$demand, names.arg=BOD$Time)
@@ -186,12 +173,8 @@ table(mtcars$cyl)
 # Generate a bar graph of counts
 barplot(table(mtcars$cyl))
 
-###
-
 library(ggplot2)
 ggplot(BOD, aes(x=factor(Time), y=demand)) + geom_bar(stat="identity")
-
-###
 
 qplot(mtcars$cyl)
 # Treat cylas discrete
@@ -201,15 +184,11 @@ qplot(factor(cyl), data=mtcars)
 # This is equivalent to:
 ggplot(mtcars, aes(x=factor(cyl))) + geom_bar()
 
-# ==============================
-# Creating a Histogram
-# ==============================
+#' Creating a Histogram --------------------------------------------------------
 
 hist(mtcars$mpg)
 # Specify approximate number of bins with breaks
 hist(mtcars$mpg, breaks=10)
-
-###
 
 library(ggplot2)
 qplot(mtcars$mpg)
@@ -219,11 +198,7 @@ qplot(mpg, data=mtcars, binwidth=4)
 ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=1)
 ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=4)
 
-# ==============================
-# Creating a Box Plot
-# ==============================
-
-help(ToothGrowth)
+#' Creating a Box Plot ---------------------------------------------------------
 str(ToothGrowth)
 
 plot(ToothGrowth$supp, ToothGrowth$len)
@@ -234,7 +209,7 @@ boxplot(len~ supp, data=ToothGrowth)
 # Put interaction of two variables on x-axis
 boxplot(len~ supp+dose, data=ToothGrowth)
 
-###
+#
 library(ggplot2)
 qplot(ToothGrowth$supp, ToothGrowth$len, geom="boxplot")
 
@@ -243,27 +218,25 @@ qplot(supp, len, data=ToothGrowth, geom="boxplot")
 # This is equivalent to:
 ggplot(ToothGrowth, aes(x=supp, y=len)) + geom_boxplot()
 
-qplot(interaction(supp, dose), len, data=ToothGrowth, geom="boxplot")
+qplot(interaction(supp, dose), len, data=ToothGrowth, geom="boxplot") # interaction...
 
 # This is equivalent to:
-ggplot(ToothGrowth, aes(x=interaction(supp, dose), y=len)) + geom_boxplot()
+ggplot(ToothGrowth, aes(x=interaction(supp, dose), y=len)) + geom_boxplot() # interaction...
 
-# ==============================
-# Plotting a Function Curve
-# ==============================
+#' Plotting a Function Curve ---------------------------------------------------
 
 curve(x^3-5*x, from=-4, to=4)
 
-# Plot a user-defined function
+#' Plot a user-defined function
 myfun<-function(xvar) {
   1/(1+exp(-xvar+10))
 }
 
 curve(myfun(x), from=0, to=20)
-# Add a line:
+
+#' Add a line:
 curve(1-myfun(x), add=TRUE, col="red")
 
-###
 library(ggplot2)
 # This is equivalent to:
 ggplot(data.frame(x=c(0, 20)), aes(x=x)) +

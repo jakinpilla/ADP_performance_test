@@ -270,7 +270,7 @@ xtabs(survived == 'survived' ~ sex + pclass, data=titanic) / xtabs(~ sex + pclas
 xtabs(~sex + survived, data = titanic)
 chisq.test(xtabs(~ sex + survived, data=titanic)) # p < .05 |-> Not independent... so there is relationship.
 
-# Mosaic plot----
+#' Mosaic plot----
 mosaicplot(survived ~ pclass + sex, data = titanic, color=T) # how to interprete the mosaic plot...
 
 

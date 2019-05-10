@@ -291,6 +291,7 @@ performance(pred_ctree, 'auc')@y.values[[1]] # 0.7901751
 #' RandomForest ----------------------------------------------------------------
 #' 
 #' Modeling...
+#+ warning = FALSE
 fitControl <- trainControl(method='repeatedcv', number=10, repeats=3)
 rf_fit <- train(survived ~ ., data=titanic.train,
                 preProcess = c("pca"),

@@ -1,7 +1,7 @@
 ADP STAT\_2
 ================
 jakinpilla
-2019-05-02
+2019-05-08
 
 ``` r
 setwd("C:/Users/Daniel/ADP_performance_test")
@@ -619,6 +619,7 @@ confusionMatrix(y_hat_lm, y_obs)
     ##     P-Value [Acc > NIR] : <2e-16          
     ##                                           
     ##                   Kappa : 0.8769          
+    ##                                           
     ##  Mcnemar's Test P-Value : 0.2207          
     ##                                           
     ##             Sensitivity : 0.9604          
@@ -1014,6 +1015,7 @@ confusionMatrix(y_hat_dt, y_obs)
     ##     P-Value [Acc > NIR] : 7.048e-08       
     ##                                           
     ##                   Kappa : 0.5305          
+    ##                                           
     ##  Mcnemar's Test P-Value : 3.058e-06       
     ##                                           
     ##             Sensitivity : 0.9535          
@@ -1137,6 +1139,7 @@ confusionMatrix(y_hat_ctree, y_obs)
     ##     P-Value [Acc > NIR] : 5.852e-09       
     ##                                           
     ##                   Kappa : 0.5916          
+    ##                                           
     ##  Mcnemar's Test P-Value : 0.3815          
     ##                                           
     ##             Sensitivity : 0.8837          
@@ -1191,99 +1194,6 @@ rf_fit <- train(survived ~ ., data=titanic.train,
                 method='rf', ntree=100, verbose=F, trControl=fitControl)
 ```
 
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-    
-    ## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
-    ## mtry: reset to within valid range
-
 Model Evaluating with confusion matrix and ROC curve—-
 
 ConfusionMatrix…
@@ -1308,6 +1218,7 @@ confusionMatrix(y_hat_rf, y_obs)
     ##     P-Value [Acc > NIR] : 5.402e-06       
     ##                                           
     ##                   Kappa : 0.52            
+    ##                                           
     ##  Mcnemar's Test P-Value : 0.8937          
     ##                                           
     ##             Sensitivity : 0.8430          
