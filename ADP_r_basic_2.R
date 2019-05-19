@@ -171,7 +171,7 @@ df_imdb %>%
   summarise(avg_imdb_score = mean(imdb_score)) %>%
   ggplot(aes(title_year, avg_imdb_score)) + geom_point(col = "steelblue") + geom_line(linetype = 6)
   
-#' Each Facter Cnt and Percentage -----------------------------------------------
+#' Each Factor Cnt and Percentage -----------------------------------------------
 data(diamonds)
 diamonds %>%
   group_by(cut) %>%
@@ -214,7 +214,7 @@ library(MASS)
 data(survey); glimpse(survey)
 head(table(survey$W.Hnd))
 chisq.test(table(survey$W.Hnd), p=c(.3, .7)) # chisq.test to figure out it follows certains distribution...
-# p< .05, so it doesn't follow certain distribution
+# p < .05, so it doesn't follow certain distribution
 
 #' 3. Scatter Plot : Two more numeric variables --------------------------------
 diamonds %>% sample_n(30) %>% pairs()
@@ -237,7 +237,6 @@ mpg %>%
   ggplot(aes(class, hwy, color = class)) + 
   geom_boxplot(outlier.colour = "red", outlier.shape = 8, alpha = .5) + 
   geom_jitter(col = 'gray')
-
 
 mpg %>% 
   mutate(class=factor(class,
@@ -271,35 +270,4 @@ xtabs(~sex + survived, data = titanic)
 chisq.test(xtabs(~ sex + survived, data=titanic)) # p < .05 |-> Not independent... so there is relationship.
 
 #' Mosaic plot----
-mosaicplot(survived ~ pclass + sex, data = titanic, color=T) # how to interprete the mosaic plot...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+mosaicplot(survived ~ pclass + sex, data = titanic, color=T) # how to interprete the mosaic plot
