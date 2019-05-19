@@ -154,13 +154,14 @@ points(pressure$temperature, pressure$pressure/2, col="red")
 
 library(ggplot2)
 qplot(pressure$temperature, pressure$pressure, geom="line")
-
 qplot(temperature, pressure, data=pressure, geom="line")
+
 # This is equivalent to:
 ggplot(pressure, aes(x=temperature, y=pressure)) + geom_line()
 
 # Lines and points together
 qplot(temperature, pressure, data=pressure, geom=c("line", "point"))
+
 # This is equivalent to:
 ggplot(pressure, aes(x=temperature, y=pressure)) + geom_line() + geom_point()
 
@@ -174,37 +175,41 @@ table(mtcars$cyl)
 
 # Generate a bar graph of counts
 barplot(table(mtcars$cyl))
+mtcars %>% select(cyl) %>% table() %>% barplot()
 
 library(ggplot2)
 ggplot(BOD, aes(x=factor(Time), y=demand)) + geom_bar(stat="identity")
 
 qplot(mtcars$cyl)
+
 # Treat cylas discrete
 qplot(factor(mtcars$cyl))
 
 qplot(factor(cyl), data=mtcars)
+
 # This is equivalent to:
 ggplot(mtcars, aes(x=factor(cyl))) + geom_bar()
 
 #' Creating a Histogram --------------------------------------------------------
 
 hist(mtcars$mpg)
+
 # Specify approximate number of bins with breaks
 hist(mtcars$mpg, breaks=10)
 
 library(ggplot2)
 qplot(mtcars$mpg)
-
 qplot(mpg, data=mtcars, binwidth=4)
+
 # This is equivalent to:
 ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=1)
 ggplot(mtcars, aes(x=mpg)) + geom_histogram(binwidth=4)
 
 #' Creating a Box Plot ---------------------------------------------------------
 str(ToothGrowth)
-
 plot(ToothGrowth$supp, ToothGrowth$len)
 
+# ?ToothGrowth
 # Formula syntax
 boxplot(len~ supp, data=ToothGrowth)
 
@@ -220,6 +225,7 @@ qplot(supp, len, data=ToothGrowth, geom="boxplot")
 # This is equivalent to:
 ggplot(ToothGrowth, aes(x=supp, y=len)) + geom_boxplot()
 
+# interaction...
 qplot(interaction(supp, dose), len, data=ToothGrowth, geom="boxplot") # interaction...
 
 # This is equivalent to:
@@ -245,6 +251,8 @@ ggplot(ToothGrowth, aes(x=interaction(supp, dose), y=len)) + geom_boxplot() # in
 #'   stat_function(fun=myfun, geom="line")
 
 #' Correlation Analysis --------------------------------------------------------
+# cov : covariance
+# cor : correlation
 
 cov(trees$Height, trees$Volume)
 cov(trees)
@@ -289,19 +297,25 @@ par(mfrow = c(1, 1))
 #' 
 #' One-way ANOVA...
 
+str(PlantGrowth)
+
+PlantGrowth %>% distinct(group)
+
 boxplot(weight ~ group, PlantGrowth,
         xlab = "group",
         ylab = "weight")
 
 plant.aov <- aov(weight ~ group, PlantGrowth)
+
 summary(plant.aov)
 
 model.tables(plant.aov, type = "means")
 
 plant.ph <- TukeyHSD(plant.aov)
-plant.ph
-plot(plant.ph)
 
+plant.ph
+
+plot(plant.ph)
 
 # Two-way ANOVA with tw.csv dataset...
 
@@ -315,16 +329,21 @@ with(tw,
      interaction.plot(Subject, Format, Satisfaction))
 
 tw.aov <- aov(Satisfaction~ Format*Subject, tw)
+
 summary(tw.aov)
+
 model.tables(tw.aov, type = "means")
 
-
 tw.format.ph <- TukeyHSD(tw.aov, which = "Format")
+
 tw.format.ph
+
 plot(tw.format.ph)
 
 tw.subject.ph <- TukeyHSD(tw.aov, which = "Subject")
+
 tw.subject.ph
+
 plot(tw.subject.ph)
 
 
@@ -340,10 +359,13 @@ with(pw,
      interaction.plot(water, plant, height))
 
 pw.aov <- aov(height ~ plant*water, pw)
+
 summary(pw.aov)
+
 model.tables(pw.aov, type ="means")
 
 pw.ph <- TukeyHSD(pw.aov, which = "plant:water")
+
 pw.ph
 
 op <- par(mar = c(5, 8, 4, 2))
@@ -352,7 +374,7 @@ plot(pw.ph, cex.axis = .7, las = 1)
 
 #' Regression Analysis... ------------------------------------------------------
 ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
-  geom_point(aes(shape = Species), size = 1.5) +
+   geom_point(aes(shape = Species), size = 1.5) +
   geom_smooth(method = "lm") +
   xlab("Sepal Length") + ylab("Sepal Width")
 
@@ -476,7 +498,6 @@ shapiro.test(resids)
 plot(lm.fit, which = 1)
 plot(lm.fit, which = 2)
 plot(lm.fit, which = 3)
-
 plot(lm.fit, which = 4)
 abline(h = 4/(31-1+1), col = "red")
 
@@ -486,6 +507,8 @@ abline(v=2*(1+1)/31, col = "blue")
 plot(lm.fit, which = 6)
 
 #' Multicollinearity -------------------------------------------------------
+
+# ?mtcars
 
 mtcars %>%
   select(mpg, disp, hp, wt, drat) %>%
@@ -596,7 +619,16 @@ cor(ir) %>%
   as.data.frame() %>%
   rownames_to_column() %>%
   as_tibble()
- 
+
+M <- cor(ir)
+corrplot(M, method = 'circle')
+corrplot(M, method = 'color')
+corrplot(M, method = 'number')
+corrplot(M, method = 'shade')
+corrplot(M, method = 'ellipse')
+corrplot(M, method = 'square')
+corrplot(M, method = 'pie')
+
 ir %>% 
   prcomp(center = T, scale = T) -> ir.pca
 
@@ -649,7 +681,6 @@ set.seed(2019)
 
 iris %>%
   select(-Species) -> ir
-
 
 train.idx <- sample(c(T, F), nrow(iris), replace = T, prob= c(.6, .4))
 
